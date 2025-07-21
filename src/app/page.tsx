@@ -97,9 +97,6 @@ const Page = () => {
           <Button onClick={handleSubmit} type="button" className="w-full">
             Submit Entry
           </Button>
-          <Button variant="outline" className="w-full">
-            Login with Google
-          </Button>
         </CardFooter>
       </Card>
 
