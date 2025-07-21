@@ -71,8 +71,8 @@ const Page = () => {
     fetchData()
   }, [])
   return (
-    <div className='min-h-screen flex  items-center px-12  justify-between  py-10'>
-      <Card className="w-full max-w-md bg-neutral-100">
+    <div className='min-h-screen flex sm:flex-col @container  items-center px-12  justify-between  py-10'>
+      <Card className="w-full  max-w-md bg-neutral-100">
         <CardHeader>
           <CardTitle>
             <h1 className='text-2xl'>Malkhaan Entry Form</h1>
@@ -104,7 +104,7 @@ const Page = () => {
       </Card>
 
       {/* Optional: Display Saved Entries */}
-      <div className='mt-10 w-full max-w-3xl'>
+      <div className='mt-10 w-full sm:flex-col md:items-center  max-w-3xl'>
         <h2 className='text-xl mb-4 font-semibold'>Saved Entries:</h2>
         <ul className='space-y-2'>
           {entries && entries?.map((entry: any, index) => (
