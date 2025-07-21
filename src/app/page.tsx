@@ -71,7 +71,7 @@ const Page = () => {
     fetchData()
   }, [])
   return (
-    <div className='min-h-screen flex sm:flex-col @container  items-center px-12  justify-between  py-10'>
+    <div className='min-h-screen flex flex-col @container  items-center px-12  justify-between  py-10'>
       <Card className="w-full  max-w-md bg-neutral-100">
         <CardHeader>
           <CardTitle>
