@@ -75,7 +75,7 @@ const Page = () => {
       <Card className="w-full  max-w-md bg-neutral-100">
         <CardHeader>
           <CardTitle>
-            <h1 className='text-2xl'>Malkhaan Entry Form</h1>
+            <h1 className='text-2xl'>Malkhan Entry Form</h1>
           </CardTitle>
           <div className='w-full flex items-center justify-between mt-2'>
             <label>Case Property</label>
@@ -93,8 +93,8 @@ const Page = () => {
           </form>
         </CardContent>
 
-        <CardFooter className="grid grid-cols-2 gap-4">
-          <Button onClick={handleSubmit} type="button" className="w-full">
+        <CardFooter className="flex items-center justify-center gap-4">
+          <Button onClick={handleSubmit} type="button" className="w-1/2">
             Submit Entry
           </Button>
         </CardFooter>
