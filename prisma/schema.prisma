@@ -18,3 +18,47 @@ model Demo {
   status        String
   place         String
 }
+
+model SeizedVehicle {
+  id             String @id @default(cuid())
+  srNo           String
+  gdNo           String
+  gdDate         String
+  underSection   String @default("207")
+  vehicleType    String
+  colour         String
+  registrationNo String
+  engineNo       String
+  description    String
+  status         String
+  policeStation  String
+  ownerName      String
+  seizedBy       String
+  caseProperty   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MaalkhanaEntry {
+  id           String  @id @default(uuid())
+  srNo         String
+  gdNo         String
+  gdDate       String
+  underSection String
+  Year         String
+  IOName       String
+  vadiName     String
+  HM           String
+  accused      String
+  firNo        String?
+  status       String
+  entryType    String
+  place        String
+  boxNo        String
+  courtNo      String
+  courtName    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
