@@ -1,7 +1,6 @@
-import { PrismaClient } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-const prisma = new PrismaClient();
 
 // POST: Create a new seized vehicle entry
 export const POST = async (req: NextRequest) => {

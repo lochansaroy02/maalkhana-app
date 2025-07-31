@@ -8,11 +8,18 @@ const Sidebar = () => {
             name: "Dashboard", link: "/",
         },
         {
-            name: "seized vehical", link: "/seized-vehical",
+            name: "Seized vehical", link: "/seized-vehical",
         },
         {
             name: "Maalkhana Entry", link: "/maalkhana-entry",
-        }
+        },
+        {
+            name: "Maalkhana Movement", link: "/maalkhana-movement",
+        },
+        {
+            name: "Report", link: "/report",
+        },
+
     ]
     const router = useRouter();
     return (

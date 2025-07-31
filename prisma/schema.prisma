@@ -41,7 +41,7 @@ model SeizedVehicle {
 }
 
 model MaalkhanaEntry {
-  id           String  @id @default(uuid())
+  id           String   @id @default(uuid())
   srNo         String
   gdNo         String
   gdDate       String
@@ -58,7 +58,28 @@ model MaalkhanaEntry {
   boxNo        String
   courtNo      String
   courtName    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model MaalkhanaMovement {
+  id             String  @id @default(cuid())
+  srNo           String
+  moveDate       String
+  firNo          String
+  underSection   String
+  takenOutBy     String
+  moveTrackingNo String
+  movePurpose    String
+  name           String
+  photo          String?
+  document       String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Report {
+  id            String @id @default(cuid())
+  movementCount Int
 }

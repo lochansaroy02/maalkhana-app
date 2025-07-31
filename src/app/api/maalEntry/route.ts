@@ -1,7 +1,5 @@
-import { PrismaClient } from "@/generated/prisma";
+import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-
-const prisma = new PrismaClient();
 
 export const POST = async (req: NextRequest) => {
     try {
@@ -53,10 +51,9 @@ export const POST = async (req: NextRequest) => {
     }
 };
 
-// GET: Fetch all seized vehicle entries
 export const GET = async () => {
     try {
-        const entries = await prisma.seizedVehicle.findMany({
+        const entries = await prisma.maalkhanaEntry.findMany({
             orderBy: { createdAt: "desc" }
         });
         return NextResponse.json({ success: true, data: entries }, { status: 200 });

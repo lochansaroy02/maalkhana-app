@@ -66,7 +66,7 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
     getNewEntry: async () => {
         try {
             const { entry } = get();
-            const response = await axios.post('/api/siezed', entry);
+            const response = await axios.post('/api/maalEntry', entry);
             if (response.data.success) {
                 set(state => ({
                     entries: [...state.entries, response.data.data]
@@ -82,7 +82,7 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
 
     fetchMaalkhanaEntry: async () => {
         try {
-            const response = await axios.get('/api/siezed');
+            const response = await axios.get('/api/maalEntry');
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {

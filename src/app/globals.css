@@ -10,8 +10,8 @@
   --breakpoint-md: 768px;
   --breakpoint-lg: 976px;
 
-
-  --color-textColor: #102647;
+  --color-cream: #fef9e5;
+  --color-blue: #102647;
 }
 
 @theme inline {
