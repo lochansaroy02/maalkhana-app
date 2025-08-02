@@ -1,7 +1,7 @@
 "use client";
 
 import Report from '@/components/Report';
-import { useMaalkhanaStore } from '@/utils/maalkhanaEntryStore';
+import { useMaalkhanaStore } from '@/store/maalkhanaEntryStore';
 import { useEffect } from 'react';
 
 const page = () => {

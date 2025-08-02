@@ -1,7 +1,7 @@
 "use client";
 
 import Report from '@/components/Report';
-import { useSeizedVehicleStore } from '@/utils/store';
+import { useSeizedVehicleStore } from '@/store/seizeStore';
 import { useEffect } from 'react';
 
 

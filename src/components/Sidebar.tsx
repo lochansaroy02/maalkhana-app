@@ -17,6 +17,9 @@ const Sidebar = () => {
             name: "Maalkhana Movement", link: "/maalkhana-movement",
         },
         {
+            name: "Maalkhana Release", link: "/maalkhana-release",
+        },
+        {
             name: "Report", link: "/report",
         },
 

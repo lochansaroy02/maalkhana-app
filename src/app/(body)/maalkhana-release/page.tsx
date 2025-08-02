@@ -17,6 +17,12 @@ const Page = () => {
         takenOutBy: '',
         moveTrackingNo: '',
         movePurpose: '',
+        recevierName: "",
+        fathersName: "",
+        address: "",
+        mobile: "",
+        releaseItemName: ""
+
     });
 
     const [caseProperty, setCaseProperty] = useState('');
@@ -39,12 +45,17 @@ const Page = () => {
     const fields = [
         { name: 'srNo', label: 'Sr. No / Mal No.' },
         { name: 'moveDate', label: 'Move Date' },
-        { name: 'firNo', label: 'FIR No.' }, // fixed key from 'firNo.' to 'firNo'
+        { name: 'firNo', label: 'FIR No.' },
         { name: 'underSection', label: 'Under Section' },
         { name: 'takenOutBy', label: 'Taken Out By' },
         { name: 'moveTrackingNo', label: 'Move Tracking No' },
         { name: 'movePurpose', label: 'Move Purpose' },
         { name: 'name', label: 'Name' },
+        { name: "recevierName", label: "Recevier Name" },
+        { name: "fathersName", label: "Father's Name" },
+        { name: "address", label: "Address" },
+        { name: "mobile", label: "Mobile No." },
+        { name: "releaseItemName", label: "Release Item Name" },
     ];
 
     const inputFields = [
@@ -68,7 +79,7 @@ const Page = () => {
         <div>
             <div className='mt-4 border border-gray-300'>
                 <div className='bg-blue py-4 border border-gray-400 flex justify-center'>
-                    <h1 className='text-2xl uppercase text-cream font-semibold'>Maalkhana Movement</h1>
+                    <h1 className='text-2xl uppercase text-cream font-semibold'>Maalkhana Release </h1>
                 </div>
                 <div className='bg-gray-100 border border-gray-300 px-8 py-4 rounded-b-md'>
                     <div className='flex items-center justify-between w-full'>

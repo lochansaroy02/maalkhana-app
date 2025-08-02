@@ -2,8 +2,8 @@
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
-import { useMaalkhanaStore } from '@/utils/maalkhanaEntryStore';
-import { useSeizedVehicleStore } from '@/utils/store';
+import { useMaalkhanaStore } from '@/store/maalkhanaEntryStore';
+import { useSeizedVehicleStore } from '@/store/seizeStore';
 import { useState } from 'react';
 
 const Page = () => {

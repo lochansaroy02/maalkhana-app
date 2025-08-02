@@ -1,7 +1,7 @@
 "use client";
 
 import Report from "@/components/Report";
-import { useMovementStore } from "@/utils/movementStore";
+import { useMovementStore } from "@/store/movementStore";
 import { useEffect } from "react";
 
 const page = () => {

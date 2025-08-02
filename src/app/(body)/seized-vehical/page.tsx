@@ -2,7 +2,7 @@
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
-import { useSeizedVehicleStore } from '@/utils/store';
+import { useSeizedVehicleStore } from '@/store/seizeStore';
 import { useState } from 'react';
 
 const Page = () => {
