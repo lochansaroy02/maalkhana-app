@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 
+
 @theme {
   --breakpoint-*: initial;
   --breakpoint-sm: 480px;
@@ -12,6 +13,10 @@
 
   --color-cream: #fef9e5;
   --color-blue: #102647;
+  --color-blue-dark: #121e33;
+  --color-maroon: #741e1c;
+  --color-lightMaroon: #b63432;
+
 }
 
 @theme inline {
@@ -121,6 +126,18 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+.glass-effect {
+  @apply backdrop-blur-xl bg-white/10 border border-white/30 rounded-xl shadow-lg;
+}
+
+.glass-noRound {
+  @apply backdrop-blur-xl bg-white/10 border border-white/30 shadow-lg;
+}
+
+.gradient {
+  @apply bg-gradient-to-br from-blue-dark to-purple-500 via-blue
 }
 
 @layer base {

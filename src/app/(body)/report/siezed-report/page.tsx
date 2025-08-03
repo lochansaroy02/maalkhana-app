@@ -2,38 +2,41 @@
 
 import Report from '@/components/Report';
 import UploadModal from '@/components/UploadModal';
-import { useMaalkhanaStore } from '@/store/maalkhanaEntryStore';
+import { useSeizedVehicleStore } from '@/store/seizeStore';
 import { useEffect, useState } from 'react';
 
-const page = () => {
-    const [isModalOpen, setIsModalOpen,] = useState(false);
-    const { fetchMaalkhanaEntry, entries, addMaalkhanaEntry } = useMaalkhanaStore();
+
+const Page = () => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const { vehicles, fetchVehicles, addVehicle } = useSeizedVehicleStore();
+
     useEffect(() => {
-        fetchMaalkhanaEntry()
-    }, [])
+        fetchVehicles();
+    }, []);
 
     const handleImportSuccess = (message: string) => {
-        fetchMaalkhanaEntry();
+     
+        fetchVehicles();
     };
 
     return (
         <>
             <Report
-                //@ts-ignore
-                data={entries}
                 onImportClick={() => setIsModalOpen(true)}
-                link='/maalkhana-entry'
-                heading='Maalkhana Data' />
+                //@ts-ignore
+                data={vehicles}
+                link='/seized-vehical'
+                heading='Siezed vehicles Report' />
             <UploadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                schemaType="entry"
+                schemaType="seizedVehicle"
                 apiEndpoint="/api/seized"
                 onSuccess={handleImportSuccess}
-                addEntry={addMaalkhanaEntry}
+                addEntry={addVehicle}
             />
         </>
-    )
-}
+    );
+};
 
-export default page
+export default Page;

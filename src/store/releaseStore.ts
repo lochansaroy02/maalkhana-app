@@ -15,7 +15,7 @@ type ReleaseEntry = {
     fathersName: string;
     address: string;
     mobile: string;
-    releaseItemNam: string;
+    releaseItemName: string;
 
 };
 
@@ -43,7 +43,7 @@ const initialState: ReleaseEntry = {
     fathersName: '',
     address: '',
     mobile: '',
-    releaseItemNam: '',
+    releaseItemName: '',
 };
 
 export const useReleaseStore = create<ReleaseStore>((set, get) => ({
@@ -89,7 +89,7 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
 
     addReleaseEntry: async (data: ReleaseEntry) => {
         try {
-            const response = await axios.post("/api/movement", data, {
+            const response = await axios.post("/api/release", data, {
                 headers: { "Content-Type": "application/json" },
             });
 

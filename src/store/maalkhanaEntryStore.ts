@@ -5,6 +5,7 @@ import { create } from 'zustand';
 type MaalkhanaEntry = {
     srNo: string;
     gdNo: string;
+    wine: number;
     gdDate: string;
     underSection: string;
     Year: string;
@@ -35,6 +36,7 @@ const initialState: MaalkhanaEntry = {
     srNo: '',
     gdNo: '',
     gdDate: '',
+    wine: 0,
     underSection: '',
     Year: '',
     IOName: '',
@@ -92,21 +94,34 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
             console.error("Error fetching entries:", err);
         }
     },
-    addMaalkhanaEntry: async (data: MaalkhanaEntry) => {
+
+
+    addMaalkhanaEntry: async (data: any | any[]) => {
         try {
             const response = await axios.post("/api/maalEntry", data, {
                 headers: { "Content-Type": "application/json" },
             });
 
 
+            // if (response.data.success) {
+            //     const newEntry = response.data.data;
+            //     set(state => ({
+            //         entries: [...state.entries, newEntry],
+            //     }));
+            //     console.log(response.data.data)
+            // } else {
+            //     console.error("POST /api/siezed error: Failed to create entry", response.data.error);
+            // }
+
+
             if (response.data.success) {
-                const newEntry = response.data.data;
-                set(state => ({
-                    entries: [...state.entries, newEntry],
-                }));
-                console.log(response.data.data)
+                if (Array.isArray(data)) {
+                    console.log(`🚀 Bulk insert successful: ${response.data.count} vehicles added.`);
+                } else {
+                    console.log("🚀 Single insert successful:", response.data.data);
+                }
             } else {
-                console.error("POST /api/siezed error: Failed to create entry", response.data.error);
+                console.error("❌ POST /api/siezed error: Failed to create vehicle");
             }
         } catch (error: any) {
             console.error("POST /api/siezed error:", error.message || error);

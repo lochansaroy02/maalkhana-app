@@ -19,7 +19,7 @@ export async function POST(req: Request) {
             fathersName,
             address,
             mobile,
-            releaseItemNam,
+            releaseItemName,
             photo,
             document,
         } = body;
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
                 fathersName,
                 address,
                 mobile,
-                releaseItemNam,
+                releaseItemName,
                 photo,
                 document,
             },
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, data: newEntry });
     } catch (error) {
-        console.error('POST /api/movement error:', error);
+        console.error('POST /api/relase error:', error);
         return NextResponse.json(
             { success: false, message: 'Failed to create entry', error },
             { status: 500 }

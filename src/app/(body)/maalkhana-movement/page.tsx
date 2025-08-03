@@ -66,13 +66,13 @@ const Page = () => {
 
     return (
         <div>
-            <div className='mt-4 border border-gray-300'>
-                <div className='bg-blue py-4 border border-gray-400 flex justify-center'>
+            <div className='glass-effect'>
+                <div className='bg-maroon rounded-t-xl py-4 border-b border-white/50 flex justify-center'>
                     <h1 className='text-2xl uppercase text-cream font-semibold'>Maalkhana Movement</h1>
                 </div>
-                <div className='bg-gray-100 border border-gray-300 px-8 py-4 rounded-b-md'>
+                <div className=' px-8 py-4  h-screen rounded-b-md'>
                     <div className='flex items-center justify-between w-full'>
-                        <label className='text-nowrap'>Case Property</label>
+                        <label className='text-nowrap text-blue-100'>Case Property</label>
                         <div className='w-3/4'>
                             <DropDown
                                 selectedValue={caseProperty}
@@ -94,11 +94,11 @@ const Page = () => {
                         ))}
 
                         {inputFields.map((item, index) => (
-                            <div key={index} className='flex items-center gap-8'>
-                                <label className='text-nowrap' htmlFor={item.id}>{item.label}</label>
+                            <div key={index} className='flex items-center justify-between'>
+                                <label className='text-nowrap text-blue-100' htmlFor={item.id}>{item.label}</label>
                                 <input
                                     ref={item.ref}
-                                    className='bg-gray-200 rounded-xl border border-dotted px-2 py-1'
+                                    className=' text-blue-100 rounded-xl glass-effect px-2 py-1'
                                     id={item.id}
                                     type='file'
                                 />
@@ -117,7 +117,7 @@ const Page = () => {
                                         console.log(`${item} clicked`);
                                     }
                                 }}
-                                className='bg-white-300 border border-gray-200 text-gray-800'
+                                className='bg-blue border border-white/50  text-blue-50'
                             >
                                 {item}
                             </Button>

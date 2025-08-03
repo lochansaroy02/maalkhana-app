@@ -19,7 +19,7 @@ const page = () => {
 
     return (
         //@ts-ignore
-        <Report data={entries} heading="Maalkhana Movement Report" />
+        <Report data={entries} link="/maalkhana-movement" heading="Maalkhana Movement Report" />
     )
 }
 

@@ -2,10 +2,26 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 
-// POST: Create a new seized vehicle entry
+
 export const POST = async (req: NextRequest) => {
     try {
         const body = await req.json();
+
+        // ✅ Handle bulk import
+        if (Array.isArray(body)) {
+            if (body.length === 0) {
+                return NextResponse.json({ success: false, message: "Empty array received" }, { status: 400 });
+            }
+
+            const result = await prisma.seizedVehicle.createMany({
+                data: body,
+                skipDuplicates: true,
+            });
+
+            return NextResponse.json({ success: true, count: result.count });
+        }
+
+        // ✅ Handle single object
         const {
             srNo,
             gdNo,
@@ -38,14 +54,17 @@ export const POST = async (req: NextRequest) => {
                 policeStation,
                 ownerName,
                 seizedBy,
-                caseProperty
-            }
+                caseProperty,
+            },
         });
 
         return NextResponse.json({ success: true, data: newEntry }, { status: 201 });
     } catch (error) {
         console.error("POST /api/siezed error:", error);
-        return NextResponse.json({ success: false, error: "Failed to create seized vehicle entry" }, { status: 500 });
+        return NextResponse.json(
+            { success: false, error: "Failed to create seized vehicle entry" },
+            { status: 500 }
+        );
     }
 };
 

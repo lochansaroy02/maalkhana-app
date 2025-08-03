@@ -30,25 +30,27 @@ model SeizedVehicle {
 }
 
 model MaalkhanaEntry {
-  id           String   @id @default(uuid())
+  id           String @id @default(uuid())
+  wine Int?
   srNo         String
   gdNo         String
   gdDate       String
   underSection String
-  Year         String
-  IOName       String
-  vadiName     String
-  HM           String
-  accused      String
-  firNo        String?
-  status       String
-  entryType    String
-  place        String
-  boxNo        String
-  courtNo      String
-  courtName    String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+
+  Year      String
+  IOName    String
+  vadiName  String
+  HM        String
+  accused   String
+  firNo     String?
+  status    String
+  entryType String
+  place     String
+  boxNo     String
+  courtNo   String
+  courtName String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model MaalkhanaMovement {
@@ -69,20 +71,20 @@ model MaalkhanaMovement {
 }
 
 model MaalkhanaRelease {
-  id             String @id @default(cuid())
-  srNo           String
-  moveDate       String
-  firNo          String
-  underSection   String
-  takenOutBy     String
-  moveTrackingNo String
-  movePurpose    String
-  name           String
-  recevierName   String
-  fathersName    String
-  address        String
-  mobile         String
-  releaseItemNam String
+  id              String @id @default(cuid())
+  srNo            String
+  moveDate        String
+  firNo           String
+  underSection    String
+  takenOutBy      String
+  moveTrackingNo  String
+  movePurpose     String
+  name            String
+  recevierName    String
+  fathersName     String
+  address         String
+  mobile          String
+  releaseItemName String
 
   photo    String?
   document String?

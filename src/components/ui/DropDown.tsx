@@ -1,4 +1,3 @@
-import React, { Dispatch } from 'react'
 
 interface DropDownProps {
     selectedValue: string,
@@ -7,14 +6,14 @@ interface DropDownProps {
 }
 const DropDown = ({ selectedValue, options, handleSelect }: DropDownProps) => {
     return (
-        <div className='w-full'>
-            <select className='rounded-lg w-full  px-2 py-1  bg-neutral-100 ' value={selectedValue} onChange={(e) => { handleSelect(e.target.value) }}>
-                <option disabled value="">select value</option>
+        <div className='w-1/2'>
+            <select className='rounded-lg w-full glass-effect text-blue-100  px-2 py-1  ' value={selectedValue} onChange={(e) => { handleSelect(e.target.value) }}>
+                <option className='bg-blue' disabled value="">select value</option>
                 {
 
                     options.map((item) => (
 
-                        <option value={item}>{item}</option>
+                        <option className='bg-blue ' value={item}>{item}</option>
                     ))
                 }
             </select>

@@ -1,8 +1,10 @@
-import React from 'react'
 
 const Header = () => {
     return (
-        <div className='w-full  h-12  bg-blue'>Header</div>
+        <div className='fixed w-full  bg-amber-300 ml-[20%] p-4   flex justify-center '>
+            <h1>Header</h1>
+
+        </div>
     )
 }
 

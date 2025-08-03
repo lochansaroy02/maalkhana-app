@@ -2,35 +2,36 @@
 
 import Report from '@/components/Report';
 import UploadModal from '@/components/UploadModal';
-import { useMaalkhanaStore } from '@/store/maalkhanaEntryStore';
+import { useReleaseStore } from '@/store/releaseStore';
 import { useEffect, useState } from 'react';
 
 const page = () => {
+
     const [isModalOpen, setIsModalOpen,] = useState(false);
-    const { fetchMaalkhanaEntry, entries, addMaalkhanaEntry } = useMaalkhanaStore();
+    const { fetchReleaseEntries, entries, addReleaseEntry } = useReleaseStore()
     useEffect(() => {
-        fetchMaalkhanaEntry()
+        fetchReleaseEntries()
     }, [])
 
     const handleImportSuccess = (message: string) => {
-        fetchMaalkhanaEntry();
+        fetchReleaseEntries();
     };
 
     return (
         <>
             <Report
+                onImportClick={() => { setIsModalOpen(true) }}
                 //@ts-ignore
                 data={entries}
-                onImportClick={() => setIsModalOpen(true)}
-                link='/maalkhana-entry'
-                heading='Maalkhana Data' />
+                link='/maalkhana-release'
+                heading="Maalkhana Release Report" />
             <UploadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 schemaType="entry"
                 apiEndpoint="/api/seized"
                 onSuccess={handleImportSuccess}
-                addEntry={addMaalkhanaEntry}
+                addEntry={addReleaseEntry}
             />
         </>
     )

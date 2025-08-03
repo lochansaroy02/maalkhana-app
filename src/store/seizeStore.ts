@@ -50,21 +50,25 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
         }
     },
 
-    addVehicle: async (vehicle: any) => {
+    addVehicle: async (vehicle: any | any[]) => {
         try {
             const response = await axios.post("/api/siezed", vehicle, {
                 headers: { "Content-Type": "application/json" },
             });
 
             if (response.data.success) {
-                const newVehicle = response.data.data;
-                console.log(newVehicle)
+                if (Array.isArray(vehicle)) {
+                    console.log(`🚀 Bulk insert successful: ${response.data.count} vehicles added.`);
+                } else {
+                    console.log("🚀 Single insert successful:", response.data.data);
+                }
             } else {
-                console.error("POST /api/siezed error: Failed to create vehicle");
+                console.error("❌ POST /api/siezed error: Failed to create vehicle");
             }
         } catch (error: any) {
-            console.error("POST /api/siezed error:", error);
+            console.error("❌ POST /api/siezed error:", error);
             set({ error: error.message || "Failed to create seized vehicle" });
         }
     },
+
 }));

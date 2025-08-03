@@ -2,12 +2,12 @@
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
-import { useMovementStore } from '@/store/movementStore';
+import { useReleaseStore } from '@/store/releaseStore';
 import { useRef, useState } from 'react';
 
 const Page = () => {
+    const { addReleaseEntry, resetForm } = useReleaseStore()
 
-    const { addMovementEntry } = useMovementStore();
     const [formData, setFormData] = useState({
         srNo: '',
         name: '',
@@ -63,27 +63,77 @@ const Page = () => {
         { label: "Upload Document", id: "document", ref: documentRef },
     ];
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const photoFile = photoRef.current?.files?.[0];
         const documentFile = documentRef.current?.files?.[0];
+
+        let photoUrl = "";
+        let documentUrl = "";
+
+        const uploadToCloudinary = async (file: File) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+
+            const res = await fetch(
+                `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`,
+                {
+                    method: "POST",
+                    body: formData,
+                }
+            );
+
+            const data = await res.json();
+            return data.secure_url;
+        };
+
+        // Upload files if selected
+        if (photoFile) {
+            photoUrl = await uploadToCloudinary(photoFile);
+        }
+        if (documentFile) {
+            documentUrl = await uploadToCloudinary(documentFile);
+        }
 
 
         const fullData = {
             ...formData,
             caseProperty,
-        }
-        addMovementEntry(fullData)
+            photoUrl,
+            documentUrl,
+        };
+
+        addReleaseEntry(fullData);
+
+        // Reset form
+        setFormData({
+            srNo: '',
+            name: '',
+            moveDate: '',
+            firNo: '',
+            underSection: '207',
+            takenOutBy: '',
+            moveTrackingNo: '',
+            movePurpose: '',
+            recevierName: "",
+            fathersName: "",
+            address: "",
+            mobile: "",
+            releaseItemName: ""
+        });
+        setCaseProperty('');
     };
+
 
     return (
         <div>
-            <div className='mt-4 border border-gray-300'>
-                <div className='bg-blue py-4 border border-gray-400 flex justify-center'>
+            <div className=' glass-effect'>
+                <div className='py-4 border bg-maroon rounded-t-xl border-gray-400 flex justify-center'>
                     <h1 className='text-2xl uppercase text-cream font-semibold'>Maalkhana Release </h1>
                 </div>
-                <div className='bg-gray-100 border border-gray-300 px-8 py-4 rounded-b-md'>
+                <div className='px-8 h-screen py-4 rounded-b-md'>
                     <div className='flex items-center justify-between w-full'>
-                        <label className='text-nowrap'>Case Property</label>
+                        <label className='text-nowrap text-blue-100'>Case Property</label>
                         <div className='w-3/4'>
                             <DropDown
                                 selectedValue={caseProperty}
@@ -106,10 +156,10 @@ const Page = () => {
 
                         {inputFields.map((item, index) => (
                             <div key={index} className='flex items-center gap-8'>
-                                <label className='text-nowrap' htmlFor={item.id}>{item.label}</label>
+                                <label className='text-nowrap text-blue-100' htmlFor={item.id}>{item.label}</label>
                                 <input
                                     ref={item.ref}
-                                    className='bg-gray-200 rounded-xl border border-dotted px-2 py-1'
+                                    className=' text-blue-100 rounded-xl glass-effect px-2 py-1'
                                     id={item.id}
                                     type='file'
                                 />

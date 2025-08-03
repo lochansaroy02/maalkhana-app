@@ -1,15 +1,21 @@
 "use client";
 
 import { exportToExcel } from "@/utils/exportToExcel";
+import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 
 interface ReportProps {
     data: [],
     heading: string
+    link: string
+    onImportClick?: () => void;
+    onAddClick?: () => void;
 }
 
-const Report = ({ data, heading }: ReportProps) => {
+const Report = ({ data, heading, link, onImportClick, onAddClick }: ReportProps) => {
 
+
+    const router = useRouter()
     const formatValue = (key: string, value: any) => {
         if (key === "createdAt" || key === "updatedAt") {
             return new Date(value).toLocaleString();
@@ -24,10 +30,14 @@ const Report = ({ data, heading }: ReportProps) => {
 
     const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document"]
     return (
-        <div className="p-4">
+        <div className="p-4  relative glass-effect  h-screen ">
             <div className='flex  justify-between'>
-                <h1 className="text-2xl font-bold mb-4">{heading}</h1>
-                <div>
+                <h1 className="text-2xl font-bold mb-4 text-white">{heading}</h1>
+                <div className="flex gap-4 ">
+                    <Button className="cursor-pointer" onClick={onImportClick}>Import</Button>
+                    <Button className="cursor-pointer" onClick={() => {
+                        router.push(link)
+                    }}>Add Record</Button>
                     <Button onClick={handleExport}>Export </Button>
                 </div>
             </div>
@@ -63,8 +73,10 @@ const Report = ({ data, heading }: ReportProps) => {
                     </table>
                 </div>
             ) : (
-                <p>No data available.</p>
+                <p>No data available</p>
             )}
+
+
         </div>
     )
 }
