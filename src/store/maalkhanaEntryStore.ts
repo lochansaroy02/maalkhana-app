@@ -33,7 +33,7 @@ type MaalkhanaStore = {
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
     fetchMaalkhanaEntry: (districtId: string | undefined) => Promise<void>;
-    addMaalkhanaEntry: (data: MaalkhanaEntry, districtId: string | undefined) => Promise<void>;
+    addMaalkhanaEntry: (data: MaalkhanaEntry) => Promise<void>;
 };
 
 const initialState: MaalkhanaEntry = {
@@ -92,7 +92,7 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
 
     fetchMaalkhanaEntry: async (districtId: string | undefined) => {
         try {
-            const response = await axios.get(`/api/entry/${districtId}`);
+            const response = await axios.get(`/api/entry?id=${districtId}`);
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {
@@ -104,9 +104,9 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
     },
 
 
-    addMaalkhanaEntry: async (data: any | any[], districtId: string | undefined) => {
+    addMaalkhanaEntry: async (data: any | any[]) => {
         try {
-            const response = await axios.post(`/api/entry/${districtId}`, data, {
+            const response = await axios.post(`/api/entry`, data, {
                 headers: { "Content-Type": "application/json" },
             });
 

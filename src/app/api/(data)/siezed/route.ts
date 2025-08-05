@@ -76,9 +76,10 @@ interface Params {
     districtId: string;
 }
 
-export const GET = async (context: { params: { districtId: string } }) => {
+export async function GET(req: NextRequest) {
     try {
-        const districtId = context.params?.districtId;
+        const { searchParams } = new URL(req.url);
+        const districtId = searchParams.get("id");
 
         if (!districtId) {
             return NextResponse.json(

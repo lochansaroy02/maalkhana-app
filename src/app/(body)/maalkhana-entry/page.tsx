@@ -104,8 +104,7 @@ const Page = () => {
             districtId,
             photoUrl
         };
-        setMaalKhanaData(fullData);
-        addMaalkhanaEntry(fullData, districtId)
+        addMaalkhanaEntry(fullData)
 
     };
 

@@ -1,6 +1,6 @@
 // app/api/movement/route.ts
 import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
     try {
@@ -72,9 +72,11 @@ interface DistrictParams {
     districtId: string;
 }
 
-export async function GET(context: { params: { districtId: string } }) {
-    const districtId = context.params?.districtId;
+export async function GET(req: NextRequest) {
+
     try {
+        const { searchParams } = new URL(req.url);
+        const districtId = searchParams.get("id");
 
         const entries = await prisma.malkhanaMovement.findMany({
             where: {

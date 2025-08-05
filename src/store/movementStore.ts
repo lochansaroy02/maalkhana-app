@@ -26,7 +26,7 @@ type MovementStore = {
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
     fetchMovementEntries: (districtId: string | undefined) => Promise<void>;
-    addMovementEntry: (data: MovementEntry, districtId: string | undefined) => Promise<void>;
+    addMovementEntry: (data: MovementEntry) => Promise<void>;
 };
 
 const initialState: MovementEntry = {
@@ -76,7 +76,7 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
 
     fetchMovementEntries: async (districtId: string | undefined) => {
         try {
-            const response = await axios.get(`/api/movement/${districtId}`);
+            const response = await axios.get(`/api/movement?id=${districtId}`);
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {
@@ -86,9 +86,9 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
             console.error("Error fetching entries:", err);
         }
     },
-    addMovementEntry: async (data: any | any[], districtId: string | undefined) => {
+    addMovementEntry: async (data: any | any[]) => {
         try {
-            const response = await axios.post(`/api/movement/${districtId}`, data, {
+            const response = await axios.post(`/api/movement`, data, {
                 headers: { "Content-Type": "application/json" },
             });
 

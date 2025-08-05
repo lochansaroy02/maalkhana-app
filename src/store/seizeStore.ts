@@ -29,7 +29,7 @@ interface SeizedVehicleStore {
     loading: boolean;
     error: string | null;
     fetchVehicles: (districtId: string | undefined) => Promise<void>;
-    addVehicle: (vehicle: SeizedVehicle, districtId: string | undefined) => Promise<void>;
+    addVehicle: (vehicle: SeizedVehicle) => Promise<void>;
 }
 export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
     vehicles: [],
@@ -39,7 +39,7 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
     fetchVehicles: async (districtId: string | undefined) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`/api/siezed/${districtId}`);
+            const response = await axios.get(`/api/siezed/?id=${districtId}`);
             if (response.data.success) {
                 set({ vehicles: response.data.data, loading: false });
             } else {
@@ -51,9 +51,9 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
         }
     },
 
-    addVehicle: async (vehicle: any | any[], districtId: string | undefined) => {
+    addVehicle: async (vehicle: any | any[]) => {
         try {
-            const response = await axios.post(`/api/siezed/${districtId}`, vehicle, {
+            const response = await axios.post(`/api/siezed`, vehicle, {
                 headers: { "Content-Type": "application/json" },
             });
 

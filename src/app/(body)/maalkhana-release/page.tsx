@@ -92,7 +92,7 @@ const Page = () => {
             documentUrl,
             districtId
         };
-        addReleaseEntry(fullData, districtId);
+        addReleaseEntry(fullData);
 
         // Reset form
         setFormData({

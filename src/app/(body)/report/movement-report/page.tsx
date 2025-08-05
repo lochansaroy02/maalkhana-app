@@ -14,7 +14,7 @@ const page = () => {
     useEffect(() => {
         fetchMovementEntries(district?.id)
     }, [])
-    console.log(entries)
+
 
     const handleImportSuccess = (message: string) => {
         fetchMovementEntries(district?.id);

@@ -102,7 +102,7 @@ const Page = () => {
             isReturned,
 
         }
-        addMovementEntry(fullData, districtId)
+        addMovementEntry(fullData)
     };
 
     return (

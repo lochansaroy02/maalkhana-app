@@ -27,7 +27,7 @@ type ReleaseStore = {
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
     fetchReleaseEntries: (districtId: string | undefined) => Promise<void>;
-    addReleaseEntry: (data: ReleaseEntry, districtId: string | undefined) => Promise<void>;
+    addReleaseEntry: (data: ReleaseEntry) => Promise<void>;
 };
 
 const initialState: ReleaseEntry = {
@@ -78,7 +78,7 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
 
     fetchReleaseEntries: async (districtId: string | undefined) => {
         try {
-            const response = await axios.get(`/api/release/${districtId}`);
+            const response = await axios.get(`/api/release?id=${districtId}`);
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {
@@ -89,9 +89,9 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
         }
     },
 
-    addReleaseEntry: async (data: any | any[], districtId: string | undefined) => {
+    addReleaseEntry: async (data: any | any[]) => {
         try {
-            const response = await axios.post(`/api/release/${districtId}`, data, {
+            const response = await axios.post(`/api/release`, data, {
                 headers: { "Content-Type": "application/json" },
             });
             if (response.data.success) {

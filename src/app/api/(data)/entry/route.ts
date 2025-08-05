@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-
 export const POST = async (req: NextRequest) => {
     try {
         const body = await req.json();
@@ -78,10 +77,11 @@ export const POST = async (req: NextRequest) => {
 interface Params {
     districtId: string;
 }
-export const GET = async (context: { params: { districtId: string } }) => {
+export async function GET(req: NextRequest) {
 
     try {
-        const districtId = context.params?.districtId;
+        const { searchParams } = new URL(req.url);
+        const districtId = searchParams.get("id");
         const entries = await prisma.malkhanaEntry.findMany({
             where: {
                 districtId

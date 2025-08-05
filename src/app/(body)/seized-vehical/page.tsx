@@ -58,7 +58,7 @@ const Page = () => {
         };
 
         setvehicalData(fullVehicleData);
-        addVehicle(fullVehicleData, district?.id)
+        addVehicle(fullVehicleData)
     };
 
     const fields = [
