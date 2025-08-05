@@ -1,14 +1,27 @@
 // app/api/movement/route.ts
 import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
 
+        if (Array.isArray(body)) {
+            if (body.length === 0) {
+                return NextResponse.json({ success: false, message: "Empty array received" }, { status: 400 });
+            }
+            const result = await prisma.malkhanaRelease.createMany({
+                data: body,
+                skipDuplicates: true,
+            });
+
+            return NextResponse.json({ success: true, count: result.count });
+        }
+
         const {
             srNo,
             moveDate,
+            districtId,
             firNo,
             underSection,
             takenOutBy,
@@ -24,10 +37,11 @@ export async function POST(req: Request) {
             document,
         } = body;
 
-        const newEntry = await prisma.maalkhanaRelease.create({
+        const newEntry = await prisma.malkhanaRelease.create({
             data: {
                 srNo,
                 moveDate,
+                districtId,
                 firNo,
                 underSection,
                 takenOutBy,
@@ -55,15 +69,30 @@ export async function POST(req: Request) {
     }
 }
 
-export async function GET() {
+interface DistrictParams {
+    districtId: string;
+}
+
+export async function GET(req: NextRequest, { params }: { params: DistrictParams }) {
+
     try {
-        const entries = await prisma.maalkhanaRelease.findMany({
+        const districtId = params?.districtId;
+        if (!districtId) {
+            return NextResponse.json(
+                { success: false, error: "District ID is required" },
+                { status: 400 }
+            );
+        }
+        const entries = await prisma.malkhanaRelease.findMany({
+            where: {
+                districtId
+            },
             orderBy: { createdAt: 'desc' },
         });
 
         return NextResponse.json({ success: true, data: entries });
     } catch (error) {
-        console.error('GET /api/movement error:', error);
+        console.error('GET  error:', error);
         return NextResponse.json(
             { success: false, message: 'Failed to fetch entries', error },
             { status: 500 }

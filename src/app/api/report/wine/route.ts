@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
@@ -9,17 +8,17 @@ export const GET = async (req: NextRequest) => {
 
         const [
             // totalCash, // crate  the cash logic to count the cash in the field 
-            
+
         ] = await Promise.all([
             // prisma.seizedVehicle.count({
             //     where: { caseProperty: type }
             // }),
-         
+
         ]);
 
 
         return NextResponse.json({
-           
+
 
         });
     } catch (error) {

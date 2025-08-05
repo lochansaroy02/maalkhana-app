@@ -11,8 +11,8 @@ interface InputProps {
 
 const InputComponent = ({ label, value, className, setInput, }: InputProps) => {
     return (
-        <div className={cn("flex    gap-8 ", className)}>
-            <Label className="w-1/4   text-wrap text-blue-100 ">{label}</Label>
+        <div className={cn("flex gap-4  ", className)}>
+            <Label className="w-1/4  text-[17px] text-wrap text-blue-100 ">{label}</Label>
             <Input className=" text-blue-100 w-3/4 " value={value} onChange={setInput} required />
         </div>
     );

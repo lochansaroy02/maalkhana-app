@@ -19,7 +19,7 @@ const ReportCard = ({ data, bgColour, icon, title }: CardProps) => {
                 <div className=" flex  ">
                     <h1 className="text-4xl font-bold text-neutral-200">{
                         data ?
-                            data : "00"
+                            data : "0"
                     }</h1>
                 </div>
             </div>

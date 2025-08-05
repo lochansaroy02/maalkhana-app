@@ -27,6 +27,7 @@ export const POST = async (req: NextRequest) => {
             gdNo,
             gdDate,
             underSection,
+            districtId,
             vehicleType,
             colour,
             registrationNo,
@@ -44,6 +45,7 @@ export const POST = async (req: NextRequest) => {
                 srNo,
                 gdNo,
                 gdDate,
+                districtId,
                 underSection,
                 vehicleType,
                 colour,
@@ -69,14 +71,36 @@ export const POST = async (req: NextRequest) => {
 };
 
 // GET: Fetch all seized vehicle entries
-export const GET = async () => {
+
+interface Params {
+    districtId: string;
+}
+
+export const GET = async (req: NextRequest, { params }: { params: Params }) => {
     try {
+        const districtId = params?.districtId;
+
+        if (!districtId) {
+            return NextResponse.json(
+                { success: false, error: "District ID is required" },
+                { status: 400 }
+            );
+        }
+
         const entries = await prisma.seizedVehicle.findMany({
-            orderBy: { createdAt: "desc" }
+            where: {
+                districtId,
+            },
+            orderBy: { createdAt: "desc" },
         });
+
         return NextResponse.json({ success: true, data: entries }, { status: 200 });
     } catch (error) {
-        console.error("GET /api/siezed error:", error);
-        return NextResponse.json({ success: false, error: "Failed to fetch seized vehicle entries" }, { status: 500 });
+        console.error("GET /api/siezed/[districtId] error:", error);
+        return NextResponse.json(
+            { success: false, error: "Failed to fetch seized vehicle entries" },
+            { status: 500 }
+        );
     }
 };
+

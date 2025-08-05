@@ -2,10 +2,14 @@
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
+import { useAuthStore } from '@/store/authStore';
 import { useSeizedVehicleStore } from '@/store/seizeStore';
 import { useState } from 'react';
 
 const Page = () => {
+
+
+    const { district } = useAuthStore();
     const [vehicalData, setvehicalData] = useState<any>(null);
     const { addVehicle } = useSeizedVehicleStore();
     const [formData, setFormData] = useState({
@@ -45,9 +49,11 @@ const Page = () => {
 
 
     const handleSave = () => {
+        const districtId = district?.id
         const fullVehicleData = {
             ...formData,
             caseProperty,
+            districtId,
             status
         };
 
@@ -79,9 +85,8 @@ const Page = () => {
                 </div>
                 <div className=' text px-8 py-4 h-screen rounded-b-md'>
                     <div className='flex items-center  justify-between  w-full'>
-                        <label className='text-nowrap  text-blue-100'>Case Property</label>
                         <div className=' w-3/4   '>
-                            <DropDown selectedValue={caseProperty} options={caseOptions} handleSelect={setCaseProperty} />
+                            <DropDown label='Case Property' selectedValue={caseProperty} options={caseOptions} handleSelect={setCaseProperty} />
                         </div>
                     </div>
                     <div className=' mt-2 grid grid-cols-2 gap-2 '>
@@ -89,8 +94,7 @@ const Page = () => {
                             <div className=''>
                                 {field.name === "status" ?
                                     <div className='flex  items-center gap-26 w-full'>
-                                        <label className='text-nowrap text-blue-100'>Status</label>
-                                        <DropDown selectedValue={status} options={statusOptions} handleSelect={setStatus} />
+                                        <DropDown selectedValue={status} options={statusOptions} label='Status' handleSelect={setStatus} />
                                     </div>
                                     : < InputComponent
                                         className=''
@@ -114,7 +118,7 @@ const Page = () => {
                                             console.log(`${item} clicked`);
                                         }
                                     }}
-                                    className='bg-white-300 border border-gray-200 text-gray-800' key={index}>{item}</Button>
+                                    className='bg-blue text-blue-100 cursor-pointer' key={index}>{item}</Button>
                             ))
                         }
                     </div>

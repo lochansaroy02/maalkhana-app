@@ -1,11 +1,31 @@
 "use client";
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from "@/components/ui/checkbox";
+import DatePicker from '@/components/ui/datePicker';
 import DropDown from '@/components/ui/DropDown';
+import { useAuthStore } from '@/store/authStore';
 import { useMovementStore } from '@/store/movementStore';
 import { useRef, useState } from 'react';
-
 const Page = () => {
+
+
+    const { district } = useAuthStore()
+
+    const [isReturned, setIsReturned] = useState<boolean>(false);
+    const [returnBackFrom, setReturnBackFrom] = useState<string>('')
+    const [dateFields, setDateFields] = useState<{
+        moveDate?: Date;
+        returnDate?: Date;
+
+
+    }>({
+        moveDate: new Date(),
+        returnDate: new Date()
+    });
+
+
+
 
     const { addMovementEntry } = useMovementStore();
     const [formData, setFormData] = useState({
@@ -17,23 +37,36 @@ const Page = () => {
         takenOutBy: '',
         moveTrackingNo: '',
         movePurpose: '',
+        receviedBy: '',
     });
 
     const [caseProperty, setCaseProperty] = useState('');
     const photoRef = useRef<HTMLInputElement>(null);
     const documentRef = useRef<HTMLInputElement>(null);
 
+
+
     const statusOptions = ['Destroy', 'Nilami', 'Pending', 'Other', 'On Court'];
     const caseOptions = [
         "Cash Property", "Kukri", "FSL", "Unclaimed", "Other Entry", "Cash Entry",
         "Wine", "MV Act", "ARTO", "BNS / IPC", "Excise Vehicle", "Unclaimed Vehicle", "Seizure Entry"
     ];
+    const returnBackOptions = ["Court", "FSL", "Other"]
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
+    };
+
+
+    const handleDateChange = (fieldName: string, date: Date | undefined) => {
+        setDateFields(prev => ({
+            ...prev,
+            [fieldName]: date,
+        }));
+        handleInputChange(fieldName, date?.toISOString() ?? "");
     };
 
     const fields = [
@@ -45,6 +78,9 @@ const Page = () => {
         { name: 'moveTrackingNo', label: 'Move Tracking No' },
         { name: 'movePurpose', label: 'Move Purpose' },
         { name: 'name', label: 'Name' },
+        { name: 'receviedBy', label: 'Recevied By' },
+        { name: 'reteurnDate', label: 'Return Date' },
+
     ];
 
     const inputFields = [
@@ -55,13 +91,18 @@ const Page = () => {
     const handleSave = () => {
         const photoFile = photoRef.current?.files?.[0];
         const documentFile = documentRef.current?.files?.[0];
-
-
+        const districtId = district?.id
         const fullData = {
             ...formData,
+            returnBackFrom,
+            returnDate: dateFields.returnDate?.toISOString() ?? '',
+            moveDate: dateFields.moveDate?.toISOString() ?? '',
             caseProperty,
+            districtId,
+            isReturned,
+
         }
-        addMovementEntry(fullData)
+        addMovementEntry(fullData, districtId)
     };
 
     return (
@@ -71,28 +112,52 @@ const Page = () => {
                     <h1 className='text-2xl uppercase text-cream font-semibold'>Maalkhana Movement</h1>
                 </div>
                 <div className=' px-8 py-4  h-screen rounded-b-md'>
-                    <div className='flex items-center justify-between w-full'>
-                        <label className='text-nowrap text-blue-100'>Case Property</label>
-                        <div className='w-3/4'>
-                            <DropDown
-                                selectedValue={caseProperty}
-                                options={caseOptions}
-                                handleSelect={setCaseProperty}
+                    <div className=' grid grid-cols-2 gap-12 '>
+                        <div className='flex items-center   gap-18 '>
+
+                            <div className='w-3/4'>
+                                <DropDown
+                                    label='Case Property'
+                                    selectedValue={caseProperty}
+                                    options={caseOptions}
+                                    handleSelect={setCaseProperty}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                checked={isReturned}
+                                onCheckedChange={(checked) => setIsReturned(!!checked)}
                             />
+                            <label className='text-blue-100' htmlFor="isReturned">Returned</label>
                         </div>
                     </div>
 
                     <div className='mt-2 grid grid-cols-2 gap-2'>
                         {fields.map((field) => (
                             <div key={field.name}>
-                                <InputComponent
-                                    label={field.label}
-                                    value={formData[field.name as keyof typeof formData]}
-                                    setInput={(e) => handleInputChange(field.name, e.target.value)}
-                                />
+                                {field.name.includes("Date") ? <div>
+                                    <DatePicker
+                                        label={field.label}
+                                        date={dateFields[field.name as keyof typeof dateFields]}
+                                        setDate={(date) => handleDateChange(field.name, date)} />
+                                </div> :
+                                    <InputComponent label={field.label} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name, e.target.value)} />
+                                }
                             </div>
                         ))}
+                        <div className='flex items-center   gap-18 '>
 
+                            <label className='text-nowrap text-blue-100'></label>
+                            <div className='w-3/4'>
+                                <DropDown
+                                    label='Return Back From'
+                                    selectedValue={returnBackFrom}
+                                    options={returnBackOptions}
+                                    handleSelect={setReturnBackFrom}
+                                />
+                            </div>
+                        </div>
                         {inputFields.map((item, index) => (
                             <div key={index} className='flex items-center justify-between'>
                                 <label className='text-nowrap text-blue-100' htmlFor={item.id}>{item.label}</label>

@@ -8,7 +8,7 @@ const Sidebar = () => {
 
     const data = [
         {
-            name: "Dashboard", link: "/",
+            name: "Dashboard", link: "/dashboard",
         },
         {
             name: "Malkhana Entry", link: "/maalkhana-entry",
@@ -26,7 +26,10 @@ const Sidebar = () => {
             name: "Report", link: "/report/siezed-report",
         },
         {
-            name: "users", link: "/users",
+            name: "Barcode", link: "/barcode",
+        },
+        {
+            name: "Users", link: "/users",
         },
 
     ]
@@ -37,7 +40,7 @@ const Sidebar = () => {
                 <div className='flex justify-center '>
                     <Logo width={100} height={100} />
                 </div>
-                <div className='gap-4  flex  flex-col '>
+                <div className='gap-2  flex  flex-col '>
                     {
                         data.map((item: any, index: number) => {
                             const isActive =
@@ -49,8 +52,9 @@ const Sidebar = () => {
                             }} className={` ${isActive ? "bg-maroon" : "glass-effect "}
                             cursor-pointer py-2 px-4 
                              transition-all ease-in-out 
-                               rounded-lg  `}>
-                                <h1 className='text-base text-blue-100 '>{item.name}</h1>
+                               rounded-lg 
+                                `}>
+                                <h1 className='text-sm text-blue-100 '>{item.name}</h1>
                             </div>
                         }
                         )

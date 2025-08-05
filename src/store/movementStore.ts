@@ -5,12 +5,18 @@ type MovementEntry = {
     srNo: string;
     name: string;
     moveDate: string;
+    districtId: string | undefined,
+    returnDate: string,
+    returnBackFrom: string
     firNo: string;
     underSection: string;
     takenOutBy: string;
     moveTrackingNo: string;
     movePurpose: string;
     caseProperty: string;
+    createdAt?: string;
+    updatedAt?: string;
+
 };
 
 type MovementStore = {
@@ -19,20 +25,25 @@ type MovementStore = {
     setField: (field: keyof MovementEntry, value: string) => void;
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
-    fetchMovementEntries: () => Promise<void>;
-    addMovementEntry: (data: MovementEntry) => Promise<void>;
+    fetchMovementEntries: (districtId: string | undefined) => Promise<void>;
+    addMovementEntry: (data: MovementEntry, districtId: string | undefined) => Promise<void>;
 };
 
 const initialState: MovementEntry = {
     srNo: '',
     name: '',
     moveDate: '',
+    returnDate: '',
+    districtId: '',
+    returnBackFrom: '',
     firNo: '',
     underSection: '',
     takenOutBy: '',
     moveTrackingNo: '',
     movePurpose: '',
     caseProperty: '',
+    createdAt: '',
+    updatedAt: ''
 };
 
 export const useMovementStore = create<MovementStore>((set, get) => ({
@@ -63,9 +74,9 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
         }
     },
 
-    fetchMovementEntries: async () => {
+    fetchMovementEntries: async (districtId: string | undefined) => {
         try {
-            const response = await axios.get('/api/movement');
+            const response = await axios.get(`/api/movement/${districtId}`);
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {
@@ -75,20 +86,26 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
             console.error("Error fetching entries:", err);
         }
     },
-
-    addMovementEntry: async (data: MovementEntry) => {
+    addMovementEntry: async (data: any | any[], districtId: string | undefined) => {
         try {
-            const response = await axios.post("/api/movement", data, {
+            const response = await axios.post(`/api/movement/${districtId}`, data, {
                 headers: { "Content-Type": "application/json" },
             });
 
+
             if (response.data.success) {
-                set(state => ({
-                    entries: [...state.entries, response.data.data]
-                }));
-                console.log("Added Entry:", response.data.data);
+                if (Array.isArray(data)) {
+                    set((state) => ({
+                        entries: [...state.entries, ...data]
+                    }))
+                } else {
+                    console.log(response.data.data)
+                    set((state) => ({
+                        entries: [...state.entries, response.data.data]
+                    }))
+                }
             } else {
-                console.error("POST /api/movement error: Failed to create entry", response.data.error);
+                console.error("❌ POST /api/siezed error: Failed to create vehicle");
             }
         } catch (error: any) {
             console.error("POST /api/movement error:", error.message || error);

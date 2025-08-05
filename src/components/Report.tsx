@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 
 interface ReportProps {
-    data: [],
+    data: any[],
     heading: string
     link: string
     onImportClick?: () => void;
@@ -20,6 +20,9 @@ const Report = ({ data, heading, link, onImportClick, onAddClick }: ReportProps)
         if (key === "createdAt" || key === "updatedAt") {
             return new Date(value).toLocaleString();
         }
+        if (key === "IsReturned") {
+            return value || "No"
+        }
         return value || "-";
     };
 
@@ -28,7 +31,7 @@ const Report = ({ data, heading, link, onImportClick, onAddClick }: ReportProps)
     }
 
 
-    const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document"]
+    const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "districtId"]
     return (
         <div className="p-4  relative glass-effect  h-screen ">
             <div className='flex  justify-between'>
@@ -66,6 +69,7 @@ const Report = ({ data, heading, link, onImportClick, onAddClick }: ReportProps)
                                             <td key={key} className="border px-2 py-1">
                                                 {formatValue(key, value)}
                                             </td>
+
                                         ))}
                                 </tr>
                             ))}
@@ -73,7 +77,9 @@ const Report = ({ data, heading, link, onImportClick, onAddClick }: ReportProps)
                     </table>
                 </div>
             ) : (
-                <p>No data available</p>
+                <div className="h-3/4  flex mt-24  justify-center  w-full">
+                    <p className="text-blue-100 text-xl">No data available</p>
+                </div>
             )}
 
 

@@ -5,6 +5,7 @@ type ReleaseEntry = {
     srNo: string;
     name: string;
     moveDate: string;
+    districtId: string | undefined,
     firNo: string;
     underSection: string;
     takenOutBy: string;
@@ -25,14 +26,15 @@ type ReleaseStore = {
     setField: (field: keyof ReleaseEntry, value: string) => void;
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
-    fetchReleaseEntries: () => Promise<void>;
-    addReleaseEntry: (data: ReleaseEntry) => Promise<void>;
+    fetchReleaseEntries: (districtId: string | undefined) => Promise<void>;
+    addReleaseEntry: (data: ReleaseEntry, districtId: string | undefined) => Promise<void>;
 };
 
 const initialState: ReleaseEntry = {
     srNo: '',
     name: '',
     moveDate: '',
+    districtId: '',
     firNo: '',
     underSection: '',
     takenOutBy: '',
@@ -74,9 +76,9 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
         }
     },
 
-    fetchReleaseEntries: async () => {
+    fetchReleaseEntries: async (districtId: string | undefined) => {
         try {
-            const response = await axios.get('/api/release');
+            const response = await axios.get(`/api/release/${districtId}`);
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {
@@ -87,20 +89,21 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
         }
     },
 
-    addReleaseEntry: async (data: ReleaseEntry) => {
+    addReleaseEntry: async (data: any | any[], districtId: string | undefined) => {
         try {
-            const response = await axios.post("/api/release", data, {
+            const response = await axios.post(`/api/release/${districtId}`, data, {
                 headers: { "Content-Type": "application/json" },
             });
-
             if (response.data.success) {
-                set(state => ({
-                    entries: [...state.entries, response.data.data]
-                }));
-                console.log("Added Entry:", response.data.data);
+                if (Array.isArray(data)) {
+                    console.log(`🚀 Bulk insert successful: ${response.data.count} vehicles added.`);
+                } else {
+                    console.log("🚀 Single insert successful:", response.data.data);
+                }
             } else {
-                console.error("POST /api/movement error: Failed to create entry", response.data.error);
+                console.error("❌ POST /api/siezed error: Failed to create vehicle");
             }
+
         } catch (error: any) {
             console.error("POST /api/movement error:", error.message || error);
         }

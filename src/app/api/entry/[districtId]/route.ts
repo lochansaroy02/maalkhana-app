@@ -9,7 +9,7 @@ export const POST = async (req: NextRequest) => {
             if (body.length === 0) {
                 return NextResponse.json({ success: false, message: "Empty array received" }, { status: 400 });
             }
-            const result = await prisma.maalkhanaEntry.createMany({
+            const result = await prisma.malkhanaEntry.createMany({
                 data: body,
                 skipDuplicates: true,
             });
@@ -18,9 +18,12 @@ export const POST = async (req: NextRequest) => {
         }
 
         const {
+            districtId,
             srNo,
             gdNo,
             wine,
+            wineType,
+            policeStation,
             gdDate,
             underSection,
             Year,
@@ -37,11 +40,14 @@ export const POST = async (req: NextRequest) => {
             courtName
         } = body;
 
-        const newEntry = await prisma.maalkhanaEntry.create({
+        const newEntry = await prisma.malkhanaEntry.create({
             data: {
+                districtId,
                 srNo,
                 gdNo,
                 wine,
+                wineType,
+                policeStation,
                 gdDate,
                 underSection,
                 Year,
@@ -66,11 +72,20 @@ export const POST = async (req: NextRequest) => {
     }
 };
 
-export const GET = async () => {
+
+interface Params {
+    districtId: string;
+}
+export const GET = async (req: NextRequest, { params }: { params: Params }) => {
+
     try {
-        const entries = await prisma.maalkhanaEntry.findMany({
-            orderBy: { createdAt: "desc" }
-        });
+        const districtId = params?.districtId;
+        const entries = await prisma.malkhanaEntry.findMany({
+            where: {
+                districtId
+            }
+        })
+
         return NextResponse.json({ success: true, data: entries }, { status: 200 });
     } catch (error) {
         console.error("GET /api/siezed error:", error);

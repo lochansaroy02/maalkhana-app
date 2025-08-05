@@ -6,25 +6,25 @@ export const GET = async () => {
     try {
 
 
-        const totalWine = await prisma.maalkhanaEntry.aggregate({
+        const totalWine = await prisma.malkhanaEntry.aggregate({
             _sum: {
                 wine: true,
             },
         });
         const [entry, movement, release, siezed, wineCount, destroy, nilami] = await Promise.all([
-            prisma.maalkhanaEntry.count(),
-            prisma.maalkhanaMovement.count(),
-            prisma.maalkhanaRelease.count(),
+            prisma.malkhanaEntry.count(),
+            prisma.malkhanaMovement.count(),
+            prisma.malkhanaRelease.count(),
             prisma.seizedVehicle.count(),
 
 
-            prisma.maalkhanaEntry.count({
+            prisma.malkhanaEntry.count({
                 where: { entryType: "Wine" }
             }),
-            prisma.maalkhanaEntry.count({
+            prisma.malkhanaEntry.count({
                 where: { status: "Destroy" }
             }),
-            prisma.maalkhanaEntry.count({
+            prisma.malkhanaEntry.count({
                 where: { status: "Nilami" }
             })
 

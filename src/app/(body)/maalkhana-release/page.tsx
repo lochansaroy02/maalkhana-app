@@ -2,12 +2,15 @@
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
+import { useAuthStore } from '@/store/authStore';
 import { useReleaseStore } from '@/store/releaseStore';
 import { useRef, useState } from 'react';
 
 const Page = () => {
     const { addReleaseEntry, resetForm } = useReleaseStore()
 
+
+    const { district } = useAuthStore()
     const [formData, setFormData] = useState({
         srNo: '',
         name: '',
@@ -96,14 +99,15 @@ const Page = () => {
         }
 
 
+        const districtId = district?.id
         const fullData = {
             ...formData,
             caseProperty,
             photoUrl,
             documentUrl,
+            districtId
         };
-
-        addReleaseEntry(fullData);
+        addReleaseEntry(fullData, districtId);
 
         // Reset form
         setFormData({
@@ -133,9 +137,9 @@ const Page = () => {
                 </div>
                 <div className='px-8 h-screen py-4 rounded-b-md'>
                     <div className='flex items-center justify-between w-full'>
-                        <label className='text-nowrap text-blue-100'>Case Property</label>
                         <div className='w-3/4'>
                             <DropDown
+                                label='Case Property'
                                 selectedValue={caseProperty}
                                 options={caseOptions}
                                 handleSelect={setCaseProperty}
@@ -153,7 +157,6 @@ const Page = () => {
                                 />
                             </div>
                         ))}
-
                         {inputFields.map((item, index) => (
                             <div key={index} className='flex items-center gap-8'>
                                 <label className='text-nowrap text-blue-100' htmlFor={item.id}>{item.label}</label>

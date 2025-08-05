@@ -43,21 +43,34 @@ export const expectedSchemas = {
         "updatedAt"
     ],
     movement: [
+        "id",
         "srNo",
         "moveDate",
-        "takenOutBy",
-        "purpose",
-        "expectedReturnDate",
-        "station",
-        "caseProperty"
-    ],
-    release: [
-        "srNo",
-        "name",
         "firNo",
         "underSection",
-        "caseProperty",
-        "releaseDate",
-        "releasedTo"
+        "takenOutBy",
+        "moveTrackingNo",
+        "movePurpose",
+        "name",
+        "createdAt",
+        "updatedAt"
+    ],
+    release: [
+        "id",
+        "srNo",
+        "moveDate",
+        "firNo",
+        "underSection",
+        "takenOutBy",
+        "moveTrackingNo",
+        "movePurpose",
+        "name",
+        "recevierName",
+        "fathersName",
+        "address",
+        "mobile",
+        "releaseItemName",
+        "createdAt",
+        "updatedAt"
     ]
 };

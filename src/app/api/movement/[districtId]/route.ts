@@ -6,9 +6,23 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
+
+        if (Array.isArray(body)) {
+            if (body.length === 0) {
+                return NextResponse.json({ success: false, message: "Empty array received" }, { status: 400 });
+            }
+
+            const result = await prisma.seizedVehicle.createMany({
+                data: body,
+                skipDuplicates: true,
+            });
+
+            return NextResponse.json({ success: true, count: result.count });
+        }
         const {
             srNo,
             moveDate,
+            districtId,
             firNo,
             underSection,
             takenOutBy,
@@ -17,12 +31,17 @@ export async function POST(req: Request) {
             name,
             photo,
             document,
+            isReturned,
+            receviedBy,
+            returnBackFrom,
+            returnDate,
         } = body;
 
-        const newEntry = await prisma.maalkhanaMovement.create({
+        const newEntry = await prisma.malkhanaMovement.create({
             data: {
                 srNo,
                 moveDate,
+                districtId,
                 firNo,
                 underSection,
                 takenOutBy,
@@ -31,6 +50,10 @@ export async function POST(req: Request) {
                 name,
                 photo,
                 document,
+                isReturned,
+                receviedBy,
+                returnBackFrom,
+                returnDate,
             },
 
         });
@@ -45,11 +68,20 @@ export async function POST(req: Request) {
     }
 }
 
-export async function GET() {
+interface DistrictParams {
+    districtId: string;
+}
+
+export async function GET({ params }: { params: DistrictParams }) {
+    const districtId = params?.districtId;
     try {
-        const entries = await prisma.maalkhanaMovement.findMany({
+
+        const entries = await prisma.malkhanaMovement.findMany({
+            where: {
+                districtId
+            },
             orderBy: { createdAt: 'desc' },
-        });
+        })
 
         return NextResponse.json({ success: true, data: entries });
     } catch (error) {

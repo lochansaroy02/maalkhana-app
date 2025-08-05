@@ -12,11 +12,10 @@ interface UploadModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: (message: string) => void;
-    apiEndpoint: string;
-    addEntry: (data: any) => Promise<void>
+    addEntry: (data: any, districtId: string | undefined) => Promise<void>
 }
 
-const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, apiEndpoint, addEntry }: UploadModalProps) => {
+const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: UploadModalProps) => {
 
 
     const [error, setError] = useState("");

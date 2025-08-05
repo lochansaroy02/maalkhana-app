@@ -2,18 +2,20 @@
 
 import Report from '@/components/Report';
 import UploadModal from '@/components/UploadModal';
+import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/maalkhanaEntryStore';
 import { useEffect, useState } from 'react';
 
 const page = () => {
+    const { district } = useAuthStore()
     const [isModalOpen, setIsModalOpen,] = useState(false);
     const { fetchMaalkhanaEntry, entries, addMaalkhanaEntry } = useMaalkhanaStore();
     useEffect(() => {
-        fetchMaalkhanaEntry()
+        fetchMaalkhanaEntry(district?.id)
     }, [])
 
     const handleImportSuccess = (message: string) => {
-        fetchMaalkhanaEntry();
+        fetchMaalkhanaEntry(district?.id);
     };
 
     return (
@@ -28,7 +30,6 @@ const page = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 schemaType="entry"
-                apiEndpoint="/api/seized"
                 onSuccess={handleImportSuccess}
                 addEntry={addMaalkhanaEntry}
             />

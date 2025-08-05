@@ -6,10 +6,12 @@ type MaalkhanaEntry = {
     srNo: string;
     gdNo: string;
     wine: number;
+    wineType: string,
     gdDate: string;
     underSection: string;
     Year: string;
     IOName: string;
+    policeStation: string
     vadiName: string;
     HM: string;
     accused: string;
@@ -20,6 +22,7 @@ type MaalkhanaEntry = {
     boxNo: string;
     courtNo: string;
     courtName: string;
+    districtId: string | undefined
 };
 
 type MaalkhanaStore = {
@@ -28,8 +31,8 @@ type MaalkhanaStore = {
     setField: (field: keyof MaalkhanaEntry, value: string) => void;
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
-    fetchMaalkhanaEntry: () => Promise<void>;
-    addMaalkhanaEntry: (data: MaalkhanaEntry) => Promise<void>;
+    fetchMaalkhanaEntry: (districtId: string | undefined) => Promise<void>;
+    addMaalkhanaEntry: (data: MaalkhanaEntry, districtId: string | undefined) => Promise<void>;
 };
 
 const initialState: MaalkhanaEntry = {
@@ -37,8 +40,10 @@ const initialState: MaalkhanaEntry = {
     gdNo: '',
     gdDate: '',
     wine: 0,
+    wineType: '',
     underSection: '',
     Year: '',
+    policeStation: '',
     IOName: '',
     vadiName: '',
     HM: '',
@@ -49,7 +54,8 @@ const initialState: MaalkhanaEntry = {
     place: '',
     boxNo: '',
     courtNo: '',
-    courtName: ''
+    courtName: '',
+    districtId: ""
 };
 
 export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
@@ -82,9 +88,9 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
         }
     },
 
-    fetchMaalkhanaEntry: async () => {
+    fetchMaalkhanaEntry: async (districtId: string | undefined) => {
         try {
-            const response = await axios.get('/api/maalEntry');
+            const response = await axios.get(`/api/entry/${districtId}`);
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {
@@ -96,27 +102,18 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
     },
 
 
-    addMaalkhanaEntry: async (data: any | any[]) => {
+    addMaalkhanaEntry: async (data: any | any[], districtId: string | undefined) => {
         try {
-            const response = await axios.post("/api/maalEntry", data, {
+            const response = await axios.post(`/api/entry/${districtId}`, data, {
                 headers: { "Content-Type": "application/json" },
             });
 
 
-            // if (response.data.success) {
-            //     const newEntry = response.data.data;
-            //     set(state => ({
-            //         entries: [...state.entries, newEntry],
-            //     }));
-            //     console.log(response.data.data)
-            // } else {
-            //     console.error("POST /api/siezed error: Failed to create entry", response.data.error);
-            // }
 
 
             if (response.data.success) {
                 if (Array.isArray(data)) {
-                    console.log(`🚀 Bulk insert successful: ${response.data.count} vehicles added.`);
+                    console.log(`🚀 Bulk insert successful: ${response.data.count} .`);
                 } else {
                     console.log("🚀 Single insert successful:", response.data.data);
                 }
@@ -124,7 +121,7 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
                 console.error("❌ POST /api/siezed error: Failed to create vehicle");
             }
         } catch (error: any) {
-            console.error("POST /api/siezed error:", error.message || error);
+            console.error(" error:", error.message || error);
         }
     }
 

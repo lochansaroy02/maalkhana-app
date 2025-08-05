@@ -8,8 +8,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model District {
+  id           String @id @default(uuid())
+  name         String
+  email        String @unique
+  passwordHash String // Store hashed password (never plain text)
+
+  // Relations
+  entries   MalkhanaEntry[]
+  vehicles  SeizedVehicle[]
+  releases  MalkhanaRelease[]
+  movements MalkhanaMovement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model SeizedVehicle {
   id             String @id @default(cuid())
+  districtId     String
   srNo           String
   gdNo           String
   gdDate         String
@@ -27,33 +44,38 @@ model SeizedVehicle {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  District  District @relation(fields: [districtId], references: [id])
 }
 
-model MaalkhanaEntry {
+model MalkhanaEntry {
   id           String @id @default(uuid())
-  wine Int?
+  wine         Int?
+  wineType     String
   srNo         String
   gdNo         String
   gdDate       String
   underSection String
 
-  Year      String
-  IOName    String
-  vadiName  String
-  HM        String
-  accused   String
-  firNo     String?
-  status    String
-  entryType String
-  place     String
-  boxNo     String
-  courtNo   String
-  courtName String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  Year          String
+  policeStation String
+  IOName        String
+  vadiName      String
+  HM            String
+  accused       String
+  firNo         String?
+  status        String
+  entryType     String
+  place         String
+  boxNo         String
+  courtNo       String
+  courtName     String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  District      District? @relation(fields: [districtId], references: [id])
+  districtId    String?
 }
 
-model MaalkhanaMovement {
+model MalkhanaMovement {
   id             String  @id @default(cuid())
   srNo           String
   moveDate       String
@@ -66,11 +88,18 @@ model MaalkhanaMovement {
   photo          String?
   document       String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isReturned     Boolean  @default(false)
+  receviedBy     String
+  returnBackFrom String
+  returnDate     DateTime
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  District   District? @relation(fields: [districtId], references: [id])
+  districtId String?
 }
 
-model MaalkhanaRelease {
+model MalkhanaRelease {
   id              String @id @default(cuid())
   srNo            String
   moveDate        String
@@ -89,8 +118,10 @@ model MaalkhanaRelease {
   photo    String?
   document String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  District   District? @relation(fields: [districtId], references: [id])
+  districtId String?
 }
 
 model Report {

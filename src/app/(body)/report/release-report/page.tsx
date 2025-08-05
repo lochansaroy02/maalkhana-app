@@ -2,19 +2,21 @@
 
 import Report from '@/components/Report';
 import UploadModal from '@/components/UploadModal';
+import { useAuthStore } from '@/store/authStore';
 import { useReleaseStore } from '@/store/releaseStore';
 import { useEffect, useState } from 'react';
 
 const page = () => {
-
+    const { district } = useAuthStore()
     const [isModalOpen, setIsModalOpen,] = useState(false);
     const { fetchReleaseEntries, entries, addReleaseEntry } = useReleaseStore()
     useEffect(() => {
-        fetchReleaseEntries()
+        fetchReleaseEntries(district?.id)
     }, [])
 
+
     const handleImportSuccess = (message: string) => {
-        fetchReleaseEntries();
+        fetchReleaseEntries(district?.id);
     };
 
     return (
@@ -28,8 +30,7 @@ const page = () => {
             <UploadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                schemaType="entry"
-                apiEndpoint="/api/seized"
+                schemaType="release"
                 onSuccess={handleImportSuccess}
                 addEntry={addReleaseEntry}
             />
