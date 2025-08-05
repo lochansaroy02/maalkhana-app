@@ -5,6 +5,7 @@ import { create } from 'zustand';
 type MaalkhanaEntry = {
     srNo: string;
     gdNo: string;
+    photoUrl: string,
     wine: number;
     wineType: string,
     gdDate: string;
@@ -39,6 +40,7 @@ const initialState: MaalkhanaEntry = {
     srNo: '',
     gdNo: '',
     gdDate: '',
+    photoUrl: '',
     wine: 0,
     wineType: '',
     underSection: '',

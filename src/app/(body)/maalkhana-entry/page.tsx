@@ -6,7 +6,8 @@ import DropDown from '@/components/ui/DropDown';
 import { Input } from '@/components/ui/input';
 import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/maalkhanaEntryStore';
-import { useState } from 'react';
+import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
+import { useRef, useState } from 'react';
 
 const Page = () => {
 
@@ -79,8 +80,16 @@ const Page = () => {
         }));
     };
 
+    const photoRef = useRef<HTMLInputElement>(null)
 
-    const handleSave = () => {
+    const handleSave = async () => {
+
+        const photoFile = photoRef.current?.files?.[0];
+        let photoUrl = ""
+
+        if (photoFile) {
+            photoUrl = await uploadToCloudinary(photoFile);
+        }
         const districtId = district?.id
         const fullData = {
             ...formData,
@@ -92,7 +101,8 @@ const Page = () => {
             courtNo,
             courtName,
             wineType,
-            districtId
+            districtId,
+            photoUrl
         };
         setMaalKhanaData(fullData);
         addMaalkhanaEntry(fullData, districtId)
@@ -180,8 +190,17 @@ const Page = () => {
                         <InputComponent label="Court No" value={courtNo} setInput={(e) => setCourtNo(e.target.value)} />
                         <InputComponent label="Court Name" value={courtName} setInput={(e) => setCourtName(e.target.value)} />
                     </div>
-                </div>
 
+                </div>
+                <div className='flex items-center mt-4 gap-8'>
+                    <label className='text-nowrap text-blue-100' htmlFor="photo">Upload Photo</label>
+                    <input
+                        ref={photoRef}
+                        className=' text-blue-100 rounded-xl glass-effect px-2 py-1'
+                        id="photo"
+                        type='file'
+                    />
+                </div>
                 {/* Action Buttons */}
                 <div className='flex w-full px-12 justify-between mt-4'>
                     {["Save", "Print", "Modify", "Delete"].map((item, index) => (

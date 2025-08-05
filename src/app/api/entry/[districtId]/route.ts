@@ -20,6 +20,7 @@ export const POST = async (req: NextRequest) => {
         const {
             districtId,
             srNo,
+            photoUrl,
             gdNo,
             wine,
             wineType,
@@ -47,6 +48,7 @@ export const POST = async (req: NextRequest) => {
                 gdNo,
                 wine,
                 wineType,
+                photoUrl,
                 policeStation,
                 gdDate,
                 underSection,
@@ -76,10 +78,10 @@ export const POST = async (req: NextRequest) => {
 interface Params {
     districtId: string;
 }
-export const GET = async (req: NextRequest, { params }: { params: Params }) => {
+export const GET = async (context: { params: { districtId: string } }) => {
 
     try {
-        const districtId = params?.districtId;
+        const districtId = context.params?.districtId;
         const entries = await prisma.malkhanaEntry.findMany({
             where: {
                 districtId

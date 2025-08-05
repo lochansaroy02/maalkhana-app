@@ -51,6 +51,7 @@ model MalkhanaEntry {
   id           String @id @default(uuid())
   wine         Int?
   wineType     String
+  photoUrl     String @default("")
   srNo         String
   gdNo         String
   gdDate       String

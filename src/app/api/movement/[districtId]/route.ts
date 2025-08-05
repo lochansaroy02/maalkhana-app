@@ -72,8 +72,8 @@ interface DistrictParams {
     districtId: string;
 }
 
-export async function GET({ params }: { params: DistrictParams }) {
-    const districtId = params?.districtId;
+export async function GET(context: { params: { districtId: string } }) {
+    const districtId = context.params?.districtId;
     try {
 
         const entries = await prisma.malkhanaMovement.findMany({
