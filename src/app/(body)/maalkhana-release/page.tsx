@@ -6,10 +6,11 @@ import { useAuthStore } from '@/store/authStore';
 import { useReleaseStore } from '@/store/releaseStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
 import { useRef, useState } from 'react';
+import toast, { LoaderIcon } from 'react-hot-toast';
 
 const Page = () => {
     const { addReleaseEntry, resetForm } = useReleaseStore()
-
+    const [isloading, setIsLoading] = useState<boolean>(false)
 
     const { district } = useAuthStore()
     const [formData, setFormData] = useState({
@@ -68,49 +69,58 @@ const Page = () => {
     ];
 
     const handleSave = async () => {
+
         const photoFile = photoRef.current?.files?.[0];
         const documentFile = documentRef.current?.files?.[0];
 
         let photoUrl = "";
         let documentUrl = "";
 
+        try {
+            setIsLoading(true);
+            if (photoFile) {
+                photoUrl = await uploadToCloudinary(photoFile);
+            }
+            if (documentFile) {
+                documentUrl = await uploadToCloudinary(documentFile);
+            }
+            const districtId = district?.id
+            const fullData = {
+                ...formData,
+                caseProperty,
+                photoUrl,
+                documentUrl,
+                districtId
+            };
+            const success = await addReleaseEntry(fullData);
+            if (success) {
+                toast.success("Data Added")
+                setFormData({
+                    srNo: '',
+                    name: '',
+                    moveDate: '',
+                    firNo: '',
+                    underSection: '207',
+                    takenOutBy: '',
+                    moveTrackingNo: '',
+                    movePurpose: '',
+                    recevierName: "",
+                    fathersName: "",
+                    address: "",
+                    mobile: "",
+                    releaseItemName: ""
+                });
+                setCaseProperty('');
+                if (photoRef.current) photoRef.current.value = '';
+                if (documentRef.current) documentRef.current.value = '';
 
+            }
+        } catch (error) {
+            console.error('Error saving vehicle:', error);
+        } finally {
+            setIsLoading(false)
 
-        if (photoFile) {
-            photoUrl = await uploadToCloudinary(photoFile);
         }
-        if (documentFile) {
-            documentUrl = await uploadToCloudinary(documentFile);
-        }
-
-
-        const districtId = district?.id
-        const fullData = {
-            ...formData,
-            caseProperty,
-            photoUrl,
-            documentUrl,
-            districtId
-        };
-        addReleaseEntry(fullData);
-
-        // Reset form
-        setFormData({
-            srNo: '',
-            name: '',
-            moveDate: '',
-            firNo: '',
-            underSection: '207',
-            takenOutBy: '',
-            moveTrackingNo: '',
-            movePurpose: '',
-            recevierName: "",
-            fathersName: "",
-            address: "",
-            mobile: "",
-            releaseItemName: ""
-        });
-        setCaseProperty('');
     };
 
 
@@ -166,9 +176,9 @@ const Page = () => {
                                         console.log(`${item} clicked`);
                                     }
                                 }}
-                                className='bg-white-300 border border-gray-200 text-gray-800'
+                                className='bg-white-300 border border-blue-200 bg-blue '
                             >
-                                {item}
+                                {isloading && item == 'Save' ? <LoaderIcon className='animate-spin' /> : item}
                             </Button>
                         ))}
                     </div>

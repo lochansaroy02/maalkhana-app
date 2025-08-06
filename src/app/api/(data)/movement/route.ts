@@ -76,11 +76,11 @@ export async function GET(req: NextRequest) {
 
     try {
         const { searchParams } = new URL(req.url);
-        const districtId = searchParams.get("id");
+        const userId = searchParams.get("id");
 
         const entries = await prisma.malkhanaMovement.findMany({
             where: {
-                districtId
+                userId
             },
             orderBy: { createdAt: 'desc' },
         })

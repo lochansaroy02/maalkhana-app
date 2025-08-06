@@ -8,7 +8,8 @@ import { useEffect } from "react";
 
 const Page = () => {
     const { fetchTotalEntries, data } = useTotalEntriesStore();
-
+    const { user } = useAuthStore()
+    console.log(user)
     useEffect(() => {
         fetchTotalEntries();
     }, []);
@@ -57,6 +58,7 @@ const Page = () => {
             bgColour: "bg-pink-500",
             value: data?.breakdown?.destroy,
         },
+
         {
             title: "Total Wine (in ltr)",
             icon: <Wine size="50px" />,
@@ -71,7 +73,6 @@ const Page = () => {
             <div className="flex justify-center py-4 border-b border-white/50 rounded-t-xl bg-maroon">
                 <h1 className="text-textColor text-2xl text-blue-100 font-bold">Dashboard</h1>
             </div>
-
             <div className="grid grid-cols-4 p-6  gap-4">
                 {reportItems.map((item, index) => (
                     <ReportCard

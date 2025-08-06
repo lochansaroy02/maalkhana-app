@@ -137,7 +137,7 @@
 }
 
 .gradient {
-  @apply bg-gradient-to-br from-blue-dark to-purple-500 via-blue
+  @apply bg-gradient-to-br from-blue-dark to-[#19438c] via-[#1f2e47]
 }
 
 @layer base {

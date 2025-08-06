@@ -23,7 +23,7 @@ const Sidebar = () => {
             name: "Seized vehical", link: "/seized-vehical",
         },
         {
-            name: "Report", link: "/report/siezed-report",
+            name: "Report", link: "/report/entry-report",
         },
         {
             name: "Barcode", link: "/barcode",
@@ -46,7 +46,6 @@ const Sidebar = () => {
                             const isActive =
                                 (item.link === '/' && path === '/') ||
                                 (item.link !== '/' && (path === item.link || path.includes(item.link)));
-
                             return <div key={index} onClick={() => {
                                 router.push(item.link)
                             }} className={` ${isActive ? "bg-maroon" : "glass-effect "}

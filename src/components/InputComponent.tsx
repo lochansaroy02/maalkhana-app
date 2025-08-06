@@ -4,16 +4,16 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 interface InputProps {
     label: string;
-    value: string | number;
+    value: string | number | undefined
     className?: string;
     setInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const InputComponent = ({ label, value, className, setInput, }: InputProps) => {
     return (
-        <div className={cn("flex gap-4  ", className)}>
-            <Label className="w-1/4  text-[17px] text-wrap text-blue-100 ">{label}</Label>
-            <Input className=" text-blue-100 w-3/4 " value={value} onChange={setInput} required />
+        <div className={cn("flex flex-col ", className)}>
+            <Label className="w-1/4  text-[17px] text-nowrap text-blue-100 ">{label}</Label>
+            <Input placeholder={`Enter ${label}`} className=" text-blue-100 placeholder:text-blue-200/50  " value={value} onChange={setInput} required />
         </div>
     );
 };

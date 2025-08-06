@@ -26,8 +26,8 @@ type ReleaseStore = {
     setField: (field: keyof ReleaseEntry, value: string) => void;
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
-    fetchReleaseEntries: (districtId: string | undefined) => Promise<void>;
-    addReleaseEntry: (data: ReleaseEntry) => Promise<void>;
+    fetchReleaseEntries: (userId: string | undefined) => Promise<void>;
+    addReleaseEntry: (data: ReleaseEntry) => Promise<boolean>;
 };
 
 const initialState: ReleaseEntry = {
@@ -76,9 +76,9 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
         }
     },
 
-    fetchReleaseEntries: async (districtId: string | undefined) => {
+    fetchReleaseEntries: async (userId: string | undefined) => {
         try {
-            const response = await axios.get(`/api/release?id=${districtId}`);
+            const response = await axios.get(`/api/release?id=${userId}`);
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {
@@ -100,12 +100,15 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
                 } else {
                     console.log("🚀 Single insert successful:", response.data.data);
                 }
+                return true;
             } else {
                 console.error("❌ POST /api/siezed error: Failed to create vehicle");
+                return false;
             }
 
         } catch (error: any) {
             console.error("POST /api/movement error:", error.message || error);
+            return false;
         }
     },
 }));

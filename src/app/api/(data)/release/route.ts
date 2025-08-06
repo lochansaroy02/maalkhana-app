@@ -77,8 +77,8 @@ export async function GET(req: NextRequest) {
 
     try {
         const { searchParams } = new URL(req.url);
-        const districtId = searchParams.get("id");
-        if (!districtId) {
+        const userId = searchParams.get("userId");
+        if (!userId) {
             return NextResponse.json(
                 { success: false, error: "District ID is required" },
                 { status: 400 }
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
         }
         const entries = await prisma.malkhanaRelease.findMany({
             where: {
-                districtId
+                userId
             },
             orderBy: { createdAt: 'desc' },
         });

@@ -23,7 +23,7 @@ type MaalkhanaEntry = {
     boxNo: string;
     courtNo: string;
     courtName: string;
-    districtId: string | undefined
+    userId: string | undefined
 };
 
 type MaalkhanaStore = {
@@ -32,8 +32,8 @@ type MaalkhanaStore = {
     setField: (field: keyof MaalkhanaEntry, value: string) => void;
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
-    fetchMaalkhanaEntry: (districtId: string | undefined) => Promise<void>;
-    addMaalkhanaEntry: (data: MaalkhanaEntry) => Promise<void>;
+    fetchMaalkhanaEntry: (userId: string | undefined) => Promise<void>;
+    addMaalkhanaEntry: (data: MaalkhanaEntry) => Promise<boolean>;
 };
 
 const initialState: MaalkhanaEntry = {
@@ -57,7 +57,7 @@ const initialState: MaalkhanaEntry = {
     boxNo: '',
     courtNo: '',
     courtName: '',
-    districtId: ""
+    userId: ""
 };
 
 export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
@@ -90,9 +90,9 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
         }
     },
 
-    fetchMaalkhanaEntry: async (districtId: string | undefined) => {
+    fetchMaalkhanaEntry: async (userId: string | undefined) => {
         try {
-            const response = await axios.get(`/api/entry?id=${districtId}`);
+            const response = await axios.get(`/api/entry?id=${userId}`);
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {
@@ -110,20 +110,20 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
                 headers: { "Content-Type": "application/json" },
             });
 
-
-
-
             if (response.data.success) {
                 if (Array.isArray(data)) {
                     console.log(`🚀 Bulk insert successful: ${response.data.count} .`);
                 } else {
                     console.log("🚀 Single insert successful:", response.data.data);
                 }
+                return true
             } else {
                 console.error("❌ POST /api/siezed error: Failed to create vehicle");
+                return false
             }
         } catch (error: any) {
             console.error(" error:", error.message || error);
+            return false
         }
     }
 

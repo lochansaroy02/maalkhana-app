@@ -4,62 +4,46 @@ import { Button } from '@/components/ui/button';
 import DatePicker from '@/components/ui/datePicker';
 import DropDown from '@/components/ui/DropDown';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/store/authStore';
+import { useFirStore } from '@/store/firStore';
 import { useMaalkhanaStore } from '@/store/maalkhanaEntryStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
 import { useRef, useState } from 'react';
+import toast, { LoaderIcon } from 'react-hot-toast';
 
 const Page = () => {
-
-
-    const { district } = useAuthStore()
+    const { user } = useAuthStore();
     const { addMaalkhanaEntry } = useMaalkhanaStore();
-    const [maalKhanaData, setMaalKhanaData] = useState<any>(null);
 
-    const [wine, setWine] = useState<number>(0)
-    const [cash, setCash] = useState<number>(0)
-    const [wineType, setWineType] = useState<string>('')
-    const [status, setStatus] = useState<string>("");
-    const [place, setPlace] = useState('');
-    const [boxNo, setBoxNo] = useState('');
-    const [courtNo, setCourtNo] = useState('');
-    const [courtName, setCourtName] = useState('');
     const [entryType, setEntryType] = useState('');
-
-    const [dateFields, setDateFields] = useState<{
-        gdDate?: Date;
-    }>({
+    const [wine, setWine] = useState<number>(0);
+    const [cash, setCash] = useState<number>(0);
+    const [wineType, setWineType] = useState<string>('');
+    const [status, setStatus] = useState<string>('');
+    const [description, setDescription] = useState('');
+    const [loading, setLoading] = useState(false)
+    const [dateFields, setDateFields] = useState<{ gdDate?: Date }>({
         gdDate: new Date(),
     });
 
-
+    // ✅ All string/number fields moved into one object
     const [formData, setFormData] = useState({
+        firNo: '',
         srNo: '',
         gdNo: '',
-        gdDate: '',
-        underSection: '207',
+        underSection: '',
         Year: '',
         policeStation: '',
         IOName: '',
         vadiName: '',
         HM: '',
         accused: '',
-        firNo: ''
+        place: '',             // ⬅️ Newly added here
+        boxNo: '',             // ⬅️ Newly added here
+        courtNo: '',           // ⬅️ Newly added here
+        courtName: '',         // ⬅️ Newly added here
     });
-
-    const fields = [
-        { name: 'firNo', label: 'FIR No' },
-        { name: 'srNo', label: 'Sr. No / Mad No.' },
-        { name: 'gdNo', label: 'GD No' },
-        { name: 'gdDate', label: 'GD Date' },
-        { name: 'Year', label: 'Year' },
-        { name: 'policeStation', label: 'Police Station Name' },
-        { name: 'IOName', label: 'IO Name' },
-        { name: 'vadiName', label: 'Vadi Name' },
-        { name: 'status', label: 'Status' },
-        { name: 'HM', label: 'HM' },
-        { name: 'accused', label: 'Accused Name' },
-    ];
 
     const entryOptions = [
         "Malkhane Entry",
@@ -68,44 +52,35 @@ const Page = () => {
         "Other Entry",
         "Cash Entry",
         "Wine/Daru",
-        "Unclaimed Entry"
+        "Unclaimed Entry",
     ];
-
     const statusOptions = ["Destroy", "Nilami", "Pending", "Other", "On Court"];
+
+    const fields = [
+        { name: 'firNo', label: 'FIR No' },
+        { name: 'srNo', label: 'Sr. No / Mad No.' },
+        { name: 'gdNo', label: 'GD No' },
+        { name: 'gdDate', label: 'GD Date', type: 'date' },
+        { name: 'Year', label: 'Year' },
+        { name: 'policeStation', label: 'Police Station Name' },
+        { name: 'IOName', label: 'IO Name' },
+        { name: 'vadiName', label: 'Vadi Name' },
+        { name: 'status', label: 'Status', type: 'dropdown', options: statusOptions },
+        { name: 'HM', label: 'HM' },
+        { name: 'accused', label: 'Accused Name' },
+        { name: 'underSection', label: 'Under Section' },
+        { name: 'description', label: 'Description', type: 'textarea' },
+        { name: 'place', label: 'Place' },               // ⬅️ Added here
+        { name: 'boxNo', label: 'Box No' },              // ⬅️ Added here
+        { name: 'courtNo', label: 'Court No' },          // ⬅️ Added here
+        { name: 'courtName', label: 'Court Name' },      // ⬅️ Added here
+    ];
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({
             ...prev,
-            [field]: field === "wine" ? Number(value) : value
+            [field]: value,
         }));
-    };
-
-    const photoRef = useRef<HTMLInputElement>(null)
-
-    const handleSave = async () => {
-
-        const photoFile = photoRef.current?.files?.[0];
-        let photoUrl = ""
-
-        if (photoFile) {
-            photoUrl = await uploadToCloudinary(photoFile);
-        }
-        const districtId = district?.id
-        const fullData = {
-            ...formData,
-            status,
-            wine,
-            entryType,
-            place,
-            boxNo,
-            courtNo,
-            courtName,
-            wineType,
-            districtId,
-            photoUrl
-        };
-        addMaalkhanaEntry(fullData)
-
     };
 
     const handleDateChange = (fieldName: string, date: Date | undefined) => {
@@ -115,112 +90,213 @@ const Page = () => {
         }));
         handleInputChange(fieldName, date?.toISOString() ?? "");
     };
-    return (
+    const photoRef = useRef<HTMLInputElement>(null);
 
-        <div className='glass-effect h-screen'>
+    const handleSave = async () => {
+
+        const photoFile = photoRef.current?.files?.[0];
+        let photoUrl = "";
+        try {
+            setLoading(true)
+            if (photoFile) {
+                photoUrl = await uploadToCloudinary(photoFile);
+            }
+
+            const userId = user?.id;
+            const fullData = {
+                ...formData,
+                status,
+                wine,
+                cash,
+                wineType,
+                entryType,
+                userId,
+                photoUrl,
+                description,
+                gdDate: dateFields.gdDate?.toISOString() ?? '',
+
+            };
+
+            const success = await addMaalkhanaEntry(fullData)
+            if (success) {
+                toast.success("Data added")
+                setFormData({
+                    accused: '', boxNo: '', courtName: "",
+                    courtNo: "", firNo: '', gdNo: '', HM: '', IOName: '', place: '', policeStation: '', srNo: '', underSection: '', vadiName: '', Year: ''
+                })
+                setDateFields({ gdDate: new Date })
+                if (photoRef.current) photoRef.current.value = '';
+            }
+        } catch (error) {
+            console.error("Save error:", error);
+        } finally {
+            setLoading(false)
+        }
+    };
+
+
+    const { fetchDataByFIR } = useFirStore();
+
+    const getByFir = async () => {
+        const data = await fetchDataByFIR("entry", formData.firNo);
+
+        if (data) {
+            setFormData({
+                firNo: data.firNo || '',
+                srNo: data.srNo || '',
+                gdNo: data.gdNo || '',
+                underSection: data.underSection || '',
+                Year: data.Year || '',
+                policeStation: data.policeStation || '',
+                IOName: data.IOName || '',
+                vadiName: data.vadiName || '',
+                HM: data.HM || '',
+                accused: data.accused || '',
+                place: data.place || '',
+                boxNo: data.boxNo || '',
+                courtNo: data.courtNo || '',
+                courtName: data.courtName || '',
+            });
+
+            setStatus(data.status || '');
+            setWine(data.wine || 0);
+            setCash(data.cash || 0);
+            setWineType(data.wineType || '');
+            setEntryType(data.entryType || '');
+            setDescription(data.description || '');
+            setDateFields({ gdDate: data.gdDate ? new Date(data.gdDate) : new Date() });
+        } else {
+            toast.error("FIR not found");
+        }
+    };
+
+
+    return (
+        <div className='glass-effect'>
             <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
                 <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Maalkhana Entry Form</h1>
             </div>
-            <div className='  px-8 py-4 rounded-b-md'>
-                <div className=' py-2   flex items-center   '>
-                    <div className='flex w-3/4  items-center gap-6  '>
-
-                        <div className={`${entryType === 'Wine/Daru' || entryType === 'Cash Entry' ? "w-full" : "w-1/2"
-                            }`}>
-                            <DropDown label='Entry type' selectedValue={entryType} options={entryOptions} handleSelect={setEntryType} />
+            <div className='px-8  py-4 rounded-b-md'>
+                <div className='py-2 flex items-center'>
+                    <div className='flex w-3/4 items-center gap-6'>
+                        <div className={`${entryType === 'Wine/Daru' || entryType === 'Cash Entry' ? "w-full" : "w-1/2"}`}>
+                            <DropDown
+                                label='Entry type'
+                                selectedValue={entryType}
+                                options={entryOptions}
+                                handleSelect={setEntryType}
+                            />
                         </div>
                     </div>
-                    <div className={` w-full ml-6 gap-6 ${entryType === 'Wine/Daru' ? "flex" : "hidden"}   items-center`}>
+
+                    <div className={`w-full ml-6 gap-6 ${entryType === 'Wine/Daru' ? "flex" : "hidden"} items-center`}>
                         <DropDown label='Wine' selectedValue={wineType} options={["Desi", "Angrezi"]} handleSelect={setWineType} />
                     </div>
-                    <div className={` w-full ml-6 gap-6 ${entryType === 'Wine/Daru' ? "flex" : "hidden"}   items-center`}>
-                        <label className='text-blue-100' htmlFor="">wine</label>
-                        <Input className='' onChange={(e) => {
-                            setWine(Number(e.target.value))
-                        }} type='number' value={wine} />
+
+                    <div className={`w-full ml-6 gap-6 ${entryType === 'Wine/Daru' ? "flex" : "hidden"} items-center`}>
+                        <label className='text-blue-100'>Wine</label>
+                        <Input type='number' value={wine} onChange={(e) => setWine(Number(e.target.value))} />
                     </div>
 
-                    <div className={`w-3/4 gap-12 ${entryType === 'Cash Entry' ? "flex" : "hidden"}   items-center`}>
-                        <label className='text-blue-100' htmlFor="">Cash</label>
-                        <Input className='ml-[70px]' onChange={(e) => {
-                            setCash(Number(e.target.value))
-                        }} type='number' value={cash} />
+                    <div className={`w-3/4 gap-12 ${entryType === 'Cash Entry' ? "flex" : "hidden"} items-center`}>
+                        <label className='text-blue-100'>Cash</label>
+                        <Input className='ml-[70px]' type='number' value={cash} onChange={(e) => setCash(Number(e.target.value))} />
                     </div>
-
                 </div>
 
-                <div className='grid grid-cols-2 gap-2'>
+                <div className='grid grid-cols-2 gap-2 '>
                     {fields.map(field => {
-                        if (field.name === "status") {
+                        if (field.name === 'firNo' && entryType === "Unclaimed Entry") return null;
+
+                        if (field.type === 'dropdown') {
                             return (
-                                <div key={field.name}>
-                                    {field.name.includes("Date") ? <div>
-                                        <DatePicker
-                                            label={field.label}
-                                            date={dateFields[field.name as keyof typeof dateFields]}
-                                            setDate={(date) => handleDateChange(field.name, date)} />
-                                    </div> :
-                                        <InputComponent label={field.label} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name, e.target.value)} />
-                                    }
+                                <DropDown
+                                    key={field.name}
+                                    label={field.label}
+                                    selectedValue={status}
+                                    options={field.options || []}
+                                    handleSelect={setStatus}
+                                />
+                            );
+                        }
+
+                        if (field.type === 'textarea') {
+                            return (
+                                <div key={field.name} className='flex flex-col gap-1 '>
+                                    <label className='text-blue-100' htmlFor={field.name}>{field.label}</label>
+                                    <Textarea
+                                        id={field.name}
+                                        value={description}
+                                        className=''
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        placeholder={`Enter ${field.label}`}
+                                    />
                                 </div>
                             );
                         }
 
-                        if (field.name === "firNo" && entryType === "Unclaimed Entry") {
-                            return null;
+                        if (field.type === 'date') {
+                            return (
+                                <DatePicker
+                                    key={field.name}
+                                    label={field.label}
+                                    date={dateFields[field.name as keyof typeof dateFields]}
+                                    setDate={(date) => handleDateChange(field.name, date)}
+                                />
+                            );
                         }
 
                         return (
-                            <InputComponent
-                                key={field.name}
-                                label={field.label}
-                                value={formData[field.name as keyof typeof formData]}
-                                setInput={(e) => handleInputChange(field.name, e.target.value)}
-                            />
+                            <div key={field.name} className=" ">
+
+                                {field.name === 'firNo' ? (
+                                    <div className='flex  items-end  justify-between  '>
+
+                                        <InputComponent
+                                            className='w-3/4 '
+                                            label={field.label}
+                                            value={formData[field.name as keyof typeof formData]}
+                                            setInput={(e) => handleInputChange(field.name, e.target.value)} />
+                                        <Button
+                                            type="button"
+                                            className="h-10 bg-blue  text-white"
+                                            onClick={getByFir}>
+                                            fetch Data
+                                        </Button>
+                                    </div>
+                                ) : <InputComponent
+                                    label={field.label}
+                                    value={formData[field.name as keyof typeof formData]}
+                                    setInput={(e) => handleInputChange(field.name, e.target.value)}
+                                />}
+                            </div>
                         );
                     })}
                 </div>
 
-                {/* Storage & Court Details */}
-                <div className='mt-2'>
-                    <div className='gap-2  grid grid-cols-2'>
-                        <InputComponent label="Place" value={place} setInput={(e) => setPlace(e.target.value)} />
-                        <InputComponent label="Box No" value={boxNo} setInput={(e) => setBoxNo(e.target.value)} />
-                        <InputComponent label="Court No" value={courtNo} setInput={(e) => setCourtNo(e.target.value)} />
-                        <InputComponent label="Court Name" value={courtName} setInput={(e) => setCourtName(e.target.value)} />
-                    </div>
-
-                </div>
                 <div className='flex items-center mt-4 gap-8'>
                     <label className='text-nowrap text-blue-100' htmlFor="photo">Upload Photo</label>
                     <input
                         ref={photoRef}
-                        className=' text-blue-100 rounded-xl glass-effect px-2 py-1'
+                        className='text-blue-100 rounded-xl glass-effect px-2 py-1'
                         id="photo"
                         type='file'
                     />
                 </div>
-                {/* Action Buttons */}
+
                 <div className='flex w-full px-12 justify-between mt-4'>
                     {["Save", "Print", "Modify", "Delete"].map((item, index) => (
                         <Button
                             key={index}
-                            onClick={() => {
-                                if (item === "Save") {
-                                    handleSave();
-                                } else {
-                                    console.log(`${item} clicked`);
-                                }
-                            }}
-                            className='bg-white-300 border border-gray-200 bg-blue-800'
+                            onClick={() => item === "Save" ? handleSave() : console.log(`${item} clicked`)}
+                            className='cursor-pointer'
                         >
-                            {item}
+                            {loading && item === "Save" ? <LoaderIcon className='animate-spin' /> : item}
                         </Button>
                     ))}
                 </div>
             </div>
         </div>
-
     );
 };
 

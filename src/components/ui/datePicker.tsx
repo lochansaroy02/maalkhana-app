@@ -44,11 +44,11 @@ const DatePicker = ({ date, setDate, label }: DateProps) => {
     const [value, setValue] = React.useState(formatDate(date))
 
     return (
-        <div className="flex gap-20">
-            <Label htmlFor="date" className=" text-wrap text-blue-100">
+        <div className="flex flex-col gap-2 ">
+            <Label htmlFor="date" className=" text-wrap text-lg text-blue-100">
                 {label}
             </Label>
-            <div className="relative  w-3/4  flex gap-2">
+            <div className="relative   flex gap-2">
                 <Input
                     id="date"
                     value={value}

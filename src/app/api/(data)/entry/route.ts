@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+
+
 export const POST = async (req: NextRequest) => {
     try {
         const body = await req.json();
@@ -17,7 +19,7 @@ export const POST = async (req: NextRequest) => {
         }
 
         const {
-            districtId,
+            userId,
             srNo,
             photoUrl,
             gdNo,
@@ -42,7 +44,7 @@ export const POST = async (req: NextRequest) => {
 
         const newEntry = await prisma.malkhanaEntry.create({
             data: {
-                districtId,
+                userId,
                 srNo,
                 gdNo,
                 wine,
@@ -74,18 +76,15 @@ export const POST = async (req: NextRequest) => {
 };
 
 
-interface Params {
-    districtId: string;
-}
 export async function GET(req: NextRequest) {
 
     try {
         const { searchParams } = new URL(req.url);
-        const districtId = searchParams.get("id");
+        const userId = searchParams.get("id");
         const entries = await prisma.malkhanaEntry.findMany({
             where: {
-                districtId
-            }
+                userId
+            }, orderBy: { createdAt: "desc" },
         })
 
         return NextResponse.json({ success: true, data: entries }, { status: 200 });

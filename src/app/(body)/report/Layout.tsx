@@ -9,9 +9,8 @@ import React from 'react';
 
 const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
     const { isOpen, setIsOpen } = useOpenStore();
-
     return (
-        <div className='relative'>
+        <div className='relative h-screen glass-effect'>
             {/* Header */}
             <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
                 <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Reports</h1>

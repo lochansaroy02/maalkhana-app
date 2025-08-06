@@ -34,7 +34,6 @@ export const POST = async (req: NextRequest) => {
                 passwordHash,
             },
         });
-        console.log(newDistrict)
         return NextResponse.json({ success: true, data: newDistrict }, { status: 201 });
     } catch (error) {
         console.error("POST /api/district error:", error);

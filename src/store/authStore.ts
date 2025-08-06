@@ -1,17 +1,19 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-interface DistrictUser {
+interface User {
     id: string;
     name: string;
     email: string;
+    role: "district" | "policeStation";
+
 }
 
 interface AuthState {
     token: string | null;
-    district: DistrictUser | null;
+    user: User | null;
     isLoggedIn: boolean;
-    login: (token: string, district: DistrictUser) => void;
+    login: (token: string, user: User) => void;
     logout: () => void;
 }
 
@@ -19,15 +21,13 @@ export const useAuthStore = create<AuthState>()(
     persist(
         (set) => ({
             token: null,
-            district: null,
+            user: null,
             isLoggedIn: false,
-
-            login: (token, district) => {
-                set({ token, district, isLoggedIn: true });
+            login: (token, user) => {
+                set({ token, user, isLoggedIn: true });
             },
-
             logout: () => {
-                set({ token: null, district: null, isLoggedIn: false });
+                set({ token: null, user: null, isLoggedIn: false });
             },
         }),
         {

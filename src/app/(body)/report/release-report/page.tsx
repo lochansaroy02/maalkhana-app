@@ -7,16 +7,16 @@ import { useReleaseStore } from '@/store/releaseStore';
 import { useEffect, useState } from 'react';
 
 const page = () => {
-    const { district } = useAuthStore()
+    const { user } = useAuthStore()
     const [isModalOpen, setIsModalOpen,] = useState(false);
     const { fetchReleaseEntries, entries, addReleaseEntry } = useReleaseStore()
     useEffect(() => {
-        fetchReleaseEntries(district?.id)
+        fetchReleaseEntries(user?.id)
     }, [])
 
 
     const handleImportSuccess = (message: string) => {
-        fetchReleaseEntries(district?.id);
+        fetchReleaseEntries(user?.id);
     };
 
     return (
@@ -32,6 +32,7 @@ const page = () => {
                 onClose={() => setIsModalOpen(false)}
                 schemaType="release"
                 onSuccess={handleImportSuccess}
+                //@ts-ignore
                 addEntry={addReleaseEntry}
             />
         </>

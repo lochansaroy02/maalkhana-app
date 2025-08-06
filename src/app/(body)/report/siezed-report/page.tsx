@@ -20,11 +20,11 @@ const Page = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
     const [data, setData] = useState<any[]>([]);
-    const { district } = useAuthStore()
+    const { user } = useAuthStore()
     const { vehicles, fetchVehicles, addVehicle } = useSeizedVehicleStore();
 
     useEffect(() => {
-        fetchVehicles(district?.id);
+        fetchVehicles(user?.id);
     }, []);
 
     useEffect(() => {
@@ -39,9 +39,9 @@ const Page = () => {
     }, [selectedCaseProperty, vehicles]);
 
     const handleImportSuccess = () => {
-        fetchVehicles(district?.id);
+        fetchVehicles(user?.id);
     };
-
+    console.log(user?.id);
     return (
         <>
             <div className="glass-effect my-4 p-4 ">
@@ -73,6 +73,7 @@ const Page = () => {
                 onClose={() => setIsModalOpen(false)}
                 schemaType="seizedVehicle"
                 onSuccess={handleImportSuccess}
+                //@ts-ignore
                 addEntry={addVehicle}
             />
         </>

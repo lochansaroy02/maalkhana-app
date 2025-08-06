@@ -11,9 +11,6 @@ const ReportHeader = () => {
     const data = [
 
         {
-            name: "Seized vehical", link: "/report/siezed-report", colour: "bg-red-500"
-        },
-        {
             name: "Malkhana Entry", link: "/report/entry-report", colour: "bg-green-500"
         },
         {
@@ -21,6 +18,9 @@ const ReportHeader = () => {
         },
         {
             name: "Malkhana Release", link: "/report/release-report", colour: "bg-amber-500"
+        },
+        {
+            name: "Seized vehical", link: "/report/siezed-report", colour: "bg-red-500"
         },
     ]
     return (

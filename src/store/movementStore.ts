@@ -5,7 +5,7 @@ type MovementEntry = {
     srNo: string;
     name: string;
     moveDate: string;
-    districtId: string | undefined,
+    userId: string | undefined,
     returnDate: string,
     returnBackFrom: string
     firNo: string;
@@ -25,8 +25,8 @@ type MovementStore = {
     setField: (field: keyof MovementEntry, value: string) => void;
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
-    fetchMovementEntries: (districtId: string | undefined) => Promise<void>;
-    addMovementEntry: (data: MovementEntry) => Promise<void>;
+    fetchMovementEntries: (userId: string | undefined) => Promise<void>;
+    addMovementEntry: (data: MovementEntry) => Promise<boolean>;
 };
 
 const initialState: MovementEntry = {
@@ -34,7 +34,7 @@ const initialState: MovementEntry = {
     name: '',
     moveDate: '',
     returnDate: '',
-    districtId: '',
+    userId: '',
     returnBackFrom: '',
     firNo: '',
     underSection: '',
@@ -74,10 +74,11 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
         }
     },
 
-    fetchMovementEntries: async (districtId: string | undefined) => {
+    fetchMovementEntries: async (userId: string | undefined) => {
         try {
-            const response = await axios.get(`/api/movement?id=${districtId}`);
+            const response = await axios.get(`/api/movement?userId=${userId}`);
             if (response.data.success) {
+                console.log(response.data.data)
                 set({ entries: response.data.data });
             } else {
                 console.error("Fetch failed:", response.data.error);
@@ -104,11 +105,13 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
                         entries: [...state.entries, response.data.data]
                     }))
                 }
+                return true
             } else {
-                console.error("❌ POST /api/siezed error: Failed to create vehicle");
+                return false
             }
         } catch (error: any) {
             console.error("POST /api/movement error:", error.message || error);
+            return false;
         }
     },
 }));

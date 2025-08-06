@@ -7,15 +7,15 @@ import { useMaalkhanaStore } from '@/store/maalkhanaEntryStore';
 import { useEffect, useState } from 'react';
 
 const page = () => {
-    const { district } = useAuthStore()
+    const { user, } = useAuthStore()
     const [isModalOpen, setIsModalOpen,] = useState(false);
     const { fetchMaalkhanaEntry, entries, addMaalkhanaEntry } = useMaalkhanaStore();
     useEffect(() => {
-        fetchMaalkhanaEntry(district?.id)
+        fetchMaalkhanaEntry(user?.id)
     }, [])
 
     const handleImportSuccess = (message: string) => {
-        fetchMaalkhanaEntry(district?.id);
+        fetchMaalkhanaEntry(user?.id);
     };
 
     return (
@@ -31,6 +31,7 @@ const page = () => {
                 onClose={() => setIsModalOpen(false)}
                 schemaType="entry"
                 onSuccess={handleImportSuccess}
+                //@ts-ignore
                 addEntry={addMaalkhanaEntry}
             />
         </>

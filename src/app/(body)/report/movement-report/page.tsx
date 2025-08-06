@@ -7,17 +7,17 @@ import { useMovementStore } from "@/store/movementStore";
 import { useEffect, useState } from "react";
 
 const page = () => {
-    const { district } = useAuthStore()
+    const { user } = useAuthStore()
     const [isModalOpen, setIsModalOpen,] = useState(false);
     const { fetchMovementEntries, entries, addMovementEntry } = useMovementStore()
 
     useEffect(() => {
-        fetchMovementEntries(district?.id)
+        fetchMovementEntries(user?.id)
     }, [])
 
 
     const handleImportSuccess = (message: string) => {
-        fetchMovementEntries(district?.id);
+        fetchMovementEntries(user?.id);
     };
 
 
@@ -36,6 +36,7 @@ const page = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={handleImportSuccess}
+                //@ts-ignore
                 addEntry={addMovementEntry}
             />
 

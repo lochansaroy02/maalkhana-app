@@ -6,6 +6,7 @@ import { expectedSchemas } from "@/constants/schemas";
 import { validateExcelSchema } from "@/utils/validateSchemas";
 import { useState } from "react";
 import * as XLSX from "xlsx";
+import { Button } from "./ui/button";
 
 interface UploadModalProps {
     schemaType: keyof typeof expectedSchemas;
@@ -60,17 +61,17 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
-            <div className="bg-white p-6 rounded w-[90%] max-w-md">
-                <h2 className="text-lg font-bold mb-4">Import Excel - {schemaType}</h2>
+        <div className="fixed inset-0 z-50 bg-black/30 flex justify-center items-center">
+            <div className="glass-effect bg-black/50  p-6 rounded w-[90%] max-w-md">
+                <h2 className="text-lg text-blue-100 font-bold mb-4">Import Excel - {schemaType}</h2>
 
-                <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4" />
+                <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4 text-blue-100/70 " />
 
                 {loading && <p className="text-blue-500">Importing...</p>}
                 {error && <p className="text-red-500 whitespace-pre-wrap">{error}</p>}
 
                 <div className="flex justify-end gap-2 mt-4">
-                    <button onClick={onClose} className="px-3 py-1 border rounded">Cancel</button>
+                    <Button onClick={onClose}>Close</Button>
                 </div>
             </div>
         </div>

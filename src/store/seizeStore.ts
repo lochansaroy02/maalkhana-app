@@ -8,7 +8,8 @@ interface SeizedVehicle {
     id?: string;
     srNo: string;
     gdNo: string;
-    districtId: string | undefined,
+    rtoName: string
+    userId: string | undefined,
     gdDate: string;
     underSection: string;
     vehicleType: string;
@@ -28,18 +29,18 @@ interface SeizedVehicleStore {
     vehicles: SeizedVehicle[];
     loading: boolean;
     error: string | null;
-    fetchVehicles: (districtId: string | undefined) => Promise<void>;
-    addVehicle: (vehicle: SeizedVehicle) => Promise<void>;
+    fetchVehicles: (userId: string | undefined) => Promise<void>;
+    addVehicle: (vehicle: SeizedVehicle) => Promise<boolean>;
 }
 export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
     vehicles: [],
     loading: false,
     error: null,
 
-    fetchVehicles: async (districtId: string | undefined) => {
+    fetchVehicles: async (userId: string | undefined) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get(`/api/siezed/?id=${districtId}`);
+            const response = await axios.get(`/api/siezed/?userId=${userId}`);
             if (response.data.success) {
                 set({ vehicles: response.data.data, loading: false });
             } else {
@@ -67,13 +68,18 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
                         vehicles: [...state.vehicles, response.data.data],
                     }));
                 }
+
+                return true
             } else {
                 console.error("❌ POST /api/siezed error: Failed to create vehicle");
+                return false;
             }
         } catch (error: any) {
             console.error("❌ POST /api/siezed error:", error);
             set({ error: error.message || "Failed to create seized vehicle" });
+            return false;
         }
+
     },
 
 }));

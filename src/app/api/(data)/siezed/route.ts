@@ -27,7 +27,7 @@ export const POST = async (req: NextRequest) => {
             gdNo,
             gdDate,
             underSection,
-            districtId,
+            userId,
             vehicleType,
             colour,
             registrationNo,
@@ -45,7 +45,7 @@ export const POST = async (req: NextRequest) => {
                 srNo,
                 gdNo,
                 gdDate,
-                districtId,
+                userId,
                 underSection,
                 vehicleType,
                 colour,
@@ -79,18 +79,19 @@ interface Params {
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
-        const districtId = searchParams.get("id");
+        const userId = searchParams.get("userId");
 
-        if (!districtId) {
+        if (!userId) {
             return NextResponse.json(
                 { success: false, error: "District ID is required" },
                 { status: 400 }
             );
         }
+        console.log(userId)
 
         const entries = await prisma.seizedVehicle.findMany({
             where: {
-                districtId,
+                userId,
             },
             orderBy: { createdAt: "desc" },
         });

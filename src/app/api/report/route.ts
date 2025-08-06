@@ -1,7 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export const GET = async () => {
+export const GET = async (req: NextRequest) => {
+    const { searchParams } = new URL(req.url);
+
+    const userId = searchParams.get("id");
+
 
     try {
 
@@ -9,25 +13,48 @@ export const GET = async () => {
         const totalWine = await prisma.malkhanaEntry.aggregate({
             _sum: {
                 wine: true,
-            },
+            }, where: {
+                userId
+            }
         });
         const [entry, movement, release, siezed, wineCount, destroy, nilami] = await Promise.all([
-            prisma.malkhanaEntry.count(),
-            prisma.malkhanaMovement.count(),
-            prisma.malkhanaRelease.count(),
-            prisma.seizedVehicle.count(),
-
-
+            prisma.malkhanaEntry.count(
+                {
+                    where: {
+                        userId
+                    }
+                }
+            ),
+            prisma.malkhanaMovement.count(
+                {
+                    where: {
+                        userId
+                    }
+                }
+            ),
+            prisma.malkhanaRelease.count(
+                {
+                    where: {
+                        userId
+                    }
+                }
+            ),
+            prisma.seizedVehicle.count(
+                {
+                    where: {
+                        userId
+                    }
+                }
+            ),
             prisma.malkhanaEntry.count({
-                where: { entryType: "Wine" }
+                where: { entryType: "Wine", userId }
             }),
             prisma.malkhanaEntry.count({
-                where: { status: "Destroy" }
+                where: { status: "Destroy", userId }
             }),
             prisma.malkhanaEntry.count({
-                where: { status: "Nilami" }
+                where: { status: "Nilami", userId }
             })
-
         ]);
 
         const total = entry + movement + release + siezed;

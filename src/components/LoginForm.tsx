@@ -3,17 +3,21 @@ import { useAuthStore } from '@/store/authStore';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import toast from 'react-hot-toast';
 import { Button } from './ui/button';
+import DropDown from './ui/DropDown';
 import { Input } from './ui/input';
+
+
 
 const LoginForm = () => {
     const [email, setEmail] = useState<string>("")
     const [password, setPassword] = useState<string>("")
-
-
+    const [role, setRole] = useState<string>("")
     const router = useRouter()
 
     const { login } = useAuthStore();
+
 
     const handleLogin = async (e: FormEvent) => {
         e.preventDefault();
@@ -21,17 +25,23 @@ const LoginForm = () => {
             email, password
         },)
         const data = response.data;
-        console.log(data)
+        console.log
         if (data.success) {
-            login(data.token, data.district);
-            router.push("/dashboard"); // or any other route
+            login(data.token, data.user);
+            toast.success("Succesfully LoggedIn")
+            router.push("/dashboard");
         } else {
-            alert(data.error || "Login failed");
+            toast.error("Login Failed") // add error page here 
         }
     }
 
     return (
         <form onSubmit={handleLogin} className='flex flex-col  gap-4'>
+            <div>
+                <label className='text-blue-100 font-semibold' htmlFor="">Login AS </label>
+                <DropDown selectedValue={role} handleSelect={setRole} options={["Police Station", "District"]} />
+            </div>
+
             <div className='flex flex-col gap-2 '>
                 <label className='text-blue-100' htmlFor="">Email</label>
                 <Input className='text-blue-100' value={email} onChange={(e) => setEmail(e.target.value)} />
