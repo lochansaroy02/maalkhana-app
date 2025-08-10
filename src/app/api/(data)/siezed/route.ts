@@ -24,6 +24,7 @@ export const POST = async (req: NextRequest) => {
         // ✅ Handle single object
         const {
             srNo,
+            firNo,
             gdNo,
             gdDate,
             underSection,
@@ -44,6 +45,7 @@ export const POST = async (req: NextRequest) => {
             data: {
                 srNo,
                 gdNo,
+                firNo,
                 gdDate,
                 userId,
                 underSection,
@@ -87,7 +89,6 @@ export async function GET(req: NextRequest) {
                 { status: 400 }
             );
         }
-        console.log(userId)
 
         const entries = await prisma.seizedVehicle.findMany({
             where: {
@@ -104,5 +105,32 @@ export async function GET(req: NextRequest) {
             { status: 500 }
         );
     }
+
+
+
 };
 
+
+
+export const PUT = async (req: NextRequest) => {
+    try {
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get("id");
+        const body = await req.json();
+        const { ...data } = body;
+
+        if (!id) {
+            return NextResponse.json({ success: false, message: "FIR No. is required" }, { status: 400 });
+        }
+
+        const updatedEntry = await prisma.seizedVehicle.update({
+            where: { id },
+            data: data
+        });
+
+        return NextResponse.json({ success: true, data: updatedEntry }, { status: 200 });
+    } catch (error) {
+        console.error("PUT /api/movement error:", error);
+        return NextResponse.json({ success: false, error: "Failed to update data" }, { status: 500 });
+    }
+};

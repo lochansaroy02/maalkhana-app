@@ -20,6 +20,7 @@ export const POST = async (req: NextRequest) => {
 
         const {
             userId,
+            cash,
             srNo,
             photoUrl,
             gdNo,
@@ -45,6 +46,7 @@ export const POST = async (req: NextRequest) => {
         const newEntry = await prisma.malkhanaEntry.create({
             data: {
                 userId,
+                cash,
                 srNo,
                 gdNo,
                 wine,
@@ -91,5 +93,28 @@ export async function GET(req: NextRequest) {
     } catch (error) {
         console.error("GET /api/siezed error:", error);
         return NextResponse.json({ success: false, error: "Failed to fetch seized vehicle entries" }, { status: 500 });
+    }
+};
+
+export const PUT = async (req: NextRequest) => {
+    try {
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get("id");
+        const body = await req.json();
+        const { ...data } = body;
+
+        if (!id) {
+            return NextResponse.json({ success: false, message: "FIR No. is required" }, { status: 400 });
+        }
+
+        const updatedEntry = await prisma.malkhanaEntry.update({
+            where: { id },
+            data: data
+        });
+
+        return NextResponse.json({ success: true, data: updatedEntry }, { status: 200 });
+    } catch (error) {
+        console.error("Error while updating the data :", error);
+        return NextResponse.json({ success: false, error: "Failed to update data" }, { status: 500 });
     }
 };

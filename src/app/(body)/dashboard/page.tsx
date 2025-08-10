@@ -3,18 +3,18 @@
 import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
-import { Car, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
+import { Banknote, Car, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
 import { useEffect } from "react";
 
 const Page = () => {
     const { fetchTotalEntries, data } = useTotalEntriesStore();
     const { user } = useAuthStore()
-    console.log(user)
+
     useEffect(() => {
-        fetchTotalEntries();
-    }, []);
+        fetchTotalEntries(user?.id);
+    }, [user?.id]);
 
-
+    console.log(data);
     const reportItems = [
         {
             title: "Total Entries",
@@ -66,10 +66,17 @@ const Page = () => {
             //@ts-ignore
             value: data?.breakdown?.wineCount?._sum?.wine,
         },
+        {
+            title: "Total Cash ",
+            icon: <Banknote size="50px" />,
+            bgColour: "bg-fuchsia-700",
+            //@ts-ignore
+            value: `₹ ${data?.breakdown?.totalCash?._sum?.cash}`,
+        },
     ];
 
     return (
-        <div className="flex h-screen flex-col glass-effect">
+        <div className="flex h-screen  flex-col glass-effect">
             <div className="flex justify-center py-4 border-b border-white/50 rounded-t-xl bg-maroon">
                 <h1 className="text-textColor text-2xl text-blue-100 font-bold">Dashboard</h1>
             </div>

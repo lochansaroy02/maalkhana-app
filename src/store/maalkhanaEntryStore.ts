@@ -6,6 +6,7 @@ type MaalkhanaEntry = {
     srNo: string;
     gdNo: string;
     photoUrl: string,
+    cash: number,
     wine: number;
     wineType: string,
     gdDate: string;
@@ -34,6 +35,7 @@ type MaalkhanaStore = {
     getNewEntry: () => Promise<void>;
     fetchMaalkhanaEntry: (userId: string | undefined) => Promise<void>;
     addMaalkhanaEntry: (data: MaalkhanaEntry) => Promise<boolean>;
+    updateMalkhanaEntry: (id: string, data: any) => Promise<boolean>
 };
 
 const initialState: MaalkhanaEntry = {
@@ -42,6 +44,7 @@ const initialState: MaalkhanaEntry = {
     gdDate: '',
     photoUrl: '',
     wine: 0,
+    cash: 0,
     wineType: '',
     underSection: '',
     Year: '',
@@ -63,8 +66,6 @@ const initialState: MaalkhanaEntry = {
 export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
     entry: { ...initialState },
     entries: [],
-
-
 
     setField: (field, value) =>
         set(state => ({
@@ -125,6 +126,20 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
             console.error(" error:", error.message || error);
             return false
         }
+    },
+    updateMalkhanaEntry: async (id: string, newData: any) => {
+        try {
+            const response = await axios.put(`/api/entry?id=${id}`, newData)
+            const data = response.data
+            if (data.success) {
+                return true;
+            }
+            return false
+        } catch (error) {
+            console.error("Error updating vehicle entry:", error);
+            return false;
+        }
+
     }
 
 }));

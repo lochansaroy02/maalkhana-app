@@ -1,96 +1,70 @@
 // app/api/movement/route.ts
-import { prisma } from '@/lib/prisma';
-import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+// GET Movement data by FIR No
+export const GET = async (req: NextRequest) => {
+    const { searchParams } = new URL(req.url);
+    const firNo = searchParams.get("firNo");
+
+    if (!firNo) {
+        return NextResponse.json({ success: false, message: "Please enter FIR No." }, { status: 400 });
+    }
+
     try {
-        const body = await req.json();
-
-
-        if (Array.isArray(body)) {
-            if (body.length === 0) {
-                return NextResponse.json({ success: false, message: "Empty array received" }, { status: 400 });
+        const data = await prisma.malkhanaEntry.findUnique({
+            where: { firNo },
+            select: {
+                id: true,
+                srNo: true,
+                isReturned: true,
+                caseProperty: true,
+                moveDate: true,
+                underSection: true,
+                takenOutBy: true,
+                moveTrackingNo: true,
+                movePurpose: true,
+                name: true,
+                receivedBy: true,
+                returnDate: true,
+                returnBackFrom: true
             }
-
-            const result = await prisma.seizedVehicle.createMany({
-                data: body,
-                skipDuplicates: true,
-            });
-
-            return NextResponse.json({ success: true, count: result.count });
-        }
-        const {
-            srNo,
-            moveDate,
-            districtId,
-            firNo,
-            underSection,
-            takenOutBy,
-            moveTrackingNo,
-            movePurpose,
-            name,
-            photo,
-            document,
-            isReturned,
-            receviedBy,
-            returnBackFrom,
-            returnDate,
-        } = body;
-
-        const newEntry = await prisma.malkhanaMovement.create({
-            data: {
-                srNo,
-                moveDate,
-                districtId,
-                firNo,
-                underSection,
-                takenOutBy,
-                moveTrackingNo,
-                movePurpose,
-                name,
-                photo,
-                document,
-                isReturned,
-                receviedBy,
-                returnBackFrom,
-                returnDate,
-            },
-
         });
 
-        return NextResponse.json({ success: true, data: newEntry });
+        if (!data) {
+            return NextResponse.json({ success: false, message: "No record found" }, { status: 404 });
+        }
+
+        return NextResponse.json({ success: true, data }, { status: 200 });
     } catch (error) {
-        console.error('POST /api/movement error:', error);
-        return NextResponse.json(
-            { success: false, message: 'Failed to create entry', error },
-            { status: 500 }
-        );
+        console.error("GET /api/movement error:", error);
+        return NextResponse.json({ success: false, error: "Failed to fetch data" }, { status: 500 });
     }
-}
+};
 
-interface DistrictParams {
-    districtId: string;
-}
-
-export async function GET(req: NextRequest) {
-
+// UPDATE Movement data
+export const PUT = async (req: NextRequest) => {
     try {
+
         const { searchParams } = new URL(req.url);
-        const userId = searchParams.get("id");
+        const id = searchParams.get("id");
 
-        const entries = await prisma.malkhanaMovement.findMany({
-            where: {
-                userId
-            },
-            orderBy: { createdAt: 'desc' },
-        })
+        const body = await req.json();
+        const { ...movementData } = body;
 
-        return NextResponse.json({ success: true, data: entries });
+        if (!id) {
+            return NextResponse.json({ success: false, message: "FIR No. is required" }, { status: 400 });
+        }
+
+        const updatedEntry = await prisma.malkhanaEntry.update({
+
+            where: { id },
+            data: movementData
+        });
+
+        return NextResponse.json({ success: true, data: updatedEntry }, { status: 200 });
     } catch (error) {
-        console.error('GET /api/movement error:', error);
-        return NextResponse.json(
-            { success: false, message: 'Failed to fetch entries', error },
-            { status: 500 }
-        );
+        console.error("PUT /api/movement error:", error);
+        return NextResponse.json({ success: false, error: "Failed to update data" }, { status: 500 });
     }
-}
+};

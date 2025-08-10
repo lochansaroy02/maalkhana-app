@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 interface InputProps {
     label: string;
-    value: string | number | undefined
+    value: string | number | undefined | boolean
     className?: string;
     setInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }

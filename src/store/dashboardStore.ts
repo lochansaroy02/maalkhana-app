@@ -18,7 +18,7 @@ interface TotalEntriesStore {
     data: TotalEntries | null;
     loading: boolean;
     error: string | null;
-    fetchTotalEntries: () => Promise<void>;
+    fetchTotalEntries: (userId: string | undefined) => Promise<void>;
 }
 
 export const useTotalEntriesStore = create<TotalEntriesStore>((set) => ({
@@ -26,10 +26,10 @@ export const useTotalEntriesStore = create<TotalEntriesStore>((set) => ({
     loading: false,
     error: null,
 
-    fetchTotalEntries: async () => {
+    fetchTotalEntries: async (userId: string | undefined) => {
         set({ loading: true, error: null });
         try {
-            const response = await axios.get('/api/report');
+            const response = await axios.get(`/api/report?userId=${userId}`);
             const data = response.data;
             set({
                 data: {

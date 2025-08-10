@@ -14,14 +14,15 @@ const Sidebar = () => {
             name: "Malkhana Entry", link: "/maalkhana-entry",
         },
         {
+            name: "Seized vehical", link: "/seized-vehical",
+        },
+        {
             name: "Malkhana Movement", link: "/maalkhana-movement",
         },
         {
             name: "Malkhana Release", link: "/maalkhana-release",
         },
-        {
-            name: "Seized vehical", link: "/seized-vehical",
-        },
+
         {
             name: "Report", link: "/report/entry-report",
         },

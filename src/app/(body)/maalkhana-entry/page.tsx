@@ -15,7 +15,7 @@ import toast, { LoaderIcon } from 'react-hot-toast';
 const Page = () => {
     const { user } = useAuthStore();
     const { addMaalkhanaEntry } = useMaalkhanaStore();
-
+    const [photoUrl, SetPhotoUrl] = useState("")
     const [entryType, setEntryType] = useState('');
     const [wine, setWine] = useState<number>(0);
     const [cash, setCash] = useState<number>(0);
@@ -46,7 +46,7 @@ const Page = () => {
     });
 
     const entryOptions = [
-        "Malkhane Entry",
+        "malkhana Entry",
         "FSL",
         "Kukri",
         "Other Entry",
@@ -74,6 +74,7 @@ const Page = () => {
         { name: 'boxNo', label: 'Box No' },              // ⬅️ Added here
         { name: 'courtNo', label: 'Court No' },          // ⬅️ Added here
         { name: 'courtName', label: 'Court Name' },      // ⬅️ Added here
+        { name: 'imagebox', label: 'Photo' },      // ⬅️ Added here
     ];
 
     const handleInputChange = (field: string, value: string) => {
@@ -94,14 +95,8 @@ const Page = () => {
 
     const handleSave = async () => {
 
-        const photoFile = photoRef.current?.files?.[0];
-        let photoUrl = "";
-        try {
-            setLoading(true)
-            if (photoFile) {
-                photoUrl = await uploadToCloudinary(photoFile);
-            }
 
+        try {
             const userId = user?.id;
             const fullData = {
                 ...formData,
@@ -171,10 +166,30 @@ const Page = () => {
     };
 
 
+    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setLoading(true);
+            // Upload to Cloudinary
+            const uploadedUrl = await uploadToCloudinary(file);
+            SetPhotoUrl(uploadedUrl); // This will trigger re-render and show preview
+            toast.success("Photo uploaded successfully");
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to upload photo");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+
     return (
         <div className='glass-effect'>
             <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
-                <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Maalkhana Entry Form</h1>
+                <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Malkhana Entry Form</h1>
             </div>
             <div className='px-8  py-4 rounded-b-md'>
                 <div className='py-2 flex items-center'>
@@ -198,9 +213,9 @@ const Page = () => {
                         <Input type='number' value={wine} onChange={(e) => setWine(Number(e.target.value))} />
                     </div>
 
-                    <div className={`w-3/4 gap-12 ${entryType === 'Cash Entry' ? "flex" : "hidden"} items-center`}>
+                    <div className={`w-3/4  ml-18   ${entryType === 'Cash Entry' ? "flex flex-col" : "hidden"}`}>
                         <label className='text-blue-100'>Cash</label>
-                        <Input className='ml-[70px]' type='number' value={cash} onChange={(e) => setCash(Number(e.target.value))} />
+                        <Input className='text-blue-100' type='number' value={cash} onChange={(e) => setCash(Number(e.target.value))} />
                     </div>
                 </div>
 
@@ -211,6 +226,7 @@ const Page = () => {
                         if (field.type === 'dropdown') {
                             return (
                                 <DropDown
+
                                     key={field.name}
                                     label={field.label}
                                     selectedValue={status}
@@ -219,10 +235,9 @@ const Page = () => {
                                 />
                             );
                         }
-
                         if (field.type === 'textarea') {
                             return (
-                                <div key={field.name} className='flex flex-col gap-1 '>
+                                <div key={field.name} className='flex flex-col col-span-1 gap-1 '>
                                     <label className='text-blue-100' htmlFor={field.name}>{field.label}</label>
                                     <Textarea
                                         id={field.name}
@@ -246,32 +261,51 @@ const Page = () => {
                             );
                         }
 
+                        if (field.name === 'imagebox') {
+                            return <div>
+                                <label htmlFor="">{field.label}</label>
+                                {photoUrl &&
+
+                                    <img src={photoUrl} width={150} height={150} className='rounded-md border' alt="upload preview" />
+
+                                }
+                            </div>
+                        }
+
                         return (
                             <div key={field.name} className=" ">
 
-                                {field.name === 'firNo' ? (
-                                    <div className='flex  items-end  justify-between  '>
+                                {
+                                    field.name === 'firNo' ? (
+                                        <div className='flex  items-end  justify-between  '>
 
-                                        <InputComponent
-                                            className='w-3/4 '
-                                            label={field.label}
-                                            value={formData[field.name as keyof typeof formData]}
-                                            setInput={(e) => handleInputChange(field.name, e.target.value)} />
-                                        <Button
-                                            type="button"
-                                            className="h-10 bg-blue  text-white"
-                                            onClick={getByFir}>
-                                            fetch Data
-                                        </Button>
-                                    </div>
-                                ) : <InputComponent
-                                    label={field.label}
-                                    value={formData[field.name as keyof typeof formData]}
-                                    setInput={(e) => handleInputChange(field.name, e.target.value)}
-                                />}
+                                            <InputComponent
+                                                className='w-3/4 '
+                                                label={field.label}
+                                                value={formData[field.name as keyof typeof formData]}
+                                                setInput={(e) => handleInputChange(field.name, e.target.value)} />
+                                            <Button
+                                                type="button"
+                                                className="h-10 bg-blue  text-white"
+                                                onClick={getByFir}>
+                                                fetch Data
+                                            </Button>
+                                        </div>
+                                    ) : <InputComponent
+                                        label={field.label}
+                                        value={formData[field.name as keyof typeof formData]}
+                                        setInput={(e) => handleInputChange(field.name, e.target.value)}
+                                    />}
+
+
                             </div>
                         );
-                    })}
+
+
+
+                    }
+
+                    )}
                 </div>
 
                 <div className='flex items-center mt-4 gap-8'>
@@ -281,6 +315,7 @@ const Page = () => {
                         className='text-blue-100 rounded-xl glass-effect px-2 py-1'
                         id="photo"
                         type='file'
+                        onChange={handlePhotoChange}
                     />
                 </div>
 

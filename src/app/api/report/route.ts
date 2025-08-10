@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
     const { searchParams } = new URL(req.url);
-
-    const userId = searchParams.get("id");
-
-
+    const userId = searchParams.get("userId");
+    if (!userId) {
+        return NextResponse.json({
+            success: false, message: "please enter userId"
+        })
+    }
     try {
-
-
         const totalWine = await prisma.malkhanaEntry.aggregate({
             _sum: {
                 wine: true,
@@ -17,22 +17,16 @@ export const GET = async (req: NextRequest) => {
                 userId
             }
         });
-        const [entry, movement, release, siezed, wineCount, destroy, nilami] = await Promise.all([
+        const totalCash = await prisma.malkhanaEntry.aggregate({
+            _sum: {
+                cash: true
+            },
+            where: {
+                userId
+            }
+        })
+        const [entry, movement, release, siezed, wineCount,] = await Promise.all([
             prisma.malkhanaEntry.count(
-                {
-                    where: {
-                        userId
-                    }
-                }
-            ),
-            prisma.malkhanaMovement.count(
-                {
-                    where: {
-                        userId
-                    }
-                }
-            ),
-            prisma.malkhanaRelease.count(
                 {
                     where: {
                         userId
@@ -56,9 +50,7 @@ export const GET = async (req: NextRequest) => {
                 where: { status: "Nilami", userId }
             })
         ]);
-
         const total = entry + movement + release + siezed;
-
         return NextResponse.json({
             total,
             breakdown: {
@@ -67,9 +59,8 @@ export const GET = async (req: NextRequest) => {
                 release: release,
                 siezed: siezed,
                 wine: wineCount,
-                nilami: nilami,
-                destroy: destroy,
-                wineCount: totalWine
+                wineCount: totalWine,
+                totalCash: totalCash
             },
         });
     } catch (error) {

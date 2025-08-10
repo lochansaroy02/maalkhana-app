@@ -6,6 +6,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "./ui/button";
+import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
 
 interface ReportProps {
     data: any[];
@@ -67,6 +68,12 @@ const Report = ({
     const handlePrint = async (entryData: any,) => {
         await generateSinglePDF(entryData, "pdf1");
     };
+
+    const handleGenerateBarcodePDF = async () => {
+        const selectedData = data.filter(item => selectedIds.includes(item.id));
+        if (selectedData.length === 0) return alert("No entries selected");
+        await generateBarcodePDF(selectedData);
+    };
     return (
         <div className="p-4 relative  ">
             <div className="flex justify-between">
@@ -77,6 +84,11 @@ const Report = ({
                     <Button onClick={handleDeleteSelected} variant="destructive">
                         Delete Selected
                     </Button>
+                    {selectedIds.length > 0 && (
+                        <Button onClick={handleGenerateBarcodePDF} className="bg-green-600 text-white">
+                            Generate Barcode
+                        </Button>
+                    )}
                 </div>
             </div>
 

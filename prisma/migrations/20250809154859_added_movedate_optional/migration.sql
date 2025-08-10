@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "SeizedVehicle" ADD COLUMN     "moveDate" TEXT,
+ALTER COLUMN "address" DROP NOT NULL,
+ALTER COLUMN "fathersName" DROP NOT NULL,
+ALTER COLUMN "mobile" DROP NOT NULL,
+ALTER COLUMN "recevierName" DROP NOT NULL,
+ALTER COLUMN "releaseItemName" DROP NOT NULL;

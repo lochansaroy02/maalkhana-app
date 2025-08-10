@@ -2,7 +2,7 @@
 import { useAuthStore } from '@/store/authStore';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Button } from './ui/button';
 import DropDown from './ui/DropDown';
@@ -16,8 +16,15 @@ const LoginForm = () => {
     const [role, setRole] = useState<string>("")
     const router = useRouter()
 
-    const { login } = useAuthStore();
+    const { login, isLoggedIn, token } = useAuthStore();
 
+    useEffect(() => {
+        if (isLoggedIn && token) {
+            router.push("/dashboard")
+        } else {
+            router.push("/")
+        }
+    }, [isLoggedIn])
 
     const handleLogin = async (e: FormEvent) => {
         e.preventDefault();
@@ -25,7 +32,6 @@ const LoginForm = () => {
             email, password
         },)
         const data = response.data;
-        console.log
         if (data.success) {
             login(data.token, data.user);
             toast.success("Succesfully LoggedIn")
