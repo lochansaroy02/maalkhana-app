@@ -8,14 +8,13 @@ import DropDown from "@/components/ui/DropDown";
 import { useAuthStore } from "@/store/authStore";
 import type { MovementEntry } from "@/store/movementStore";
 import { useMovementStore } from "@/store/movementStore";
-import { useSeizedVehicleStore } from "@/store/seizeStore";
+import { useSeizedVehicleStore } from "@/store/siezed-vehical/seizeStore";
 import { uploadToCloudinary } from "@/utils/uploadToCloudnary";
 import React, { useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const Page: React.FC = () => {
     const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
-
     const { user } = useAuthStore();
     const { updateVehicalEntry, addVehicle } = useSeizedVehicleStore()
     const { addMovementEntry, updateMovementEntry, fetchByFIR, entry } = useMovementStore();
@@ -29,6 +28,7 @@ const Page: React.FC = () => {
         srNo: "",
         name: "",
         moveDate: "",
+        policeStation: "",
         firNo: "",
         underSection: "",
         takenOutBy: "",
@@ -70,9 +70,11 @@ const Page: React.FC = () => {
         { name: "takenOutBy", label: "Taken Out By" },
         { name: "moveTrackingNo", label: "Move Tracking No" },
         { name: "movePurpose", label: "Move Purpose" },
+        { name: "policeStation", label: "Police Station" },
         { name: "name", label: "Name" },
         { name: "receivedBy", label: "Received By" },
-        { name: "returnDate", label: "Return Date", type: "date" },
+        { name: "returnDate", label: "Return Back Date", type: "date" },
+        { name: "returnBackFrom", label: "Return Back From", type: "date" },
     ];
 
     const caseOptions = [
@@ -141,9 +143,11 @@ const Page: React.FC = () => {
             if (type === "malkhana") {
                 if (existingEntryId) {
                     success = await updateMovementEntry(existingEntryId, fullData);
+                    toast.success("data updated")
                 } else {
                     const dataWithUserId = { userId, ...fullData }
                     success = await addMovementEntry(dataWithUserId);
+                    toast.success("Data Added")
                 }
             }
             if (type === "siezed vehical") {
@@ -190,7 +194,6 @@ const Page: React.FC = () => {
 
     const getByFir = async () => {
         try {
-
             let success = false;
             if (formData.firNo) {
                 success = await fetchByFIR(type, formData.firNo);
@@ -241,7 +244,7 @@ const Page: React.FC = () => {
         <div>
             <div className="glass-effect">
                 <div className="bg-maroon rounded-t-xl py-4 border-b border-white/50 flex justify-center">
-                    <h1 className="text-2xl uppercase text-cream font-semibold">Maalkhana Movement</h1>
+                    <h1 className="text-2xl uppercase text-cream font-semibold">Malkhana Movement</h1>
                 </div>
                 <div className="w-full  items-center gap-4  flex justify-center ">
                     <label className="text-blue-100 text-nowrap" htmlFor="">Select type</label>
@@ -249,7 +252,7 @@ const Page: React.FC = () => {
                 </div>
                 <div className="px-8 py-4 rounded-b-md">
                     <div className="grid grid-cols-2 gap-12">
-                        <DropDown label="Case Property" selectedValue={caseProperty} options={caseOptions} handleSelect={setCaseProperty} />
+                        <InputComponent label="Case Property" value={caseProperty} setInput={(e) => setCaseProperty(e.target.value)} />
                         <div className="flex items-center space-x-2">
                             <Checkbox checked={isReturned} onCheckedChange={(checked) => setIsReturned(!!checked)} />
                             <label className="text-blue-100">Returned</label>
@@ -258,6 +261,15 @@ const Page: React.FC = () => {
 
                     <div className="mt-2 grid grid-cols-2 gap-4">
                         {fields.map((field) => {
+
+
+
+                            if (!isReturned && field.name == 'receivedBy' || field.name == 'returnBackFrom') {
+                                return null;
+                            }
+                            if (isReturned && field.name == 'moveTrackingNo' || field.name == 'takenOutBy') {
+                                return null;
+                            }
                             const shouldShowBesideSrNo =
                                 type === "siezed vehical" &&
                                 (caseProperty === "Unclaimed" || caseProperty === "MV Act" || caseProperty === "Unclaimed Vehicle");

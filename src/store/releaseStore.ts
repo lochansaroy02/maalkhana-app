@@ -3,7 +3,7 @@ import { create } from 'zustand';
 
 type ReleaseEntry = {
     srNo: string;
-    name: string;
+
     moveDate: string;
     districtId: string | undefined,
     firNo: string;
@@ -27,12 +27,14 @@ type ReleaseStore = {
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
     fetchReleaseEntries: (userId: string | undefined) => Promise<void>;
-    addReleaseEntry: (data: ReleaseEntry) => Promise<boolean>;
+    addReleaseEntry: (type: string, data: ReleaseEntry) => Promise<boolean>;
+    FetchByFIR: (type: string, firNo?: string, srNo?: string) => Promise<any>
+    updateReleaseEntry: (id: string, updatedData: any) => Promise<any>
 };
 
 const initialState: ReleaseEntry = {
     srNo: '',
-    name: '',
+
     moveDate: '',
     districtId: '',
     firNo: '',
@@ -89,9 +91,9 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
         }
     },
 
-    addReleaseEntry: async (data: any | any[]) => {
+    addReleaseEntry: async (type: string, data: any | any[]) => {
         try {
-            const response = await axios.post(`/api/release`, data, {
+            const response = await axios.post(`/api/release?type=${type}`, data, {
                 headers: { "Content-Type": "application/json" },
             });
             if (response.data.success) {
@@ -108,6 +110,29 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
 
         } catch (error: any) {
             console.error("POST /api/movement error:", error.message || error);
+            return false;
+        }
+    },
+    FetchByFIR: async (type: string, firNo?: string, srNo?: string) => {
+        try {
+
+            const response = await axios.get(`/api/release/fir?type=${type}&firNo=${firNo}&srNo=${srNo}`);
+            const data = response.data;
+            console.log(data)
+        } catch (error) {
+
+        }
+    },
+
+    updateReleaseEntry: async (id: string, updatedData: ReleaseEntry) => {
+        try {
+            const res = await axios.put(`/api/release?id=${id}`, updatedData);
+            if (res.data?.success) {
+                console.log(res.data.data)
+            }
+            return res.data?.success ?? false;
+        } catch (err) {
+            console.error("PUT /api/movement error:", err);
             return false;
         }
     },

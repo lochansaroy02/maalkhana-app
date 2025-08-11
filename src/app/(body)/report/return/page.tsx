@@ -14,8 +14,7 @@ const page = () => {
         fetchMaalkhanaEntry(user?.id)
     }, [])
 
-    console.log(user?.id)
-
+ 
     const handleImportSuccess = (message: string) => {
         fetchMaalkhanaEntry(user?.id);
     };

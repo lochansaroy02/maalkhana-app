@@ -21,6 +21,7 @@ export const POST = async (req: NextRequest) => {
         const {
             userId,
             cash,
+            caseProperty,
             srNo,
             photoUrl,
             gdNo,
@@ -53,6 +54,7 @@ export const POST = async (req: NextRequest) => {
                 wineType,
                 photoUrl,
                 policeStation,
+                caseProperty,
                 gdDate,
                 underSection,
                 Year,

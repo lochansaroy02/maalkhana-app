@@ -25,7 +25,7 @@ export const GET = async (req: NextRequest) => {
                 userId
             }
         })
-        const [entry, movement, release, siezed, wineCount,] = await Promise.all([
+        const [entry, movement, release, siezed, wineCount, returnVehical, returnMalkhana, english, desi] = await Promise.all([
             prisma.malkhanaEntry.count(
                 {
                     where: {
@@ -48,19 +48,35 @@ export const GET = async (req: NextRequest) => {
             }),
             prisma.malkhanaEntry.count({
                 where: { status: "Nilami", userId }
-            })
+            }),
+            prisma.seizedVehicle.count({
+                where: { isReturned: true, userId }
+            }),
+            prisma.malkhanaEntry.count({
+                where: { isReturned: true, userId }
+            }),
+            prisma.malkhanaEntry.count({
+                where: { wineType: "Desi", userId }
+            }),
+            prisma.malkhanaEntry.count({
+                where: { wineType: "Angrezi", userId }
+            }),
         ]);
         const total = entry + movement + release + siezed;
         return NextResponse.json({
             total,
             breakdown: {
                 entry: entry,
+                returnVehical: returnVehical,
+                returnMalkhana: returnMalkhana,
                 movement: movement,
                 release: release,
                 siezed: siezed,
                 wine: wineCount,
                 wineCount: totalWine,
-                totalCash: totalCash
+                totalCash: totalCash,
+                desi: desi,
+                english: english
             },
         });
     } catch (error) {

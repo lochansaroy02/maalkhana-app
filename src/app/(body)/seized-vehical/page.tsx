@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
 import { useAuthStore } from '@/store/authStore';
 import { useMovementStore } from '@/store/movementStore';
-import { useSeizedVehicleStore } from '@/store/seizeStore';
+import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 

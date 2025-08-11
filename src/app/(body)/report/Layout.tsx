@@ -22,13 +22,6 @@ const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
 
             {children}
 
-            {/* Import Button */}
-            <div
-                onClick={() => setIsOpen(true)}
-                className='fixed bottom-12 px-4 py-2 right-8 flex justify-center glass-effect items-center cursor-pointer hover:scale-105 transition'
-            >
-                <h1 className='text-lg font-bold text-blue-300'>Import</h1>
-            </div>
 
             {/* Modal */}
             {isOpen && (

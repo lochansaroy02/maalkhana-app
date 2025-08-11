@@ -6,15 +6,18 @@ import DropDown from '@/components/ui/DropDown';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/store/authStore';
-import { useFirStore } from '@/store/firStore';
-import { useMaalkhanaStore } from '@/store/maalkhanaEntryStore';
+import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
+import { Trash } from 'lucide-react';
 import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
 const Page = () => {
     const { user } = useAuthStore();
-    const { addMaalkhanaEntry } = useMaalkhanaStore();
+    const { addMaalkhanaEntry, updateMalkhanaEntry, getByFIR } = useMaalkhanaStore();
+
+
+    const [firData, setFirData] = useState(null)
     const [photoUrl, SetPhotoUrl] = useState("")
     const [entryType, setEntryType] = useState('');
     const [wine, setWine] = useState<number>(0);
@@ -22,16 +25,17 @@ const Page = () => {
     const [wineType, setWineType] = useState<string>('');
     const [status, setStatus] = useState<string>('');
     const [description, setDescription] = useState('');
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
+    const [existingId, setExistingId] = useState<string>("");
     const [dateFields, setDateFields] = useState<{ gdDate?: Date }>({
         gdDate: new Date(),
     });
 
-    // ✅ All string/number fields moved into one object
     const [formData, setFormData] = useState({
         firNo: '',
         srNo: '',
         gdNo: '',
+        caseProperty: '',
         underSection: '',
         Year: '',
         policeStation: '',
@@ -39,10 +43,10 @@ const Page = () => {
         vadiName: '',
         HM: '',
         accused: '',
-        place: '',             // ⬅️ Newly added here
-        boxNo: '',             // ⬅️ Newly added here
-        courtNo: '',           // ⬅️ Newly added here
-        courtName: '',         // ⬅️ Newly added here
+        place: '',
+        boxNo: '',
+        courtNo: '',
+        courtName: '',
     });
 
     const entryOptions = [
@@ -59,6 +63,8 @@ const Page = () => {
     const fields = [
         { name: 'firNo', label: 'FIR No' },
         { name: 'srNo', label: 'Sr. No / Mad No.' },
+        { name: 'caseProperty', label: 'case Property' },
+
         { name: 'gdNo', label: 'GD No' },
         { name: 'gdDate', label: 'GD Date', type: 'date' },
         { name: 'Year', label: 'Year' },
@@ -66,15 +72,15 @@ const Page = () => {
         { name: 'IOName', label: 'IO Name' },
         { name: 'vadiName', label: 'Vadi Name' },
         { name: 'status', label: 'Status', type: 'dropdown', options: statusOptions },
-        { name: 'HM', label: 'HM' },
+        { name: 'HM', label: 'Malkhana Incharge' },
         { name: 'accused', label: 'Accused Name' },
         { name: 'underSection', label: 'Under Section' },
         { name: 'description', label: 'Description', type: 'textarea' },
-        { name: 'place', label: 'Place' },               // ⬅️ Added here
-        { name: 'boxNo', label: 'Box No' },              // ⬅️ Added here
-        { name: 'courtNo', label: 'Court No' },          // ⬅️ Added here
-        { name: 'courtName', label: 'Court Name' },      // ⬅️ Added here
-        { name: 'imagebox', label: 'Photo' },      // ⬅️ Added here
+        { name: 'place', label: 'Place' },
+        { name: 'boxNo', label: 'Box No' },
+        { name: 'courtNo', label: 'Court No' },
+        { name: 'courtName', label: 'Court Name' },
+        { name: 'imagebox', label: 'Photo' },
     ];
 
     const handleInputChange = (field: string, value: string) => {
@@ -94,7 +100,7 @@ const Page = () => {
     const photoRef = useRef<HTMLInputElement>(null);
 
     const handleSave = async () => {
-
+        setLoading(true);
 
         try {
             const userId = user?.id;
@@ -110,17 +116,28 @@ const Page = () => {
                 description,
                 gdDate: dateFields.gdDate?.toISOString() ?? '',
 
+
             };
 
-            const success = await addMaalkhanaEntry(fullData)
+            let success = false;
+            if (existingId) {
+                success = await updateMalkhanaEntry(existingId, fullData)
+                toast.success("Data Updated")
+            } else {
+                success = await addMaalkhanaEntry(fullData)
+                toast.success("Data Added")
+            }
+
             if (success) {
-                toast.success("Data added")
+
                 setFormData({
+                    caseProperty: '',
                     accused: '', boxNo: '', courtName: "",
                     courtNo: "", firNo: '', gdNo: '', HM: '', IOName: '', place: '', policeStation: '', srNo: '', underSection: '', vadiName: '', Year: ''
                 })
                 setDateFields({ gdDate: new Date })
                 if (photoRef.current) photoRef.current.value = '';
+                SetPhotoUrl('')
             }
         } catch (error) {
             console.error("Save error:", error);
@@ -130,17 +147,24 @@ const Page = () => {
     };
 
 
-    const { fetchDataByFIR } = useFirStore();
 
-    const getByFir = async () => {
-        const data = await fetchDataByFIR("entry", formData.firNo);
 
-        if (data) {
+
+
+    const handleGetByFir = async () => {
+
+        const response = await getByFIR(formData.firNo);
+        const success = response?.success
+        const data = response?.data;
+        setFirData(data)
+        if (success) {
+            setExistingId(data.id)
             setFormData({
                 firNo: data.firNo || '',
+                underSection: data.underSection || '',
+                caseProperty: data.caseProperty,
                 srNo: data.srNo || '',
                 gdNo: data.gdNo || '',
-                underSection: data.underSection || '',
                 Year: data.Year || '',
                 policeStation: data.policeStation || '',
                 IOName: data.IOName || '',
@@ -174,7 +198,7 @@ const Page = () => {
             setLoading(true);
             // Upload to Cloudinary
             const uploadedUrl = await uploadToCloudinary(file);
-            SetPhotoUrl(uploadedUrl); // This will trigger re-render and show preview
+            SetPhotoUrl(uploadedUrl);
             toast.success("Photo uploaded successfully");
         } catch (err) {
             console.error(err);
@@ -226,7 +250,6 @@ const Page = () => {
                         if (field.type === 'dropdown') {
                             return (
                                 <DropDown
-
                                     key={field.name}
                                     label={field.label}
                                     selectedValue={status}
@@ -235,6 +258,7 @@ const Page = () => {
                                 />
                             );
                         }
+                        
                         if (field.type === 'textarea') {
                             return (
                                 <div key={field.name} className='flex flex-col col-span-1 gap-1 '>
@@ -261,16 +285,7 @@ const Page = () => {
                             );
                         }
 
-                        if (field.name === 'imagebox') {
-                            return <div>
-                                <label htmlFor="">{field.label}</label>
-                                {photoUrl &&
 
-                                    <img src={photoUrl} width={150} height={150} className='rounded-md border' alt="upload preview" />
-
-                                }
-                            </div>
-                        }
 
                         return (
                             <div key={field.name} className=" ">
@@ -287,7 +302,7 @@ const Page = () => {
                                             <Button
                                                 type="button"
                                                 className="h-10 bg-blue  text-white"
-                                                onClick={getByFir}>
+                                                onClick={handleGetByFir}>
                                                 fetch Data
                                             </Button>
                                         </div>
@@ -296,29 +311,38 @@ const Page = () => {
                                         value={formData[field.name as keyof typeof formData]}
                                         setInput={(e) => handleInputChange(field.name, e.target.value)}
                                     />}
-
-
                             </div>
                         );
-
-
-
                     }
-
                     )}
                 </div>
 
-                <div className='flex items-center mt-4 gap-8'>
-                    <label className='text-nowrap text-blue-100' htmlFor="photo">Upload Photo</label>
-                    <input
-                        ref={photoRef}
-                        className='text-blue-100 rounded-xl glass-effect px-2 py-1'
-                        id="photo"
-                        type='file'
-                        onChange={handlePhotoChange}
-                    />
-                </div>
+                <div className='w-full'>
+                    <div className='flex flex-row mt-4 gap-2 '>
+                        <div className='w-[40%]'>
+                            <label className='text-nowrap text-blue-100' htmlFor="photo">Upload Photo</label>
+                            <input
+                                ref={photoRef}
+                                className='text-blue-100 rounded-xl glass-effect px-2 py-1'
+                                id="photo"
+                                type='file'
+                                onChange={handlePhotoChange}
+                            />
+                        </div>
 
+                        <div className='w-[60%] flex flex-col gap-4 relative '>
+                            {photoUrl && <Button onClick={() => { SetPhotoUrl("") }} className='absolute right-0 bg-red-800 hover:bg-red-500  cursor-pointer ' > <Trash /></Button>}
+                            <div className=''>
+                                {photoUrl &&
+                                    <img src={photoUrl} className='rounded-md w-full h-full  border' alt="upload preview" />
+
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
                 <div className='flex w-full px-12 justify-between mt-4'>
                     {["Save", "Print", "Modify", "Delete"].map((item, index) => (
                         <Button

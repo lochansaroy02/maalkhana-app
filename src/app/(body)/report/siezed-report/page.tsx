@@ -4,7 +4,7 @@ import Report from '@/components/Report';
 import { Checkbox } from '@/components/ui/checkbox';
 import UploadModal from '@/components/UploadModal';
 import { useAuthStore } from '@/store/authStore';
-import { useSeizedVehicleStore } from '@/store/seizeStore';
+import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useEffect, useState } from 'react';
 
 const casePropertyOptions = [

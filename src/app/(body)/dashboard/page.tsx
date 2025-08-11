@@ -3,7 +3,7 @@
 import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
-import { Banknote, Car, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
+import { ArrowDownFromLine, Banknote, Car, LucideArrowDownNarrowWide, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
 import { useEffect } from "react";
 
 const Page = () => {
@@ -60,18 +60,32 @@ const Page = () => {
         },
 
         {
-            title: "Total Wine (in ltr)",
+            title: "Total Wine (in ltr): English",
             icon: <Wine size="50px" />,
             bgColour: "bg-gray-500",
             //@ts-ignore
-            value: data?.breakdown?.wineCount?._sum?.wine,
+            value: data?.breakdown?.english,
+        },
+        {
+            title: "Total Wine (in ltr): Desi  ",
+            icon: <Wine size="50px" />,
+            bgColour: "bg-fuchsia-700",
+            //@ts-ignore
+            value: ` ${data?.breakdown?.desi == undefined ? "0" : data?.breakdown?.desi}`,
+        },
+        {
+            title: "Returned Entry",
+            icon: <LucideArrowDownNarrowWide size="50px" />,
+            bgColour: "bg-green-700",
+            //@ts-ignore
+            value: `${data?.breakdown?.returnVehical == undefined ? "0" : data?.breakdown?.returnVehical}`,
         },
         {
             title: "Total Cash ",
             icon: <Banknote size="50px" />,
-            bgColour: "bg-fuchsia-700",
+            bgColour: "bg-cyan-700",
             //@ts-ignore
-            value: `₹ ${data?.breakdown?.totalCash?._sum?.cash}`,
+            value: `₹ ${data?.breakdown?.totalCash?._sum?.cash == undefined ? "0" : data?.breakdown?.totalCash?._sum?.cash} `,
         },
     ];
 
@@ -80,7 +94,7 @@ const Page = () => {
             <div className="flex justify-center py-4 border-b border-white/50 rounded-t-xl bg-maroon">
                 <h1 className="text-textColor text-2xl text-blue-100 font-bold">Dashboard</h1>
             </div>
-            <div className="grid grid-cols-4 p-6  gap-4">
+            <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 p-6  gap-4">
                 {reportItems.map((item, index) => (
                     <ReportCard
                         key={index}

@@ -1,19 +1,17 @@
-// app/api/movement/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-// GET Movement data by FIR No
+
 export const GET = async (req: NextRequest) => {
     const { searchParams } = new URL(req.url);
-    const firNo = searchParams.get("firNo");
-
-    if (!firNo) {
+    const userId = searchParams.get("userId");
+    if (!userId) {
         return NextResponse.json({ success: false, message: "Please enter FIR No." }, { status: 400 });
     }
 
     try {
         const data = await prisma.malkhanaEntry.findMany({
-            where: { firNo },
+            where: { userId },
             select: {
 
                 id: true,
@@ -40,32 +38,5 @@ export const GET = async (req: NextRequest) => {
     } catch (error) {
         console.error("GET /api/movement error:", error);
         return NextResponse.json({ success: false, error: "Failed to fetch data" }, { status: 500 });
-    }
-};
-
-// UPDATE Movement data
-export const PUT = async (req: NextRequest) => {
-    try {
-
-        const { searchParams } = new URL(req.url);
-        const id = searchParams.get("id");
-
-        const body = await req.json();
-        const { ...movementData } = body;
-
-        if (!id) {
-            return NextResponse.json({ success: false, message: "FIR No. is required" }, { status: 400 });
-        }
-
-        const updatedEntry = await prisma.malkhanaEntry.update({
-
-            where: { id },
-            data: movementData
-        });
-
-        return NextResponse.json({ success: true, data: updatedEntry }, { status: 200 });
-    } catch (error) {
-        console.error("PUT /api/movement error:", error);
-        return NextResponse.json({ success: false, error: "Failed to update data" }, { status: 500 });
     }
 };

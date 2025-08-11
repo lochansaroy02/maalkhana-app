@@ -9,16 +9,16 @@ import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
 const Page = () => {
-    const { addReleaseEntry, resetForm } = useReleaseStore()
+    const { addReleaseEntry, resetForm, FetchByFIR, updateReleaseEntry } = useReleaseStore()
     const [isloading, setIsLoading] = useState<boolean>(false)
-
-    const { district } = useAuthStore()
+    const [type, setType] = useState<string>("")
+    const [existingId, setExistingId] = useState<string>("")
+    const { user } = useAuthStore()
     const [formData, setFormData] = useState({
         srNo: '',
-        name: '',
         moveDate: '',
         firNo: '',
-        underSection: '207',
+        underSection: '',
         takenOutBy: '',
         moveTrackingNo: '',
         movePurpose: '',
@@ -48,14 +48,13 @@ const Page = () => {
     };
 
     const fields = [
+        { name: 'firNo', label: 'FIR No.' },
         { name: 'srNo', label: 'Sr. No / Mal No.' },
         { name: 'moveDate', label: 'Move Date' },
-        { name: 'firNo', label: 'FIR No.' },
         { name: 'underSection', label: 'Under Section' },
         { name: 'takenOutBy', label: 'Taken Out By' },
         { name: 'moveTrackingNo', label: 'Move Tracking No' },
         { name: 'movePurpose', label: 'Move Purpose' },
-        { name: 'name', label: 'Name' },
         { name: "recevierName", label: "Recevier Name" },
         { name: "fathersName", label: "Father's Name" },
         { name: "address", label: "Address" },
@@ -84,7 +83,9 @@ const Page = () => {
             if (documentFile) {
                 documentUrl = await uploadToCloudinary(documentFile);
             }
-            const districtId = district?.id
+            const districtId = user?.id
+
+
             const fullData = {
                 ...formData,
                 caseProperty,
@@ -92,66 +93,108 @@ const Page = () => {
                 documentUrl,
                 districtId
             };
-            const success = await addReleaseEntry(fullData);
-            if (success) {
-                toast.success("Data Added")
-                setFormData({
-                    srNo: '',
-                    name: '',
-                    moveDate: '',
-                    firNo: '',
-                    underSection: '207',
-                    takenOutBy: '',
-                    moveTrackingNo: '',
-                    movePurpose: '',
-                    recevierName: "",
-                    fathersName: "",
-                    address: "",
-                    mobile: "",
-                    releaseItemName: ""
-                });
-                setCaseProperty('');
-                if (photoRef.current) photoRef.current.value = '';
-                if (documentRef.current) documentRef.current.value = '';
+            let success;
+            if (existingId) {
+                success = await updateReleaseEntry(existingId, fullData)
+                if (success) {
+                    toast.success("Data Updated")
+                }
+            } else {
+                success = await addReleaseEntry(type, fullData)
+                if (success) {
+                    toast.success("Data Added")
 
+                }
             }
         } catch (error) {
             console.error('Error saving vehicle:', error);
         } finally {
             setIsLoading(false)
-
+            setFormData({
+                srNo: '',
+                moveDate: '',
+                firNo: '',
+                underSection: '',
+                takenOutBy: '',
+                moveTrackingNo: '',
+                movePurpose: '',
+                recevierName: "",
+                fathersName: "",
+                address: "",
+                mobile: "",
+                releaseItemName: ""
+            });
+            setCaseProperty('');
+            if (photoRef.current) photoRef.current.value = '';
+            if (documentRef.current) documentRef.current.value = '';
         }
     };
 
 
+    const handleGetFIR = async () => {
+        try {
+            let response = null;
+            if (formData.firNo) {
+                response = await FetchByFIR(type, formData.firNo, undefined);
+            }
+
+
+
+            if (formData.srNo) {
+                response = await FetchByFIR(type, undefined, formData.srNo)
+            }
+        } catch (error) {
+            console.error("Error fetching by FIR:", error);
+            toast.error("Fetch failed. See con  sole.");
+        }
+    }
+
+
+
+
     return (
         <div>
-            <div className=' glass-effect'>
+            <div className=' '>
                 <div className='py-4 border bg-maroon rounded-t-xl border-gray-400 flex justify-center'>
                     <h1 className='text-2xl uppercase text-cream font-semibold'>Maalkhana Release </h1>
                 </div>
-                <div className='px-8 h-screen py-4 rounded-b-md'>
-                    <div className='flex items-center justify-between w-full'>
-                        <div className='w-3/4'>
-                            <DropDown
-                                label='Case Property'
-                                selectedValue={caseProperty}
-                                options={caseOptions}
-                                handleSelect={setCaseProperty}
-                            />
-                        </div>
+                <div className='px-8 glass-effect  py-4 rounded-b-md'>
+                    <div className='flex   justify-center my-4 '>
+                        <DropDown selectedValue={type} handleSelect={setType} options={["malkhana", "siezed vehical"]} />
                     </div>
-
                     <div className='mt-2 grid grid-cols-2 gap-2'>
-                        {fields.map((field) => (
-                            <div key={field.name}>
-                                <InputComponent
-                                    label={field.label}
-                                    value={formData[field.name as keyof typeof formData]}
-                                    setInput={(e) => handleInputChange(field.name, e.target.value)}
+                        <div className='flex items-center justify-between w-full'>
+                            <div className='w-full'>
+                                <DropDown
+                                    label='Case Property'
+                                    selectedValue={caseProperty}
+                                    options={caseOptions}
+                                    handleSelect={setCaseProperty}
                                 />
                             </div>
-                        ))}
+                        </div>
+                        {fields.map((field) => {
+                            return field.name !== 'firNo' ? (
+                                <div key={field.name}>
+                                    <InputComponent
+                                        label={field.label}
+                                        value={formData[field.name as keyof typeof formData]}
+                                        setInput={(e) => handleInputChange(field.name, e.target.value)}
+                                    />
+                                </div>
+                            ) : (
+                                <div key={field.name} className='flex  items-center gap-2 mr-2   justify-between'>
+                                    <InputComponent
+                                        className='w-full'
+                                        label={field.label}
+                                        value={formData[field.name as keyof typeof formData]}
+                                        setInput={(e) => handleInputChange(field.name, e.target.value)}
+                                    />
+                                    <Button onClick={handleGetFIR} className='mt-6 '>Fetch</Button>
+                                </div>
+                            );
+                        })}
+
                         {inputFields.map((item, index) => (
                             <div key={index} className='flex items-center gap-8'>
                                 <label className='text-nowrap text-blue-100' htmlFor={item.id}>{item.label}</label>

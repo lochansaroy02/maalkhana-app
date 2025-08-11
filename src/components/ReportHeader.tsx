@@ -13,11 +13,11 @@ const ReportHeader = () => {
         {
             name: "Malkhana Entry", link: "/report/entry-report", colour: "bg-green-500"
         },
+        // {
+        //     name: "Malkhana Movement", link: "/report/movement-report", colour: "bg-blue-500"
+        // },
         {
-            name: "Malkhana Movement", link: "/report/movement-report", colour: "bg-blue-500"
-        },
-        {
-            name: "Malkhana Release", link: "/report/release-report", colour: "bg-amber-500"
+            name: "Return", link: "/report/release-report", colour: "bg-amber-500"
         },
         {
             name: "Seized vehical", link: "/report/siezed-report", colour: "bg-red-500"

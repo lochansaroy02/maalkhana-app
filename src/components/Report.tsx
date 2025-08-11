@@ -1,12 +1,14 @@
 "use client";
 
+import { useOpenStore } from "@/store/store";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { generateSinglePDF } from "@/utils/exportToPDF";
+import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
+import DropDown from "./ui/DropDown";
 
 interface ReportProps {
     data: any[];
@@ -28,6 +30,8 @@ const Report = ({
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+
+    const { reportType, setReportType } = useOpenStore()
     const formatValue = (key: string, value: any) => {
         if (key === "createdAt" || key === "updatedAt") {
             return new Date(value).toLocaleString();
@@ -74,10 +78,21 @@ const Report = ({
         if (selectedData.length === 0) return alert("No entries selected");
         await generateBarcodePDF(selectedData);
     };
+
+    useEffect(() => {
+        if (reportType === "movement") {
+            router.push("/report/movement-report")
+        } else {
+            router.push("/report/siezed-report")
+        }
+    }, [reportType])
     return (
         <div className="p-4 relative  ">
             <div className="flex justify-between">
                 <h1 className="text-2xl font-bold mb-4 text-white">{heading}</h1>
+                <div>
+                    <DropDown selectedValue={reportType} handleSelect={setReportType} options={["movement", "release"]} />
+                </div>
                 <div className="flex gap-4">
                     <Button onClick={onImportClick}>Import</Button>
                     <Button onClick={handleExport}>Export</Button>
@@ -94,14 +109,14 @@ const Report = ({
 
             {data && data.length > 0 ? (
                 <div className="overflow-x-auto">
-                    <table className="min-w-full table-auto border border-gray-300">
+                    <table className="min-w-full table-auto border border-gray-600">
                         <thead className="bg-gray-200 text-sm font-semibold">
-                            <tr>
+                            <tr >
                                 <th className="border px-2 py-1">Select</th>
                                 {Object.keys(data[0])
                                     .filter((key) => !excluded.includes(key))
                                     .map((key) => (
-                                        <th key={key} className="border border-gray-400 px-2 py-1 capitalize">
+                                        <th key={key} className="border border-gray-800 px-2 py-1 capitalize">
                                             {key}
                                         </th>
                                     ))}
@@ -110,7 +125,7 @@ const Report = ({
                         <tbody className="bg-gray-100">
                             {data.map((item, index) => (
                                 <tr onDoubleClick={() => {
-                                    handlePrint(item)
+                                    router.push(`/report/entry-report/${item.id}`)
                                 }} key={index} className="text-sm cursor-pointer">
                                     <td className="border px-2 py-1 text-center">
                                         <input

@@ -10,7 +10,7 @@ export const GET = async (req: NextRequest) => {
         if (!districtId) {
             return NextResponse.json({ success: true, data: "please pass the districtId" }, { status: 200 });
         }
-        const policeStation = await prisma.policeStation.findMany({
+        const policeStation = await prisma.user.findMany({
             orderBy: { createdAt: "desc" },
             where: {
                 districtId

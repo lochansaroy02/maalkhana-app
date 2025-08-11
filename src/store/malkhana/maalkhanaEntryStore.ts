@@ -9,6 +9,7 @@ type MaalkhanaEntry = {
     cash: number,
     wine: number;
     wineType: string,
+    caseProperty: string,
     gdDate: string;
     underSection: string;
     Year: string;
@@ -35,7 +36,8 @@ type MaalkhanaStore = {
     getNewEntry: () => Promise<void>;
     fetchMaalkhanaEntry: (userId: string | undefined) => Promise<void>;
     addMaalkhanaEntry: (data: MaalkhanaEntry) => Promise<boolean>;
-    updateMalkhanaEntry: (id: string, data: any) => Promise<boolean>
+    updateMalkhanaEntry: (id: string, data: any) => Promise<boolean>;
+    getByFIR: (firNo: string) => Promise<any>
 };
 
 const initialState: MaalkhanaEntry = {
@@ -46,6 +48,7 @@ const initialState: MaalkhanaEntry = {
     wine: 0,
     cash: 0,
     wineType: '',
+    caseProperty: '',
     underSection: '',
     Year: '',
     policeStation: '',
@@ -110,7 +113,6 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
             const response = await axios.post(`/api/entry`, data, {
                 headers: { "Content-Type": "application/json" },
             });
-
             if (response.data.success) {
                 if (Array.isArray(data)) {
                     console.log(`🚀 Bulk insert successful: ${response.data.count} .`);
@@ -129,8 +131,10 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
     },
     updateMalkhanaEntry: async (id: string, newData: any) => {
         try {
-            const response = await axios.put(`/api/entry?id=${id}`, newData)
-            const data = response.data
+            const response = await axios.put(`/api/entry?id=${encodeURIComponent(id)}`, newData);
+
+            const data = response.data;
+            console.log(data)
             if (data.success) {
                 return true;
             }
@@ -140,6 +144,21 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
             return false;
         }
 
-    }
+    },
 
+    getByFIR: async (firNo: string) => {
+        try {
+            const response = await axios.get(`http://localhost:3000/api/entry/fir?firNo=${firNo}`)
+            const data = response.data;
+            console.log(data.data)
+            return data;
+        } catch (error) {
+
+            console.error({
+                message: "failed to fetch Details "
+            })
+            return error;
+
+        }
+    }
 }));

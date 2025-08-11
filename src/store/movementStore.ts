@@ -7,6 +7,7 @@ export type MovementEntry = {
     srNo: string
     name: string;
     moveDate: string;
+    policeStation?: string,
     userId?: string | undefined;
     returnDate: string;
     returnBackFrom?: string;
@@ -85,9 +86,10 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
         }
     },
 
+
     fetchMovementEntries: async (userId?: string) => {
         try {
-            const response = await axios.get(`/api/movement${userId ? `?userId=${userId}` : ""}`);
+            const response = await axios.get(`/api/movement/getAll?userId=${userId}`);
             if (response.data?.success) {
                 set({ entries: response.data.data });
             } else {

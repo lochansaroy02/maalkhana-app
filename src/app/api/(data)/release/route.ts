@@ -1,8 +1,11 @@
 // app/api/movement/route.ts
-import { prisma } from '@/lib/prisma';
-import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from "@/lib/prisma";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+
+
+
+export const POST = async (req: NextRequest) => {
     try {
         const body = await req.json();
 
@@ -10,7 +13,7 @@ export async function POST(req: Request) {
             if (body.length === 0) {
                 return NextResponse.json({ success: false, message: "Empty array received" }, { status: 400 });
             }
-            const result = await prisma.malkhanaRelease.createMany({
+            const result = await prisma.malkhanaEntry.createMany({
                 data: body,
                 skipDuplicates: true,
             });
@@ -19,84 +22,116 @@ export async function POST(req: Request) {
         }
 
         const {
+            userId,
+            cash,
+            caseProperty,
             srNo,
-            moveDate,
-            districtId,
-            firNo,
+            photoUrl,
+            gdNo,
+            wine,
+            wineType,
+            policeStation,
+            gdDate,
             underSection,
-            takenOutBy,
-            moveTrackingNo,
-            movePurpose,
-            name,
-            recevierName,
-            fathersName,
-            address,
-            mobile,
-            releaseItemName,
-            photo,
-            document,
+            Year,
+            IOName,
+            vadiName,
+            HM,
+            accused,
+            firNo,
+            status,
+            entryType,
+            place,
+            boxNo,
+            courtNo,
+            courtName
         } = body;
 
-        const newEntry = await prisma.malkhanaRelease.create({
+        const newEntry = await prisma.malkhanaEntry.create({
             data: {
+                userId,
+                cash,
                 srNo,
-                moveDate,
-                districtId,
-                firNo,
+                gdNo,
+                wine,
+                wineType,
+                photoUrl,
+                policeStation,
+                caseProperty,
+                gdDate,
                 underSection,
-                takenOutBy,
-                moveTrackingNo,
-                movePurpose,
-                name,
-                recevierName,
-                fathersName,
-                address,
-                mobile,
-                releaseItemName,
-                photo,
-                document,
-            },
-
+                Year,
+                IOName,
+                vadiName,
+                HM,
+                accused,
+                firNo,
+                status,
+                entryType,
+                place,
+                boxNo,
+                courtNo,
+                courtName
+            }
         });
 
-        return NextResponse.json({ success: true, data: newEntry });
+        return NextResponse.json({ success: true, data: newEntry }, { status: 201 });
     } catch (error) {
-        console.error('POST /api/relase error:', error);
-        return NextResponse.json(
-            { success: false, message: 'Failed to create entry', error },
-            { status: 500 }
-        );
+        console.error("POST /api/siezed error:", error);
+        return NextResponse.json({ success: false, error: "Failed to create seized vehicle entry" }, { status: 500 });
     }
-}
+};
+export const GET = async (req: NextRequest) => {
+    const { searchParams } = new URL(req.url);
+    const firNo = searchParams.get("firNo");
 
-interface DistrictParams {
-    districtId: string;
-}
-
-export async function GET(req: NextRequest) {
-
+    if (!firNo) {
+        return NextResponse.json({ success: false, message: "Please enter FIR No." }, { status: 400 });
+    }
     try {
-        const { searchParams } = new URL(req.url);
-        const userId = searchParams.get("userId");
-        if (!userId) {
-            return NextResponse.json(
-                { success: false, error: "District ID is required" },
-                { status: 400 }
-            );
-        }
-        const entries = await prisma.malkhanaRelease.findMany({
-            where: {
-                userId
-            },
-            orderBy: { createdAt: 'desc' },
+        const data = await prisma.malkhanaEntry.findMany({
+            where: { firNo },
+            select: {
+
+                id: true,
+                srNo: true,
+            }
         });
 
-        return NextResponse.json({ success: true, data: entries });
+        if (!data) {
+            return NextResponse.json({ success: false, message: "No record found" }, { status: 404 });
+        }
+
+        return NextResponse.json({ success: true, data }, { status: 200 });
     } catch (error) {
-        console.error('GET  error:', error);
-        return NextResponse.json(
-            { success: false, message: 'Failed to fetch entries', error },
-            { status: 500 }
-        );
+        console.error("GET /api/movement error:", error);
+        return NextResponse.json({ success: false, error: "Failed to fetch data" }, { status: 500 });
     }
-}
+};
+
+// UPDATE Movement data
+export const PUT = async (req: NextRequest) => {
+    try {
+
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get("id");
+
+        const body = await req.json();
+        const { ...movementData } = body;
+
+        if (!id) {
+            return NextResponse.json({ success: false, message: "FIR No. is required" }, { status: 400 });
+        }
+
+        const updatedEntry = await prisma.malkhanaEntry.update({
+
+            where: { id },
+            data: movementData
+        });
+
+        return NextResponse.json({ success: true, data: updatedEntry }, { status: 200 });
+    } catch (error) {
+        console.error("PUT /api/movement error:", error);
+        return NextResponse.json({ success: false, error: "Failed to update data" }, { status: 500 });
+    }
+};

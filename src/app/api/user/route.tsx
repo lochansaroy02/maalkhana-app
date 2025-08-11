@@ -15,7 +15,7 @@ export const POST = async (req: NextRequest) => {
             );
         }
 
-        
+
 
         const existing = await prisma.user.findUnique({ where: { email } });
         if (existing) {
@@ -38,7 +38,6 @@ export const POST = async (req: NextRequest) => {
                 role,
                 passwordHash,
                 districtId
-
             },
         });
         return NextResponse.json({ success: true, data: newUser }, { status: 201 });
@@ -86,21 +85,21 @@ export const GET = async (req: NextRequest) => {
 };
 
 
-export const DELETE = async (req: NextRequest, res: NextResponse) => {
-    const body = await req.json()
-    const { ids } = body
-    if (!Array.isArray(ids) || ids.length === 0) {
-        return NextResponse.json({ success: false, error: "Invalid user IDs" });
-    }
+// export const DELETE = async (req: NextRequest, res: NextResponse) => {
+//     const body = await req.json()
+//     const { ids } = body
+//     if (!Array.isArray(ids) || ids.length === 0) {
+//         return NextResponse.json({ success: false, error: "Invalid user IDs" });
+//     }
 
-    try {
-        await prisma.user.deleteMany({
-            where: { id: { in: ids } },
-        });
+//     try {
+//         await prisma.user.deleteMany({
+//             where: { id: { in: ids } },
+//         });
 
-        return NextResponse.json({ success: true, message: "Users deleted successfully" });
-    } catch (error) {
-        console.error("DELETE /api/user error:", error);
-        return NextResponse.json({ success: false, error: "Failed to delete users" });
-    }
-}
+//         return NextResponse.json({ success: true, message: "Users deleted successfully" });
+//     } catch (error) {
+//         console.error("DELETE /api/user error:", error);
+//         return NextResponse.json({ success: false, error: "Failed to delete users" });
+//     }
+// }

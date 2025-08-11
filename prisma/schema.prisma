@@ -38,13 +38,12 @@ model User {
 }
 
 model SeizedVehicle {
-  id String @id @default(cuid())
-
-  srNo           String? @unique
+  id             String  @id @default(cuid())
+  srNo           String?
   firNo          String?
   gdNo           String
   gdDate         String
-  underSection   String  @default("207")
+  underSection   String
   vehicleType    String
   colour         String
   registrationNo String
@@ -93,8 +92,8 @@ model MalkhanaEntry {
   cash         Int?
   wineType     String
   photoUrl     String  @default("")
-  firNo        String? @unique
-  srNo         String? @unique
+  firNo        String?
+  srNo         String?
   gdNo         String
   gdDate       String
   underSection String

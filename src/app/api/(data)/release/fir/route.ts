@@ -7,26 +7,32 @@ export const GET = async (req: NextRequest) => {
     const type = searchParams.get("type");
     const srNo = searchParams.get("srNo");
 
-
+    console.log(firNo, type, srNo)
     try {
         const selection = {
             id: true,
             firNo: true,
             srNo: true,
-            isReturned: true,
-            caseProperty: true,
+            // isReturned: true,
+            // caseProperty: true,
             moveDate: true,
             underSection: true,
             takenOutBy: true,
             moveTrackingNo: true,
             movePurpose: true,
-            name: true,
-            receivedBy: true,
-            returnDate: true,
-            returnBackFrom: true,
+            recevierName: true,
+
+            address: true,
+            mobileNo: true,
+            releaseItemName: true,
             userId: true
         };
+
         if (type === 'malkhana') {
+
+            if (!firNo) {
+                return NextResponse.json({ success: true, message: "please enter FirNo." }, { status: 200 });
+            }
             const data = await prisma.malkhanaEntry.findFirst({
                 where: {
                     firNo
@@ -37,6 +43,9 @@ export const GET = async (req: NextRequest) => {
         }
 
         if (type === "siezed vehical") {
+            if (!firNo && !srNo) {
+                return NextResponse.json({ success: true, message: "please enter FirNo." }, { status: 200 });
+            }
 
             if (firNo) {
                 const data = await prisma.seizedVehicle.findFirst({
@@ -58,6 +67,8 @@ export const GET = async (req: NextRequest) => {
             }
 
         }
+        return NextResponse.json({ success: false, message: "no data sent" }, { status: 200 });
+
 
 
     } catch (error) {
