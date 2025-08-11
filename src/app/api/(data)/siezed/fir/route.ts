@@ -9,15 +9,52 @@ export const GET = async (req: NextRequest) => {
 
     try {
         const selection = {
-            // movement entry
+
             id: true,
-            userId: true
+            srNo: true,
+            firNo: true,
+            gdNo: true,
+            gdDate: true,
+            underSection: true,
+            vehicleType: true,
+            colour: true,
+
+            engineNo: true,
+            description: true,
+            status: true,
+            policeStation: true,
+            ownerName: true,
+            seizedBy: true,
+            caseProperty: true,
+
+
+            receviedBy: true,
+            returnBackFrom: true,
+            takenOutBy: true,
+            moveTrackingNo: true,
+            returnDate: true,
+            movePurpose: true,
+            name: true,
+            photoUrl: true,
+            document: true,
+            moveDate: true,
+            receivedBy: true,
+            documentUrl: true,
+
+
+            recevierName: true,
+            fathersName: true,
+            address: true,
+            mobile: true,
+            releaseItemName: true,
+
         }
         const data = await prisma.seizedVehicle.findFirst({
             where: {
                 firNo
             },
             select: selection
+
         })
 
         return NextResponse.json({ success: true, data: data }, { status: 200 });

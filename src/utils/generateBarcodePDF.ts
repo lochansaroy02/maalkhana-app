@@ -11,8 +11,8 @@ export const generateBarcodePDF = async (entries: any[]) => {
     const barcodeWidth = 40; // mm
     const barcodeHeight = 15; // mm
     const paddingX = 10; // mm
-    const paddingY = 10; // mm
-    const verticalSpacing = 20; // mm
+    const paddingY = 15; // mm, increased for top text
+    const verticalSpacing = 25; // Increased vertical spacing for clarity
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
@@ -20,6 +20,7 @@ export const generateBarcodePDF = async (entries: any[]) => {
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
 
+        // Recalculate position for each barcode
         const indexOnPage = i % perPage;
         const row = Math.floor(indexOnPage / barcodesPerRow);
         const col = indexOnPage % barcodesPerRow;
@@ -27,28 +28,36 @@ export const generateBarcodePDF = async (entries: any[]) => {
         const x = paddingX + col * (barcodeWidth + paddingX);
         const y = paddingY + row * verticalSpacing;
 
-        // Create a browser canvas element
+        // --- Add static "1" above the barcode ---
+        doc.text('1', x + barcodeWidth / 2, y - 2, { align: 'center' });
+
+        // --- Generate Barcode with "SR/Year" as the value ---
         const canvas = document.createElement("canvas");
-        JsBarcode(canvas, entry.id, {
+
+        // Create the value string (e.g., "148/24")
+        const barcodeValue = `${entry.srNo || '??'}/${String(entry.Year || '??').slice(-2)}`;
+
+        JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
             width: 2,
             height: 40,
-            displayValue: false,
+            displayValue: true,      // Show the value as text
+            textPosition: "bottom",  // Position text below the barcode
+            textAlign: "center",     // Center the text
+            textMargin: 2,
+            fontSize: 10,
+            // The `text` option is not needed, it defaults to showing the barcode's value
         });
         const imageData = canvas.toDataURL("image/png");
 
-        // Add barcode image
+        // Add the generated barcode image to the PDF document
         doc.addImage(imageData, "PNG", x, y, barcodeWidth, barcodeHeight);
 
-        // Add FIR text below barcode
-        doc.text(`FIR: ${entry.firNo}`, x, y + barcodeHeight + 4);
-
-        // Add new page if needed
+        // Add a new page if the current one is full
         if ((i + 1) % perPage === 0 && i !== entries.length - 1) {
             doc.addPage();
         }
     }
 
-    // Save the PDF
     doc.save("barcodes.pdf");
 };

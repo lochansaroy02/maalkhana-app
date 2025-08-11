@@ -3,7 +3,7 @@
 import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
-import { ArrowDownFromLine, Banknote, Car, LucideArrowDownNarrowWide, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
+import { Banknote, Car, LucideArrowDownNarrowWide, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
 import { useEffect } from "react";
 
 const Page = () => {
@@ -41,7 +41,7 @@ const Page = () => {
             value: data?.breakdown?.release,
         },
         {
-            title: "Seized Vehicle",
+            title: "Seized Vehical",
             icon: <Car size="50px" />,
             bgColour: "bg-blue-500",
             value: data?.breakdown?.siezed,

@@ -16,9 +16,8 @@ const Page = () => {
     const { user } = useAuthStore();
     const { addMaalkhanaEntry, updateMalkhanaEntry, getByFIR } = useMaalkhanaStore();
 
-
-    const [firData, setFirData] = useState(null)
-    const [photoUrl, SetPhotoUrl] = useState("")
+    const [firData, setFirData] = useState<any[]>([]);
+    const [photoUrl, SetPhotoUrl] = useState("");
     const [entryType, setEntryType] = useState('');
     const [wine, setWine] = useState<number>(0);
     const [cash, setCash] = useState<number>(0);
@@ -30,6 +29,8 @@ const Page = () => {
     const [dateFields, setDateFields] = useState<{ gdDate?: Date }>({
         gdDate: new Date(),
     });
+
+    const [selectedSrNo, setSelectedSrNo] = useState<string>('');
 
     const [formData, setFormData] = useState({
         firNo: '',
@@ -49,22 +50,61 @@ const Page = () => {
         courtName: '',
     });
 
+    const populateForm = (data: any) => {
+        if (!data) return;
+        setExistingId(data.id || "");
+        setFormData({
+            firNo: data.firNo || '',
+            srNo: data.srNo || '',
+            underSection: data.underSection || '',
+            caseProperty: data.caseProperty || '',
+            gdNo: data.gdNo || '',
+            Year: data.Year || '',
+            policeStation: data.policeStation || '',
+            IOName: data.IOName || '',
+            vadiName: data.vadiName || '',
+            HM: data.HM || '',
+            accused: data.accused || '',
+            place: data.place || '',
+            boxNo: data.boxNo || '',
+            courtNo: data.courtNo || '',
+            courtName: data.courtName || '',
+        });
+        setStatus(data.status || '');
+        setWine(data.wine || 0);
+        setCash(data.cash || 0);
+        setWineType(data.wineType || '');
+        setEntryType(data.entryType || '');
+        setDescription(data.description || '');
+        setDateFields({ gdDate: data.gdDate ? new Date(data.gdDate) : new Date() });
+        SetPhotoUrl(data.photoUrl || "");
+    };
+
+    const clearForm = () => {
+        setFormData(prev => ({
+            firNo: prev.firNo,
+            srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '',
+        }));
+        setExistingId("");
+        setStatus('');
+        setWine(0);
+        setCash(0);
+        setWineType('');
+        setDescription('');
+        setDateFields({ gdDate: new Date() });
+        SetPhotoUrl("");
+        if (photoRef.current) photoRef.current.value = '';
+    };
+
     const entryOptions = [
-        "malkhana Entry",
-        "FSL",
-        "Kukri",
-        "Other Entry",
-        "Cash Entry",
-        "Wine/Daru",
-        "Unclaimed Entry",
+        "malkhana Entry", "FSL", "Kukri", "Other Entry", "Cash Entry", "Wine/Daru", "Unclaimed Entry",
     ];
     const statusOptions = ["Destroy", "Nilami", "Pending", "Other", "On Court"];
 
     const fields = [
         { name: 'firNo', label: 'FIR No' },
-        { name: 'srNo', label: 'Sr. No / Mad No.' },
+        { name: 'srNo', label: 'Sr. No / Mud No.' },
         { name: 'caseProperty', label: 'case Property' },
-
         { name: 'gdNo', label: 'GD No' },
         { name: 'gdDate', label: 'GD Date', type: 'date' },
         { name: 'Year', label: 'Year' },
@@ -84,111 +124,77 @@ const Page = () => {
     ];
 
     const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value,
-        }));
+        setFormData(prev => ({ ...prev, [field]: value }));
     };
 
     const handleDateChange = (fieldName: string, date: Date | undefined) => {
-        setDateFields(prev => ({
-            ...prev,
-            [fieldName]: date,
-        }));
+        setDateFields(prev => ({ ...prev, [fieldName]: date }));
         handleInputChange(fieldName, date?.toISOString() ?? "");
     };
+
     const photoRef = useRef<HTMLInputElement>(null);
+
+    const handleSrNoSelectionChange = (srNo: string) => {
+        setSelectedSrNo(srNo);
+        const selectedData = firData.find((item: any) => item.srNo === srNo);
+        if (selectedData) {
+            populateForm(selectedData);
+        }
+    };
 
     const handleSave = async () => {
         setLoading(true);
-
         try {
             const userId = user?.id;
             const fullData = {
                 ...formData,
-                status,
-                wine,
-                cash,
-                wineType,
-                entryType,
-                userId,
-                photoUrl,
-                description,
+                status, wine, cash, wineType, entryType, userId, photoUrl, description,
                 gdDate: dateFields.gdDate?.toISOString() ?? '',
-
-
             };
 
             let success = false;
             if (existingId) {
-                success = await updateMalkhanaEntry(existingId, fullData)
-                toast.success("Data Updated")
+                success = await updateMalkhanaEntry(existingId, fullData);
+                toast.success("Data Updated");
             } else {
-                success = await addMaalkhanaEntry(fullData)
-                toast.success("Data Added")
+                success = await addMaalkhanaEntry(fullData);
+                toast.success("Data Added");
             }
 
             if (success) {
-
-                setFormData({
-                    caseProperty: '',
-                    accused: '', boxNo: '', courtName: "",
-                    courtNo: "", firNo: '', gdNo: '', HM: '', IOName: '', place: '', policeStation: '', srNo: '', underSection: '', vadiName: '', Year: ''
-                })
-                setDateFields({ gdDate: new Date })
-                if (photoRef.current) photoRef.current.value = '';
-                SetPhotoUrl('')
+                clearForm();
+                setFormData({ firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '' });
+                setFirData([]);
+                setSelectedSrNo('');
             }
         } catch (error) {
             console.error("Save error:", error);
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
     };
 
-
-
-
-
-
     const handleGetByFir = async () => {
-
+        setSelectedSrNo('');
         const response = await getByFIR(formData.firNo);
-        const success = response?.success
+        const success = response?.success;
         const data = response?.data;
-        setFirData(data)
-        if (success) {
-            setExistingId(data.id)
-            setFormData({
-                firNo: data.firNo || '',
-                underSection: data.underSection || '',
-                caseProperty: data.caseProperty,
-                srNo: data.srNo || '',
-                gdNo: data.gdNo || '',
-                Year: data.Year || '',
-                policeStation: data.policeStation || '',
-                IOName: data.IOName || '',
-                vadiName: data.vadiName || '',
-                HM: data.HM || '',
-                accused: data.accused || '',
-                place: data.place || '',
-                boxNo: data.boxNo || '',
-                courtNo: data.courtNo || '',
-                courtName: data.courtName || '',
-            });
 
-            setStatus(data.status || '');
-            setWine(data.wine || 0);
-            setCash(data.cash || 0);
-            setWineType(data.wineType || '');
-            setEntryType(data.entryType || '');
-            setDescription(data.description || '');
-            setDateFields({ gdDate: data.gdDate ? new Date(data.gdDate) : new Date() });
+        if (success) {
+            const dataArray = Array.isArray(data) ? data : [data];
+            setFirData(dataArray);
+
+            if (dataArray.length === 1) {
+                populateForm(dataArray[0]);
+                setSelectedSrNo(dataArray[0].srNo);
+            } else {
+                clearForm();
+            }
         } else {
+            setFirData([]);
             toast.error("FIR not found");
         }
     };
-
 
     const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -196,7 +202,6 @@ const Page = () => {
 
         try {
             setLoading(true);
-            // Upload to Cloudinary
             const uploadedUrl = await uploadToCloudinary(file);
             SetPhotoUrl(uploadedUrl);
             toast.success("Photo uploaded successfully");
@@ -208,148 +213,111 @@ const Page = () => {
         }
     };
 
-
-
     return (
         <div className='glass-effect'>
             <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
                 <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Malkhana Entry Form</h1>
             </div>
-            <div className='px-8  py-4 rounded-b-md'>
+            <div className='px-8 py-4 rounded-b-md'>
                 <div className='py-2 flex items-center'>
                     <div className='flex w-3/4 items-center gap-6'>
                         <div className={`${entryType === 'Wine/Daru' || entryType === 'Cash Entry' ? "w-full" : "w-1/2"}`}>
-                            <DropDown
-                                label='Entry type'
-                                selectedValue={entryType}
-                                options={entryOptions}
-                                handleSelect={setEntryType}
-                            />
+                            <DropDown label='Entry type' selectedValue={entryType} options={entryOptions} handleSelect={setEntryType} />
                         </div>
                     </div>
-
                     <div className={`w-full ml-6 gap-6 ${entryType === 'Wine/Daru' ? "flex" : "hidden"} items-center`}>
                         <DropDown label='Wine' selectedValue={wineType} options={["Desi", "Angrezi"]} handleSelect={setWineType} />
                     </div>
-
                     <div className={`w-full ml-6 gap-6 ${entryType === 'Wine/Daru' ? "flex" : "hidden"} items-center`}>
                         <label className='text-blue-100'>Wine</label>
                         <Input type='number' value={wine} onChange={(e) => setWine(Number(e.target.value))} />
                     </div>
-
-                    <div className={`w-3/4  ml-18   ${entryType === 'Cash Entry' ? "flex flex-col" : "hidden"}`}>
+                    <div className={`w-3/4 ml-18 ${entryType === 'Cash Entry' ? "flex flex-col" : "hidden"}`}>
                         <label className='text-blue-100'>Cash</label>
                         <Input className='text-blue-100' type='number' value={cash} onChange={(e) => setCash(Number(e.target.value))} />
                     </div>
                 </div>
 
-                <div className='grid grid-cols-2 gap-2 '>
+                <div className='grid grid-cols-2 gap-2'>
                     {fields.map(field => {
                         if (field.name === 'firNo' && entryType === "Unclaimed Entry") return null;
 
-                        if (field.type === 'dropdown') {
-                            return (
-                                <DropDown
-                                    key={field.name}
-                                    label={field.label}
-                                    selectedValue={status}
-                                    options={field.options || []}
-                                    handleSelect={setStatus}
-                                />
-                            );
+                        if (field.name === 'srNo') {
+                            if (firData.length > 1) {
+                                return (
+                                    <div key="srNo-radios" className="col-span-2 flex flex-col gap-1">
+                                        <label className='text-blue-100'>Select One Sr. No / Mud No.</label>
+                                        <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
+                                            {firData
+                                                .filter((item: any) => item && item.srNo) // <-- THIS LINE IS ADDED
+                                                .map((item: any) => (
+                                                    <div key={item.id || item.srNo} className="flex items-center gap-2">
+                                                        <input
+                                                            type="radio"
+                                                            id={`srNo-${item.srNo}`}
+                                                            name="srNoSelection"
+                                                            className="form-radio h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500 cursor-pointer"
+                                                            checked={selectedSrNo === item.srNo}
+                                                            onChange={() => handleSrNoSelectionChange(item.srNo)}
+                                                        />
+                                                        <label htmlFor={`srNo-${item.srNo}`} className="text-blue-100 cursor-pointer">{item.srNo}</label>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </div>
+                                );
+                            } else {
+                                return (
+                                    <InputComponent key={field.name} label={field.label} value={formData.srNo} setInput={(e) => handleInputChange(field.name, e.target.value)} />
+                                );
+                            }
                         }
-                        
+
+                        if (field.type === 'dropdown') {
+                            return <DropDown key={field.name} label={field.label} selectedValue={status} options={field.options || []} handleSelect={setStatus} />;
+                        }
                         if (field.type === 'textarea') {
                             return (
-                                <div key={field.name} className='flex flex-col col-span-1 gap-1 '>
+                                <div key={field.name} className='flex flex-col col-span-1 gap-1'>
                                     <label className='text-blue-100' htmlFor={field.name}>{field.label}</label>
-                                    <Textarea
-                                        id={field.name}
-                                        value={description}
-                                        className=''
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        placeholder={`Enter ${field.label}`}
-                                    />
+                                    <Textarea className='text-blue-100' id={field.name} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={`Enter ${field.label}`} />
                                 </div>
                             );
                         }
-
                         if (field.type === 'date') {
-                            return (
-                                <DatePicker
-                                    key={field.name}
-                                    label={field.label}
-                                    date={dateFields[field.name as keyof typeof dateFields]}
-                                    setDate={(date) => handleDateChange(field.name, date)}
-                                />
-                            );
+                            return <DatePicker key={field.name} label={field.label} date={dateFields[field.name as keyof typeof dateFields]} setDate={(date) => handleDateChange(field.name, date)} />;
                         }
 
-
-
                         return (
-                            <div key={field.name} className=" ">
-
-                                {
-                                    field.name === 'firNo' ? (
-                                        <div className='flex  items-end  justify-between  '>
-
-                                            <InputComponent
-                                                className='w-3/4 '
-                                                label={field.label}
-                                                value={formData[field.name as keyof typeof formData]}
-                                                setInput={(e) => handleInputChange(field.name, e.target.value)} />
-                                            <Button
-                                                type="button"
-                                                className="h-10 bg-blue  text-white"
-                                                onClick={handleGetByFir}>
-                                                fetch Data
-                                            </Button>
-                                        </div>
-                                    ) : <InputComponent
-                                        label={field.label}
-                                        value={formData[field.name as keyof typeof formData]}
-                                        setInput={(e) => handleInputChange(field.name, e.target.value)}
-                                    />}
+                            <div key={field.name}>
+                                {field.name === 'firNo' ? (
+                                    <div className='flex items-end justify-between'>
+                                        <InputComponent className='w-3/4' label={field.label} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name, e.target.value)} />
+                                        <Button type="button" className="h-10 bg-blue text-white" onClick={handleGetByFir}>Fetch Data</Button>
+                                    </div>
+                                ) : (
+                                    <InputComponent label={field.label} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name, e.target.value)} />
+                                )}
                             </div>
                         );
-                    }
-                    )}
+                    })}
                 </div>
 
                 <div className='w-full'>
-                    <div className='flex flex-row mt-4 gap-2 '>
+                    <div className='flex flex-row mt-4 gap-2'>
                         <div className='w-[40%]'>
                             <label className='text-nowrap text-blue-100' htmlFor="photo">Upload Photo</label>
-                            <input
-                                ref={photoRef}
-                                className='text-blue-100 rounded-xl glass-effect px-2 py-1'
-                                id="photo"
-                                type='file'
-                                onChange={handlePhotoChange}
-                            />
+                            <input ref={photoRef} className='text-blue-100 rounded-xl glass-effect px-2 py-1' id="photo" type='file' onChange={handlePhotoChange} />
                         </div>
-
-                        <div className='w-[60%] flex flex-col gap-4 relative '>
-                            {photoUrl && <Button onClick={() => { SetPhotoUrl("") }} className='absolute right-0 bg-red-800 hover:bg-red-500  cursor-pointer ' > <Trash /></Button>}
-                            <div className=''>
-                                {photoUrl &&
-                                    <img src={photoUrl} className='rounded-md w-full h-full  border' alt="upload preview" />
-
-                                }
-                            </div>
+                        <div className='w-[60%] flex flex-col gap-4 relative'>
+                            {photoUrl && <Button onClick={() => SetPhotoUrl("")} className='absolute right-0 bg-red-800 hover:bg-red-500 cursor-pointer'><Trash /></Button>}
+                            {photoUrl && <img src={photoUrl} className='rounded-md w-full h-full border' alt="upload preview" />}
                         </div>
                     </div>
-
-
                 </div>
                 <div className='flex w-full px-12 justify-between mt-4'>
                     {["Save", "Print", "Modify", "Delete"].map((item, index) => (
-                        <Button
-                            key={index}
-                            onClick={() => item === "Save" ? handleSave() : console.log(`${item} clicked`)}
-                            className='cursor-pointer'
-                        >
+                        <Button key={index} onClick={() => item === "Save" ? handleSave() : console.log(`${item} clicked`)} className='cursor-pointer'>
                             {loading && item === "Save" ? <LoaderIcon className='animate-spin' /> : item}
                         </Button>
                     ))}

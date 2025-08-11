@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
         const entries = await prisma.malkhanaEntry.findMany({
             where: {
                 userId
-            }, orderBy: { createdAt: "desc" },
+        }, orderBy: { createdAt: "desc" },
         })
 
         return NextResponse.json({ success: true, data: entries }, { status: 200 });

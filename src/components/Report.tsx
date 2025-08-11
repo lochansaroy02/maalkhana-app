@@ -1,62 +1,54 @@
 "use client";
 
-import { useOpenStore } from "@/store/store";
 import { exportToExcel } from "@/utils/exportToExcel";
-import { generateSinglePDF } from "@/utils/exportToPDF";
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "./ui/button";
-import DropDown from "./ui/DropDown";
 
 interface ReportProps {
     data: any[];
     heading: string;
-    link: string;
+    detailsPathPrefix: string; // Changed 'link' to 'detailsPathPrefix' for clarity
     onImportClick?: () => void;
-    onAddClick?: () => void;
     fetchData?: () => void;
 }
 
 const Report = ({
     data,
     heading,
-    link,
+    detailsPathPrefix, // Use the new prop
     onImportClick,
-    onAddClick,
     fetchData
 }: ReportProps) => {
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-
-    const { reportType, setReportType } = useOpenStore()
+    // ... (rest of the functions like formatValue, handleExport, etc. remain the same)
     const formatValue = (key: string, value: any) => {
-        if (key === "createdAt" || key === "updatedAt") {
-            return new Date(value).toLocaleString();
+        if (key === "createdAt" || key === "updatedAt" || key === 'gdDate' || key === 'moveDate' || key == 'returnDate') {
+            return new Date(value).toLocaleString()
+                .split("T")[0]
+                .replace(/-/g, "/");
         }
         if (key === "IsReturned") {
-            return value || "No";
+            return "Yes";
         }
+
         return value || "-";
     };
-
     const handleExport = () => {
         data && exportToExcel(data, "data");
     };
-
     const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "photoUrl", "userId", "districtId"];
-
     const toggleSelect = (id: string) => {
         setSelectedIds(prev =>
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
         );
     };
-
     const handleDeleteSelected = async () => {
         if (selectedIds.length === 0) return alert("No entries selected");
-
         try {
             await axios.post("/api/entry/delete-multiple", { ids: selectedIds });
             alert("Deleted successfully");
@@ -67,32 +59,17 @@ const Report = ({
             alert("Error deleting entries");
         }
     };
-
-    // Example handler
-    const handlePrint = async (entryData: any,) => {
-        await generateSinglePDF(entryData, "pdf1");
-    };
-
     const handleGenerateBarcodePDF = async () => {
         const selectedData = data.filter(item => selectedIds.includes(item.id));
         if (selectedData.length === 0) return alert("No entries selected");
         await generateBarcodePDF(selectedData);
     };
 
-    useEffect(() => {
-        if (reportType === "movement") {
-            router.push("/report/movement-report")
-        } else {
-            router.push("/report/siezed-report")
-        }
-    }, [reportType])
+
     return (
         <div className="p-4 relative  ">
             <div className="flex justify-between">
                 <h1 className="text-2xl font-bold mb-4 text-white">{heading}</h1>
-                <div>
-                    <DropDown selectedValue={reportType} handleSelect={setReportType} options={["movement", "release"]} />
-                </div>
                 <div className="flex gap-4">
                     <Button onClick={onImportClick}>Import</Button>
                     <Button onClick={handleExport}>Export</Button>
@@ -124,9 +101,12 @@ const Report = ({
                         </thead>
                         <tbody className="bg-gray-100">
                             {data.map((item, index) => (
-                                <tr onDoubleClick={() => {
-                                    router.push(`/report/entry-report/${item.id}`)
-                                }} key={index} className="text-sm cursor-pointer">
+                                <tr
+                                    // UPDATED THIS LINE
+                                    onDoubleClick={() => router.push(`${detailsPathPrefix}/${item.id}`)}
+                                    key={index}
+                                    className="text-sm cursor-pointer"
+                                >
                                     <td className="border px-2 py-1 text-center">
                                         <input
                                             type="checkbox"

@@ -1,7 +1,11 @@
 "use client";
 
+import { useOpenStore } from "@/store/store";
 import { usePathname, useRouter } from "next/navigation";
+import DropDown from "./ui/DropDown";
+
 const ReportHeader = () => {
+    const { reportType, setReportType } = useOpenStore()
 
 
     const router = useRouter()
@@ -13,19 +17,19 @@ const ReportHeader = () => {
         {
             name: "Malkhana Entry", link: "/report/entry-report", colour: "bg-green-500"
         },
+        {
+            name: "Seized vehical", link: "/report/siezed-report", colour: "bg-red-500"
+        },
         // {
         //     name: "Malkhana Movement", link: "/report/movement-report", colour: "bg-blue-500"
         // },
         {
-            name: "Return", link: "/report/release-report", colour: "bg-amber-500"
-        },
-        {
-            name: "Seized vehical", link: "/report/siezed-report", colour: "bg-red-500"
+            name: "Return", link: "/report/return", colour: "bg-amber-500"
         },
     ]
     return (
-        <div className="  py-1  h-14    ">
-            <div className="flex  justify-between px-4   h-full ">
+        <div className="  py-1   justify- flex  h-14    ">
+            <div className="flex   gap-8  px-4   h-full ">
                 {
                     data.map((item, index) => {
                         const isActive = path === item.link
@@ -42,6 +46,10 @@ const ReportHeader = () => {
 
                     )
                 }
+
+                <div>
+                    <DropDown selectedValue={reportType} handleSelect={setReportType} options={["movement", "release", "All"]} />
+                </div>
             </div>
         </div>
     )

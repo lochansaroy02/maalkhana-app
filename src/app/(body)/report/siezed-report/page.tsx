@@ -5,43 +5,49 @@ import { Checkbox } from '@/components/ui/checkbox';
 import UploadModal from '@/components/UploadModal';
 import { useAuthStore } from '@/store/authStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
+import { useOpenStore } from '@/store/store';
 import { useEffect, useState } from 'react';
 
 const casePropertyOptions = [
-    'mv act',
-    'arto seized',
-    'BNS/IPC',
-    'EXCISE',
-    'SEIZED',
-    'UNCLAMMED VEHICLE'
+    'mv act', 'arto seized', 'BNS/IPC', 'EXCISE', 'SEIZED', 'UNCLAMMED VEHICLE'
 ];
 
 const Page = () => {
+    const { reportType } = useOpenStore();
+    const { user } = useAuthStore();
+    const { vehicles, vehicleMovements, vehicleReleases, addVehicle, fetchVehicles } = useSeizedVehicleStore();
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
-    const [data, setData] = useState<any[]>([]);
-    const { user } = useAuthStore()
-    const { vehicles, fetchVehicles, addVehicle } = useSeizedVehicleStore();
+    const [displayData, setDisplayData] = useState<any[]>([]);
+
+    // REMOVED the data fetching useEffect from here.
 
     useEffect(() => {
-        fetchVehicles(user?.id);
-    }, []);
+        let sourceData = [];
 
-    useEffect(() => {
-        if (selectedCaseProperty) {
-            const filtered = vehicles.filter(
-                (item) => item.caseProperty?.toLowerCase() === selectedCaseProperty.toLowerCase()
-            );
-            setData(filtered);
+        if (reportType === 'movement') {
+            sourceData = vehicleMovements || [];
+        } else if (reportType === 'release') {
+            sourceData = vehicleReleases || [];
         } else {
-            setData(vehicles);
+            sourceData = vehicles;
         }
-    }, [selectedCaseProperty, vehicles]);
+
+        if (selectedCaseProperty) {
+            const filtered = sourceData.filter(
+                (item: any) => item.caseProperty?.toLowerCase() === selectedCaseProperty.toLowerCase()
+            );
+            setDisplayData(filtered);
+        } else {
+            setDisplayData(sourceData);
+        }
+    }, [reportType, selectedCaseProperty, vehicles, vehicleMovements, vehicleReleases]);
 
     const handleImportSuccess = () => {
-        fetchVehicles(user?.id);
+        if (user?.id) fetchVehicles(user.id);
     };
-    console.log(user?.id);
+
     return (
         <>
             <div className="glass-effect my-4 p-4 ">
@@ -63,9 +69,9 @@ const Page = () => {
 
             <Report
                 onImportClick={() => setIsModalOpen(true)}
-                data={data}
-                link="/seized-vehical"
+                data={displayData}
                 heading="Seized Vehicles Report"
+                detailsPathPrefix="/report/siezed-report"
             />
 
             <UploadModal

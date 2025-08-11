@@ -38,6 +38,7 @@ type MaalkhanaStore = {
     addMaalkhanaEntry: (data: MaalkhanaEntry) => Promise<boolean>;
     updateMalkhanaEntry: (id: string, data: any) => Promise<boolean>;
     getByFIR: (firNo: string) => Promise<any>
+    fetchMovementData: (userId: string | undefined) => Promise<any>
 };
 
 const initialState: MaalkhanaEntry = {
@@ -148,12 +149,25 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
 
     getByFIR: async (firNo: string) => {
         try {
-            const response = await axios.get(`http://localhost:3000/api/entry/fir?firNo=${firNo}`)
+            const response = await axios.get(`/api/entry/fir?firNo=${firNo}`)
             const data = response.data;
             console.log(data.data)
             return data;
         } catch (error) {
 
+            console.error({
+                message: "failed to fetch Details "
+            })
+            return error;
+
+        }
+    },
+    fetchMovementData: async (userId: string | undefined) => {
+        try {
+            const response = await axios.get(`/api/entry/movement?userId=${userId}`)
+            const data = response.data;
+            return data;
+        } catch (error) {
             console.error({
                 message: "failed to fetch Details "
             })
