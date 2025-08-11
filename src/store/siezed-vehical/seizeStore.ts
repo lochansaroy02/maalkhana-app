@@ -133,7 +133,7 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
         try {
             const response = await axios.put(`/api/siezed?id=${id}`, newData)
             const data = response.data
-            
+
             if (data.success) {
                 return true;
             }

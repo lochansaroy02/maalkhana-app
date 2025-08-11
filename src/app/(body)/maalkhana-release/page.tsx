@@ -9,12 +9,19 @@ import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
 const Page = () => {
-    const { addReleaseEntry, resetForm, FetchByFIR, updateReleaseEntry } = useReleaseStore()
-    const [isloading, setIsLoading] = useState<boolean>(false)
-    const [type, setType] = useState<string>("")
-    const [existingId, setExistingId] = useState<string>("")
-    const { user } = useAuthStore()
-    const [formData, setFormData] = useState({
+    // Use the corrected release store
+    const { FetchByFIR, updateReleaseEntry } = useReleaseStore();
+
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isFetching, setIsFetching] = useState<boolean>(false);
+    const [type, setType] = useState<string>("");
+
+    // This state will now hold the unique ID of the record we fetch
+    const [recordId, setRecordId] = useState<string>("");
+
+    const { user } = useAuthStore();
+
+    const initialFormData = {
         srNo: '',
         moveDate: '',
         firNo: '',
@@ -22,29 +29,25 @@ const Page = () => {
         takenOutBy: '',
         moveTrackingNo: '',
         movePurpose: '',
-        recevierName: "",
+        recevierName: "", // In your schema, this is 'receiverName', ensure consistency
         fathersName: "",
         address: "",
         mobile: "",
         releaseItemName: ""
+    };
 
-    });
-
+    const [formData, setFormData] = useState(initialFormData);
     const [caseProperty, setCaseProperty] = useState('');
     const photoRef = useRef<HTMLInputElement>(null);
     const documentRef = useRef<HTMLInputElement>(null);
 
-    const statusOptions = ['Destroy', 'Nilami', 'Pending', 'Other', 'On Court'];
     const caseOptions = [
         "Cash Property", "Kukri", "FSL", "Unclaimed", "Other Entry", "Cash Entry",
         "Wine", "MV Act", "ARTO", "BNS / IPC", "Excise Vehicle", "Unclaimed Vehicle", "Seizure Entry"
     ];
 
     const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        setFormData(prev => ({ ...prev, [field]: value }));
     };
 
     const fields = [
@@ -55,7 +58,7 @@ const Page = () => {
         { name: 'takenOutBy', label: 'Taken Out By' },
         { name: 'moveTrackingNo', label: 'Move Tracking No' },
         { name: 'movePurpose', label: 'Move Purpose' },
-        { name: "recevierName", label: "Recevier Name" },
+        { name: "recevierName", label: "Receiver Name" },
         { name: "fathersName", label: "Father's Name" },
         { name: "address", label: "Address" },
         { name: "mobile", label: "Mobile No." },
@@ -67,90 +70,97 @@ const Page = () => {
         { label: "Upload Document", id: "document", ref: documentRef },
     ];
 
-    const handleSave = async () => {
+    const resetAll = () => {
+        setFormData(initialFormData);
+        setCaseProperty('');
+        setRecordId('');
+        setType('');
+        if (photoRef.current) photoRef.current.value = '';
+        if (documentRef.current) documentRef.current.value = '';
+    }
 
-        const photoFile = photoRef.current?.files?.[0];
-        const documentFile = documentRef.current?.files?.[0];
+    const handleGetFIR = async () => {
+        if (!type) {
+            toast.error("Please select a type first.");
+            return;
+        }
+        if (!formData.firNo && !formData.srNo) {
+            toast.error("Please enter an FIR No. or Sr. No. to fetch.");
+            return;
+        }
 
-        let photoUrl = "";
-        let documentUrl = "";
-
+        setIsFetching(true);
         try {
-            setIsLoading(true);
-            if (photoFile) {
-                photoUrl = await uploadToCloudinary(photoFile);
-            }
-            if (documentFile) {
-                documentUrl = await uploadToCloudinary(documentFile);
-            }
-            const districtId = user?.id
+            const data = await FetchByFIR(type, formData.firNo || undefined, formData.srNo || undefined);
 
+            if (data) {
+                toast.success("Data Fetched Successfully!");
+                // Store the unique ID of the fetched record
+                setRecordId(data.id);
 
-            const fullData = {
+                // Populate the form with existing data
+                setFormData({
+                    ...initialFormData, // Start with a clean slate
+                    firNo: data.firNo || '',
+                    srNo: data.srNo || '',
+                    underSection: data.underSection || '',
+                    releaseItemName: data.description || data.caseProperty || '' // Pre-fill item name
+                });
+                setCaseProperty(data.caseProperty || '');
+            } else {
+                toast.error("No record found.");
+                setRecordId(''); // Clear ID if not found
+            }
+        } catch (error) {
+            console.error("Error fetching by FIR:", error);
+            toast.error("Fetch failed. See console.");
+        } finally {
+            setIsFetching(false);
+        }
+    };
+
+    const handleSave = async () => {
+        // We must have a recordId to perform an update
+        if (!recordId) {
+            toast.error("Please fetch a valid record before saving.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const photoFile = photoRef.current?.files?.[0];
+            const documentFile = documentRef.current?.files?.[0];
+            let photoUrl = "";
+            let documentUrl = "";
+
+            if (photoFile) photoUrl = await uploadToCloudinary(photoFile);
+            if (documentFile) documentUrl = await uploadToCloudinary(documentFile);
+
+            // Consolidate all data to be sent for the update
+            const updateData = {
                 ...formData,
                 caseProperty,
                 photoUrl,
                 documentUrl,
-                districtId
+                // Add any other fields that need to be updated
             };
-            let success;
-            if (existingId) {
-                success = await updateReleaseEntry(existingId, fullData)
-                if (success) {
-                    toast.success("Data Updated")
-                }
-            } else {
-                success = await addReleaseEntry(type, fullData)
-                if (success) {
-                    toast.success("Data Added")
 
-                }
+            // We ONLY update now. No more 'add' logic here.
+            const success = await updateReleaseEntry(recordId, type, updateData);
+
+            if (success) {
+                toast.success("Record Updated Successfully!");
+                resetAll(); // Reset the entire form
+            } else {
+                toast.error("Failed to update the record.");
             }
         } catch (error) {
             console.error('Error saving vehicle:', error);
+            toast.error("An error occurred during save.");
         } finally {
-            setIsLoading(false)
-            setFormData({
-                srNo: '',
-                moveDate: '',
-                firNo: '',
-                underSection: '',
-                takenOutBy: '',
-                moveTrackingNo: '',
-                movePurpose: '',
-                recevierName: "",
-                fathersName: "",
-                address: "",
-                mobile: "",
-                releaseItemName: ""
-            });
-            setCaseProperty('');
-            if (photoRef.current) photoRef.current.value = '';
-            if (documentRef.current) documentRef.current.value = '';
+            setIsLoading(false);
         }
     };
-
-
-    const handleGetFIR = async () => {
-        try {
-            let response = null;
-            if (formData.firNo) {
-                response = await FetchByFIR(type, formData.firNo, undefined);
-            }
-
-
-
-            if (formData.srNo) {
-                response = await FetchByFIR(type, undefined, formData.srNo)
-            }
-        } catch (error) {
-            console.error("Error fetching by FIR:", error);
-            toast.error("Fetch failed. See con  sole.");
-        }
-    }
-
-
-
 
     return (
         <div>
@@ -159,48 +169,35 @@ const Page = () => {
                     <h1 className='text-2xl uppercase text-cream font-semibold'>Maalkhana Release </h1>
                 </div>
                 <div className='px-8 glass-effect  py-4 rounded-b-md'>
-                    <div className='flex   justify-center my-4 '>
+                    <div className='flex justify-center my-4 '>
                         <DropDown selectedValue={type} handleSelect={setType} options={["malkhana", "siezed vehical"]} />
                     </div>
-                    <div className='mt-2 grid grid-cols-2 gap-2'>
-                        <div className='flex items-center justify-between w-full'>
-                            <div className='w-full'>
-                                <DropDown
-                                    label='Case Property'
-                                    selectedValue={caseProperty}
-                                    options={caseOptions}
-                                    handleSelect={setCaseProperty}
+                    <div className='mt-2 grid grid-cols-1 md:grid-cols-2 gap-4'>
+                        <div className='md:col-span-2'>
+                            <DropDown
+                                label='Case Property'
+                                selectedValue={caseProperty}
+                                options={caseOptions}
+                                handleSelect={setCaseProperty}
+                            />
+                        </div>
+
+                        {fields.map((field) => (
+                            <div key={field.name}>
+                                <InputComponent
+                                    label={field.label}
+                                    value={formData[field.name as keyof typeof formData]}
+                                    setInput={(e) => handleInputChange(field.name, e.target.value)}
                                 />
                             </div>
-                        </div>
-                        {fields.map((field) => {
-                            return field.name !== 'firNo' ? (
-                                <div key={field.name}>
-                                    <InputComponent
-                                        label={field.label}
-                                        value={formData[field.name as keyof typeof formData]}
-                                        setInput={(e) => handleInputChange(field.name, e.target.value)}
-                                    />
-                                </div>
-                            ) : (
-                                <div key={field.name} className='flex  items-center gap-2 mr-2   justify-between'>
-                                    <InputComponent
-                                        className='w-full'
-                                        label={field.label}
-                                        value={formData[field.name as keyof typeof formData]}
-                                        setInput={(e) => handleInputChange(field.name, e.target.value)}
-                                    />
-                                    <Button onClick={handleGetFIR} className='mt-6 '>Fetch</Button>
-                                </div>
-                            );
-                        })}
+                        ))}
 
                         {inputFields.map((item, index) => (
-                            <div key={index} className='flex items-center gap-8'>
+                            <div key={index} className='flex items-center gap-4 mt-2'>
                                 <label className='text-nowrap text-blue-100' htmlFor={item.id}>{item.label}</label>
                                 <input
                                     ref={item.ref}
-                                    className=' text-blue-100 rounded-xl glass-effect px-2 py-1'
+                                    className='w-full text-blue-100 rounded-xl glass-effect px-2 py-1'
                                     id={item.id}
                                     type='file'
                                 />
@@ -208,22 +205,16 @@ const Page = () => {
                         ))}
                     </div>
 
-                    <div className='flex w-full px-12 justify-between mt-4'>
-                        {["Save", "Print", "Modify", "Delete"].map((item, index) => (
-                            <Button
-                                key={index}
-                                onClick={() => {
-                                    if (item === "Save") {
-                                        handleSave();
-                                    } else {
-                                        console.log(`${item} clicked`);
-                                    }
-                                }}
-                                className='bg-white-300 border border-blue-200 bg-blue '
-                            >
-                                {isloading && item == 'Save' ? <LoaderIcon className='animate-spin' /> : item}
-                            </Button>
-                        ))}
+                    <div className='flex w-full px-12 justify-center items-center gap-4 mt-6'>
+                        <Button onClick={handleGetFIR} className='bg-blue-600' disabled={isFetching || !type}>
+                            {isFetching ? <LoaderIcon className='animate-spin' /> : '1. Fetch Record'}
+                        </Button>
+                        <Button onClick={handleSave} className='bg-green-600' disabled={isLoading || !recordId}>
+                            {isLoading ? <LoaderIcon className='animate-spin' /> : '2. Save Release Info'}
+                        </Button>
+                        <Button onClick={resetAll} className='bg-red-600'>
+                            Clear Form
+                        </Button>
                     </div>
                 </div>
             </div>

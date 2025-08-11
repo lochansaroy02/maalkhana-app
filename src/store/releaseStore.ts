@@ -1,139 +1,64 @@
 import axios from 'axios';
 import { create } from 'zustand';
+import { useMaalkhanaStore } from './malkhana/maalkhanaEntryStore';
+import { useSeizedVehicleStore } from './siezed-vehical/seizeStore';
 
-type ReleaseEntry = {
-    srNo: string;
-
-    moveDate: string;
-    districtId: string | undefined,
-    firNo: string;
-    underSection: string;
-    takenOutBy: string;
-    moveTrackingNo: string;
-    movePurpose: string;
-    caseProperty: string;
-    recevierName: string;
-    fathersName: string;
-    address: string;
-    mobile: string;
-    releaseItemName: string;
-
-};
+// This store will now correctly orchestrate fetching and updating.
 
 type ReleaseStore = {
-    entry: ReleaseEntry;
-    entries: ReleaseEntry[];
-    setField: (field: keyof ReleaseEntry, value: string) => void;
+    // Fetches the ORIGINAL item to be released and returns it
+    FetchByFIR: (type: string, firNo?: string, srNo?: string) => Promise<any | null>;
+
+    // Updates the ORIGINAL item with release data
+    updateReleaseEntry: (id: string, type: string, updatedData: any) => Promise<boolean>;
+
+    // Reset form function (can be added if needed)
     resetForm: () => void;
-    getNewEntry: () => Promise<void>;
-    fetchReleaseEntries: (userId: string | undefined) => Promise<void>;
-    addReleaseEntry: (type: string, data: ReleaseEntry) => Promise<boolean>;
-    FetchByFIR: (type: string, firNo?: string, srNo?: string) => Promise<any>
-    updateReleaseEntry: (id: string, updatedData: any) => Promise<any>
 };
 
-const initialState: ReleaseEntry = {
-    srNo: '',
-
-    moveDate: '',
-    districtId: '',
-    firNo: '',
-    underSection: '',
-    takenOutBy: '',
-    moveTrackingNo: '',
-    movePurpose: '',
-    caseProperty: '',
-    recevierName: '',
-    fathersName: '',
-    address: '',
-    mobile: '',
-    releaseItemName: '',
-};
 
 export const useReleaseStore = create<ReleaseStore>((set, get) => ({
-    entry: { ...initialState },
-    entries: [],
 
-    setField: (field: any, value: any) =>
-        set(state => ({
-            entry: { ...state.entry, [field]: value }
-        })),
-
-    resetForm: () => set({ entry: { ...initialState } }),
-
-    getNewEntry: async () => {
-        try {
-            const { entry } = get();
-            const response = await axios.post('/api/release', entry);
-            if (response.data.success) {
-                set(state => ({
-                    entries: [...state.entries, response.data.data]
-                }));
-                get().resetForm();
-            } else {
-                console.error("Failed to submit entry", response.data.error);
-            }
-        } catch (err) {
-            console.error("Error while creating new entry:", err);
-        }
-    },
-
-    fetchReleaseEntries: async (userId: string | undefined) => {
-        try {
-            const response = await axios.get(`/api/release?id=${userId}`);
-            if (response.data.success) {
-                set({ entries: response.data.data });
-            } else {
-                console.error("Fetch failed:", response.data.error);
-            }
-        } catch (err) {
-            console.error("Error fetching entries:", err);
-        }
-    },
-
-    addReleaseEntry: async (type: string, data: any | any[]) => {
-        try {
-            const response = await axios.post(`/api/release?type=${type}`, data, {
-                headers: { "Content-Type": "application/json" },
-            });
-            if (response.data.success) {
-                if (Array.isArray(data)) {
-                    console.log(`🚀 Bulk insert successful: ${response.data.count} vehicles added.`);
-                } else {
-                    console.log("🚀 Single insert successful:", response.data.data);
-                }
-                return true;
-            } else {
-                console.error("❌ POST /api/siezed error: Failed to create vehicle");
-                return false;
-            }
-
-        } catch (error: any) {
-            console.error("POST /api/movement error:", error.message || error);
-            return false;
-        }
-    },
     FetchByFIR: async (type: string, firNo?: string, srNo?: string) => {
         try {
+            // We use our new, dedicated API route for fetching
+            const response = await axios.get(`/api/fetch-for-release`, {
+                params: { type, firNo, srNo }
+            });
 
-            const response = await axios.get(`/api/release/fir?type=${type}&firNo=${firNo}&srNo=${srNo}`);
-            const data = response.data;
-            console.log(data)
-        } catch (error) {
+            if (response.data.success) {
+                return response.data.data; // Return the full record
+            }
+            return null;
 
+        } catch (error: any) {
+            console.error("Error in FetchByFIR:", error.response?.data?.message || error.message);
+            return null;
         }
     },
 
-    updateReleaseEntry: async (id: string, updatedData: ReleaseEntry) => {
+    updateReleaseEntry: async (id: string, type: string, updatedData: any) => {
         try {
-            const res = await axios.put(`/api/release?id=${id}`, updatedData);
-            if (res.data?.success) {
-                console.log(res.data.data)
+            let success = false;
+            if (type === 'malkhana') {
+                // Use the update function from the maalkhanaStore
+                const { updateMalkhanaEntry } = useMaalkhanaStore.getState();
+                success = await updateMalkhanaEntry(id, updatedData);
+            } else if (type === 'siezed vehical') {
+                // Use the update function from the seizedVehicleStore
+                const { updateVehicalEntry } = useSeizedVehicleStore.getState();
+                success = await updateVehicalEntry(id, updatedData);
             }
-            return res.data?.success ?? false;
+            return success;
         } catch (err) {
-            console.error("PUT /api/movement error:", err);
+            console.error("Error in updateReleaseEntry:", err);
             return false;
         }
     },
+
+    // A simple reset function can be defined here if you want to clear state
+    resetForm: () => {
+        // This part is optional and depends on what state you want to keep in this store.
+        // For now, it does nothing as the form state is handled in the component.
+    }
 }));
