@@ -81,6 +81,8 @@ const Page = () => {
         ];
 
 
+
+
         const movementEntries = allEntries.filter((entry: any) => entry.movePurpose);
 
 
@@ -95,10 +97,11 @@ const Page = () => {
             return newEntryObject;
         });
 
-        console.log(selectedFieldsData)
         return selectedFieldsData;
     };
 
+
+    console.log(entries)
     /**
  * Filters an array of entries to select only release-related data
  * and returns new objects with a specific set of fields.

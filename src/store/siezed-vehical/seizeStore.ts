@@ -10,6 +10,8 @@ interface SeizedVehicle {
     firNo?: string,
     gdNo: string;
     rtoName: string
+    isMovement: boolean,
+    isRecevied: boolean,
     userId: string | undefined,
     gdDate: string;
     underSection: string;
@@ -46,6 +48,8 @@ const initialState = {
     gdNo: "",
     rtoName: "",
     userId: "",
+    isMovement: false,
+    isRecevied: false,
     gdDate: "",
     underSection: "",
     vehicleType: "",

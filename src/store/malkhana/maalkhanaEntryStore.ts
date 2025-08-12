@@ -8,6 +8,9 @@ type MaalkhanaEntry = {
     photoUrl: string,
     cash: number,
     wine: number;
+    description: string,
+    isMovement?: boolean,
+    isRecevied?: boolean,
     wineType: string,
     caseProperty: string,
     gdDate: string;
@@ -44,8 +47,11 @@ type MaalkhanaStore = {
 const initialState: MaalkhanaEntry = {
     srNo: '',
     gdNo: '',
+    description: '',
     gdDate: '',
     photoUrl: '',
+    isMovement: false,
+    isRecevied: false,
     wine: 0,
     cash: 0,
     wineType: '',

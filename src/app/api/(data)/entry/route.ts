@@ -20,6 +20,7 @@ export const POST = async (req: NextRequest) => {
 
         const {
             userId,
+
             cash,
             caseProperty,
             srNo,
@@ -35,9 +36,12 @@ export const POST = async (req: NextRequest) => {
             vadiName,
             HM,
             accused,
+            description,
             firNo,
             status,
             entryType,
+            isReceived,
+            isMovement,
             place,
             boxNo,
             courtNo,
@@ -51,6 +55,10 @@ export const POST = async (req: NextRequest) => {
                 srNo,
                 gdNo,
                 wine,
+                description,
+                isMovement,
+                isReceived,
+
                 wineType,
                 photoUrl,
                 policeStation,
@@ -88,7 +96,7 @@ export async function GET(req: NextRequest) {
         const entries = await prisma.malkhanaEntry.findMany({
             where: {
                 userId
-        }, orderBy: { createdAt: "desc" },
+            }, orderBy: { createdAt: "desc" },
         })
 
         return NextResponse.json({ success: true, data: entries }, { status: 200 });

@@ -59,20 +59,20 @@ model SeizedVehicle {
   isReturned Boolean @default(false)
   receviedBy String?
 
-  returnBackFrom String?
-  takenOutBy     String?
-  moveTrackingNo String?
-  returnDate     DateTime?
-  movePurpose    String?
-  name           String?
-  photoUrl       String?
-  document       String?
-  moveDate       String?
-  receivedBy     String?
-  documentUrl    String?
-
+  returnBackFrom  String?
+  takenOutBy      String?
+  moveTrackingNo  String?
+  returnDate      DateTime?
+  movePurpose     String?
+  name            String?
+  photoUrl        String?
+  document        String?
+  moveDate        String?
+  receivedBy      String?
+  documentUrl     String?
+  isMovement      Boolean?  @default(false)
   // release details
-
+  isRelease       Boolean?  @default(false)
   recevierName    String?
   fathersName     String?
   address         String?
@@ -97,6 +97,7 @@ model MalkhanaEntry {
   gdNo         String
   gdDate       String
   underSection String
+  description  String?
 
   Year          String
   policeStation String
@@ -112,7 +113,7 @@ model MalkhanaEntry {
   courtName     String
 
   //movement entry 
-
+  isMovement     Boolean?  @default(false)
   moveDate       String?
   takenOutBy     String?
   moveTrackingNo String?
@@ -126,6 +127,7 @@ model MalkhanaEntry {
   documentUrl    String?
 
   // release entry
+  isRelease      Boolean? @default(false)
   receiverName    String?
   fathersName     String?
   address         String?

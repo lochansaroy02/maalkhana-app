@@ -14,11 +14,15 @@ import React, { useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const Page: React.FC = () => {
-    const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
     const { user } = useAuthStore();
-    const { updateVehicalEntry, addVehicle } = useSeizedVehicleStore()
     const { addMovementEntry, updateMovementEntry, fetchByFIR, entry } = useMovementStore();
+    const { updateVehicalEntry, addVehicle } = useSeizedVehicleStore()
+    const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    const [isMovement, setIsMovemnt] = useState<boolean>(true)
+    const [isRecevied, setIsRecevied] = useState<boolean>(true)
+
     const [isReturned, setIsReturned] = useState(false);
     const [returnBackFrom, setReturnBackFrom] = useState("");
     const [caseProperty, setCaseProperty] = useState("");
@@ -57,7 +61,14 @@ const Page: React.FC = () => {
     const caseOptions = ["Cash Property", "Kukri", "FSL", "Unclaimed", "Other Entry", "Cash Entry", "Wine", "MV Act", "ARTO", "BNS / IPC", "Excise Vehicle", "Unclaimed Vehicle", "Seizure Entry",];
     const returnBackOptions = ["Court", "FSL", "Other"];
     const inputFields = [{ label: "Upload Photo", id: "photo", ref: photoRef }, { label: "Upload Document", id: "document", ref: documentRef },];
+
+
+
+
     const handleSave = async () => {
+
+        console.log(type)
+
         setIsLoading(true);
         try {
             const photoFile = photoRef.current?.files?.[0];
@@ -67,12 +78,16 @@ const Page: React.FC = () => {
             if (photoFile) photoUrl = await uploadToCloudinary(photoFile);
             if (documentFile) documentUrl = await uploadToCloudinary(documentFile);
             const userId = user?.id ?? undefined;
-            const fullData: MovementEntry = {
+
+            const data = { ...formData, }
+            const fullData = {
                 srNo: formData.srNo ?? "", name: formData.name ?? "", moveDate: dateFields.moveDate.toISOString(), returnDate: dateFields.returnDate.toISOString(), returnBackFrom, firNo: formData.firNo ?? "", underSection: formData.underSection ?? "", receivedBy: formData.receivedBy ?? "", takenOutBy: formData.takenOutBy ?? "", moveTrackingNo: formData.moveTrackingNo ?? "", movePurpose: formData.movePurpose ?? "", documentUrl, photoUrl, isReturned, caseProperty,
+
             };
             let success = false;
             if (type === "malkhana") {
                 if (existingEntryId) {
+
                     success = await updateMovementEntry(existingEntryId, fullData);
                     toast.success("data updated")
                 } else {
@@ -133,7 +148,8 @@ const Page: React.FC = () => {
         setFormData({ srNo: entryData.srNo, name: entryData.name, moveDate: entryData.moveDate, firNo: entryData.firNo, underSection: entryData.underSection, takenOutBy: entryData.takenOutBy, moveTrackingNo: entryData.moveTrackingNo, movePurpose: entryData.movePurpose, receivedBy: entryData.receivedBy, returnDate: entryData.returnDate, caseProperty: entryData.caseProperty });
         setCaseProperty(entryData.caseProperty ?? "");
         setReturnBackFrom(entryData.returnBackFrom ?? "");
-        setIsReturned(!!entryData.isReturned);
+        setIsReturned(entryData.isReturned);
+
         setDateFields({
             moveDate: entryData.moveDate ? new Date(entryData.moveDate) : new Date(), returnDate: entryData.returnDate ? new Date(entryData.returnDate) : new Date(),
         });

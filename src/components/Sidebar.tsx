@@ -1,6 +1,7 @@
 "use client";
 
 import Logo from '@/assets/Logo';
+import Spycore from '@/assets/Spycore';
 import { usePathname, useRouter } from 'next/navigation';
 
 const Sidebar = () => {
@@ -25,13 +26,10 @@ const Sidebar = () => {
 
         {
             name: "Report", link: "/report/entry-report",
-        },
-        {
-            name: "Barcode", link: "/barcode",
-        },
-        {
-            name: "Users", link: "/users",
-        },
+        }, ,
+        // {
+        //     name: "Users", link: "/users",
+        // },
 
     ]
     const router = useRouter();
@@ -61,6 +59,7 @@ const Sidebar = () => {
                     }
                 </div>
                 <div className=' p-4  mb-2 glass-effect'>
+                    <Spycore height={240} width={240} />
                     <h1 className='text-blue-100'>Helpline</h1>
                     <h2 className='text-blue-100'>+9187787873</h2>
                 </div>

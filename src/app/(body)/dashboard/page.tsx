@@ -8,84 +8,87 @@ import { useEffect } from "react";
 
 const Page = () => {
     const { fetchTotalEntries, data } = useTotalEntriesStore();
-    const { user } = useAuthStore()
+    const { user } = useAuthStore();
 
     useEffect(() => {
-        fetchTotalEntries(user?.id);
-    }, [user?.id]);
+        if (user?.id) {
+            fetchTotalEntries(user.id);
+        }
+    }, [user?.id, fetchTotalEntries]);
 
-    console.log(data);
+    // ✅ FIXED: The reportItems array now correctly accesses the data from the API.
     const reportItems = [
         {
             title: "Total Entries",
             icon: <Menu size="50px" />,
             bgColour: "bg-cyan-500",
-            value: data?.total,
+            value: data?.total || 0,
         },
         {
             title: "Total Malkhana Entry",
             icon: <User size="50px" />,
             bgColour: "bg-red-500",
-            value: data?.breakdown?.entry,
+            value: data?.breakdown?.entry || 0,
         },
         {
             title: "Malkhana Movement",
             icon: <User size="50px" />,
             bgColour: "bg-orange-500",
-            value: data?.breakdown?.movement,
+            value: data?.breakdown?.movement || 0,
         },
         {
             title: "Malkhana Release",
             icon: <Settings size="50px" />,
             bgColour: "bg-green-500",
-            value: data?.breakdown?.release,
+            value: data?.breakdown?.release || 0,
         },
         {
-            title: "Seized Vehical",
+            title: "Seized Vehicle",
             icon: <Car size="50px" />,
             bgColour: "bg-blue-500",
-            value: data?.breakdown?.siezed,
+            value: data?.breakdown?.siezed || 0,
         },
         {
             title: "Total Nilami",
             icon: <Megaphone size="50px" />,
             bgColour: "bg-yellow-500",
-            value: data?.breakdown?.nilami,
+            value: data?.breakdown?.nilami || 0, // Corrected key
         },
         {
             title: "Total Destroy",
             icon: <Shredder size="50px" />,
             bgColour: "bg-pink-500",
-            value: data?.breakdown?.destroy,
+            value: data?.breakdown?.destroy || 0, // Corrected key
         },
-
         {
-            title: "Total Wine (in ltr): English",
+            title: "Total English Wine Entries", // Title clarified
             icon: <Wine size="50px" />,
             bgColour: "bg-gray-500",
-            //@ts-ignore
-            value: data?.breakdown?.english,
+            value: data?.breakdown?.english || 0,
         },
         {
-            title: "Total Wine (in ltr): Desi  ",
+            title: "Total Desi Wine Entries", // Title clarified
             icon: <Wine size="50px" />,
             bgColour: "bg-fuchsia-700",
-            //@ts-ignore
-            value: ` ${data?.breakdown?.desi == undefined ? "0" : data?.breakdown?.desi}`,
+            value: data?.breakdown?.desi || 0,
         },
         {
-            title: "Returned Entry",
+            title: "Returned Entries", // Title clarified
             icon: <LucideArrowDownNarrowWide size="50px" />,
             bgColour: "bg-green-700",
-            //@ts-ignore
-            value: `${data?.breakdown?.returnVehical == undefined ? "0" : data?.breakdown?.returnVehical}`,
+            value: (data?.breakdown?.returnVehical || 0) + (data?.breakdown?.returnMalkhana || 0),
         },
         {
-            title: "Total Cash ",
+            title: "Total Cash",
             icon: <Banknote size="50px" />,
             bgColour: "bg-cyan-700",
-            //@ts-ignore
-            value: `₹ ${data?.breakdown?.totalCash?._sum?.cash == undefined ? "0" : data?.breakdown?.totalCash?._sum?.cash} `,
+            value: `₹ ${data?.breakdown?.totalCash || 0}`, // Corrected data access
+        },
+        {
+            title: "Total Wine (in ltr)", // Added missing card for total wine sum
+            icon: <Wine size="50px" />,
+            bgColour: "bg-purple-700",
+            value: `${data?.breakdown?.totalWine || 0} Ltr`,
         },
     ];
 

@@ -4,85 +4,75 @@ import { NextRequest, NextResponse } from "next/server";
 export const GET = async (req: NextRequest) => {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
+
     if (!userId) {
         return NextResponse.json({
-            success: false, message: "please enter userId"
-        })
+            success: false, message: "Please provide a userId"
+        }, { status: 400 });
     }
+
     try {
-        const totalWine = await prisma.malkhanaEntry.aggregate({
-            _sum: {
-                wine: true,
-            }, where: {
-                userId
-            }
-        });
-        const totalCash = await prisma.malkhanaEntry.aggregate({
-            _sum: {
-                cash: true
-            },
-            where: {
-                userId
-            }
-        })
-        const [entry, movement, release, siezed, wineCount, returnVehical, returnMalkhana, english, desi] = await Promise.all([
-            prisma.malkhanaEntry.count(
-                {
-                    where: {
-                        userId
-                    }
-                }
-            ),
-            prisma.seizedVehicle.count(
-                {
-                    where: {
-                        userId
-                    }
-                }
-            ),
-            prisma.malkhanaEntry.count({
-                where: { entryType: "Wine", userId }
+        // Run all Prisma queries concurrently for better performance
+        const [
+            totals,
+            malkhanaEntryCount,
+            seizedVehicleCount,
+            wineEntryCount,
+            destroyCount,
+            nilamiCount,
+            returnedVehicleCount,
+            returnedMalkhanaCount,
+            desiWineCount,
+            englishWineCount,
+            movementCount
+        ] = await Promise.all([
+            // Get sum of wine and cash in one query
+            prisma.malkhanaEntry.aggregate({
+                _sum: { wine: true, cash: true, },
+                where: { userId }
             }),
-            prisma.malkhanaEntry.count({
-                where: { status: "Destroy", userId }
-            }),
-            prisma.malkhanaEntry.count({
-                where: { status: "Nilami", userId }
-            }),
-            prisma.seizedVehicle.count({
-                where: { isReturned: true, userId }
-            }),
-            prisma.malkhanaEntry.count({
-                where: { isReturned: true, userId }
-            }),
-            prisma.malkhanaEntry.count({
-                where: { wineType: "Desi", userId }
-            }),
-            prisma.malkhanaEntry.count({
-                where: { wineType: "Angrezi", userId }
-            }),
+            // Get counts for different entry types and statuses
+            prisma.malkhanaEntry.count({ where: { userId } }),
+            prisma.seizedVehicle.count({ where: { userId } }),
+            prisma.malkhanaEntry.count({ where: { entryType: "Wine", userId } }),
+            prisma.malkhanaEntry.count({ where: { status: "Destroy", userId } }),
+            prisma.malkhanaEntry.count({ where: { status: "Nilami", userId } }),
+            prisma.seizedVehicle.count({ where: { isReturned: true, userId } }),
+            prisma.malkhanaEntry.count({ where: { isReturned: true, userId } }),
+            prisma.malkhanaEntry.count({ where: { wineType: "Desi", userId } }),
+            prisma.malkhanaEntry.count({ where: { wineType: "Angrezi", userId } }),
+            prisma.malkhanaEntry.count({ where: { movePurpose: { not: null }, userId } })
         ]);
-        const total = entry + movement + release + siezed;
+
+        // Calculate derived totals
+        const releaseCount = destroyCount + nilamiCount;
+        const totalEntries = malkhanaEntryCount + seizedVehicleCount;
+
+        // ✅ FIXED: The response object now uses the correct keys expected by the frontend.
         return NextResponse.json({
-            total,
+            success: true,
+            total: totalEntries,
             breakdown: {
-                entry: entry,
-                returnVehical: returnVehical,
-                returnMalkhana: returnMalkhana,
-                movement: movement,
-                release: release,
-                siezed: siezed,
-                wine: wineCount,
-                wineCount: totalWine,
-                totalCash: totalCash,
-                desi: desi,
-                english: english
+                entry: malkhanaEntryCount,
+                returnVehical: returnedVehicleCount,
+                returnMalkhana: returnedMalkhanaCount,
+                movement: movementCount,
+                release: releaseCount,
+                siezed: seizedVehicleCount,
+                destroy: destroyCount, // Changed from 'distroyCount'
+                nilami: nilamiCount,   // Changed from 'nilamiCount'
+                wine: wineEntryCount,
+                totalWine: totals._sum.wine || 0,
+                totalCash: totals._sum.cash || 0,
+                desi: desiWineCount,
+                english: englishWineCount
             },
         });
+
     } catch (error) {
-        console.error('Error fetching total entries:', error);
+        console.error('Error fetching dashboard data:', error);
         return NextResponse.json(
-            { success: false, message: 'Failed to fetch entries' },
+            { success: false, message: 'Failed to fetch dashboard data' },
             { status: 500 },
         );
     }

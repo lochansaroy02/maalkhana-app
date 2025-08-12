@@ -10,7 +10,7 @@ import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
 import { Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
 const Page = () => {
@@ -106,6 +106,7 @@ const Page = () => {
         { name: 'firNo', label: 'FIR No' },
         { name: 'srNo', label: 'Sr. No / Mud No.' },
         { name: 'caseProperty', label: 'case Property' },
+
         { name: 'gdNo', label: 'GD No' },
         { name: 'gdDate', label: 'GD Date', type: 'date' },
         { name: 'Year', label: 'Year' },
@@ -121,8 +122,8 @@ const Page = () => {
         { name: 'boxNo', label: 'Box No' },
         { name: 'courtNo', label: 'Court No' },
         { name: 'courtName', label: 'Court Name' },
-        { name: 'imagebox', label: 'Photo' },
     ];
+
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -144,6 +145,7 @@ const Page = () => {
     };
 
     const handleSave = async () => {
+        
         setLoading(true);
         try {
             const userId = user?.id;
@@ -151,6 +153,7 @@ const Page = () => {
                 ...formData,
                 status, wine, cash, wineType, entryType, userId, photoUrl, description,
                 gdDate: dateFields.gdDate?.toISOString() ?? '',
+
             };
 
             let success = false;
