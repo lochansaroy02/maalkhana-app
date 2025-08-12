@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest, { params }: { params: any }) {
-    const { id } = params;
+    const { id } = await params;
     const entry = await prisma.malkhanaEntry.findUnique({
         where: { id }
     });

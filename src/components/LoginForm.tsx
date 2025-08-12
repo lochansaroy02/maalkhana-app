@@ -37,7 +37,7 @@ const LoginForm = () => {
             toast.success("Succesfully LoggedIn")
             router.push("/dashboard");
         } else {
-            toast.error("Login Failed") // add error page here 
+            toast.error("Login Failed")
         }
     }
 
