@@ -15,7 +15,7 @@ const Sidebar = () => {
             name: "Malkhana Entry", link: "/maalkhana-entry",
         },
         {
-            name: "Seized vehical", link: "/seized-vehical",
+            name: "Seized vehicle", link: "/seized-vehical",
         },
         {
             name: "Malkhana Movement", link: "/maalkhana-movement",

@@ -31,7 +31,7 @@ const Report = ({
             // Check if value is valid before creating a Date object
             return value ? new Date(value).toLocaleDateString('en-IN') : "-";
         }
-        if (key === "IsReturned") {
+        if (key === "isReturned") {
             return value ? "Yes" : "No";
         }
         return value || "-";

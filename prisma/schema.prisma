@@ -73,7 +73,7 @@ model SeizedVehicle {
   isMovement      Boolean?  @default(false)
   // release details
   isRelease       Boolean?  @default(false)
-  recevierName    String?
+  receiverName    String?
   fathersName     String?
   address         String?
   mobile          String?

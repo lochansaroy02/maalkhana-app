@@ -18,13 +18,7 @@ const ReportHeader = () => {
             name: "Malkhana Entry", link: "/report/entry-report", colour: "bg-green-500"
         },
         {
-            name: "Seized vehical", link: "/report/siezed-report", colour: "bg-red-500"
-        },
-        // {
-        //     name: "Malkhana Movement", link: "/report/movement-report", colour: "bg-blue-500"
-        // },
-        {
-            name: "Return", link: "/report/return", colour: "bg-amber-500"
+            name: "Seized vehicle", link: "/report/siezed-report", colour: "bg-red-500"
         },
     ]
     return (
@@ -48,7 +42,7 @@ const ReportHeader = () => {
                 }
 
                 <div>
-                    <DropDown selectedValue={reportType} handleSelect={setReportType} options={["movement", "release", "All"]} />
+                    <DropDown selectedValue={reportType} handleSelect={setReportType} options={["All", "movement", "release", "destroy", "return",]} />
                 </div>
             </div>
         </div>

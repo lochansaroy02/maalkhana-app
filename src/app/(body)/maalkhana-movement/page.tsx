@@ -20,9 +20,6 @@ const Page: React.FC = () => {
     const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    const [isMovement, setIsMovemnt] = useState<boolean>(true)
-    const [isRecevied, setIsRecevied] = useState<boolean>(true)
-
     const [isReturned, setIsReturned] = useState(false);
     const [returnBackFrom, setReturnBackFrom] = useState("");
     const [caseProperty, setCaseProperty] = useState("");
@@ -56,19 +53,13 @@ const Page: React.FC = () => {
         { name: "name", label: "Name" },
         { name: "receivedBy", label: "Received By" },
         { name: "returnDate", label: "Return Back Date", type: "date" },
-        { name: "returnBackFrom", label: "Return Back From" }, // Simplified this line
+        { name: "returnBackFrom", label: "Return Back From" },
     ];
     const caseOptions = ["Cash Property", "Kukri", "FSL", "Unclaimed", "Other Entry", "Cash Entry", "Wine", "MV Act", "ARTO", "BNS / IPC", "Excise Vehicle", "Unclaimed Vehicle", "Seizure Entry",];
     const returnBackOptions = ["Court", "FSL", "Other"];
     const inputFields = [{ label: "Upload Photo", id: "photo", ref: photoRef }, { label: "Upload Document", id: "document", ref: documentRef },];
 
-
-
-
     const handleSave = async () => {
-
-        console.log(type)
-
         setIsLoading(true);
         try {
             const photoFile = photoRef.current?.files?.[0];
@@ -79,34 +70,48 @@ const Page: React.FC = () => {
             if (documentFile) documentUrl = await uploadToCloudinary(documentFile);
             const userId = user?.id ?? undefined;
 
-            const data = { ...formData, }
             const fullData = {
-                srNo: formData.srNo ?? "", name: formData.name ?? "", moveDate: dateFields.moveDate.toISOString(), returnDate: dateFields.returnDate.toISOString(), returnBackFrom, firNo: formData.firNo ?? "", underSection: formData.underSection ?? "", receivedBy: formData.receivedBy ?? "", takenOutBy: formData.takenOutBy ?? "", moveTrackingNo: formData.moveTrackingNo ?? "", movePurpose: formData.movePurpose ?? "", documentUrl, photoUrl, isReturned, caseProperty,
-
+                srNo: formData.srNo ?? "",
+                name: formData.name ?? "",
+                moveDate: dateFields.moveDate.toISOString(),
+                returnDate: dateFields.returnDate.toISOString(),
+                returnBackFrom,
+                firNo: formData.firNo ?? "",
+                underSection: formData.underSection ?? "",
+                receivedBy: formData.receivedBy ?? "",
+                takenOutBy: formData.takenOutBy ?? "",
+                moveTrackingNo: formData.moveTrackingNo ?? "",
+                movePurpose: formData.movePurpose ?? "",
+                documentUrl,
+                photoUrl,
+                isReturned,
+                caseProperty,
+                isMovement: true, // Flag to identify this as a movement entry
             };
+
             let success = false;
             if (type === "malkhana") {
                 if (existingEntryId) {
-
                     success = await updateMovementEntry(existingEntryId, fullData);
-                    toast.success("data updated")
+                    toast.success("Data updated");
                 } else {
-                    const dataWithUserId = { userId, ...fullData }
+                    const dataWithUserId = { userId, ...fullData };
                     success = await addMovementEntry(dataWithUserId);
-                    toast.success("Data Added")
+                    toast.success("Data Added");
                 }
             }
             if (type === "siezed vehical") {
                 if (existingEntryId) {
                     success = await updateVehicalEntry(existingEntryId, fullData);
                 } else {
-                    const dataWithUserId = { fullData }
+                    const dataWithUserId = { ...fullData, userId };
                     success = await addVehicle(dataWithUserId);
                 }
             }
+
             if (success) {
                 toast.success(existingEntryId ? "Data Updated" : "Data Added");
-                setFormData({ srNo: "", name: "", moveDate: "", underSection: "", takenOutBy: "", moveTrackingNo: "", movePurpose: "", receivedBy: "", returnDate: "", });
+                setFormData({ srNo: "", name: "", moveDate: "", policeStation: "", firNo: "", underSection: "", takenOutBy: "", moveTrackingNo: "", movePurpose: "", receivedBy: "", returnDate: "", });
                 setDateFields({ moveDate: new Date(), returnDate: new Date() });
                 setReturnBackFrom("");
                 setCaseProperty("");
@@ -122,6 +127,7 @@ const Page: React.FC = () => {
             setIsLoading(false);
         }
     };
+
     const getByFir = async () => {
         try {
             let success = false;
@@ -132,16 +138,16 @@ const Page: React.FC = () => {
                 success = await fetchByFIR(type, undefined, formData.srNo);
             }
             if (success && entry) {
-                console.log(entry)
                 const id = (entry as any)._id ?? (entry as any).id;
                 setExistingEntryId(id);
-                fillForm(entry)
+                fillForm(entry);
             }
         } catch (error) {
             console.error("Error fetching by FIR:", error);
-            toast.error("Fetch failed. See con  sole.");
+            toast.error("Fetch failed. See console.");
         }
     };
+
     function fillForm(entryData: any) {
         const id = entryData._id ?? entryData.id;
         setExistingEntryId(id);
@@ -151,7 +157,8 @@ const Page: React.FC = () => {
         setIsReturned(entryData.isReturned);
 
         setDateFields({
-            moveDate: entryData.moveDate ? new Date(entryData.moveDate) : new Date(), returnDate: entryData.returnDate ? new Date(entryData.returnDate) : new Date(),
+            moveDate: entryData.moveDate ? new Date(entryData.moveDate) : new Date(),
+            returnDate: entryData.returnDate ? new Date(entryData.returnDate) : new Date(),
         });
     }
 
@@ -161,7 +168,7 @@ const Page: React.FC = () => {
                 <div className="bg-maroon rounded-t-xl py-4 border-b border-white/50 flex justify-center">
                     <h1 className="text-2xl uppercase text-cream font-semibold">Malkhana Movement</h1>
                 </div>
-                <div className="w-full  items-center gap-4  flex justify-center ">
+                <div className="w-full items-center gap-4 flex justify-center ">
                     <label className="text-blue-100 text-nowrap" htmlFor="">Select type</label>
                     <DropDown selectedValue={type} handleSelect={setType} options={["malkhana", "siezed vehical"]} />
                 </div>
@@ -176,16 +183,13 @@ const Page: React.FC = () => {
 
                     <div className="mt-2 grid grid-cols-2 gap-4">
                         {fields.map((field) => {
-                            // ✅ CORRECTED LOGIC: Group fields to hide into arrays for cleaner logic.
                             const fieldsToHideWhenNotReturned = ['receivedBy', 'returnBackFrom', 'returnDate'];
-                            const fieldsToHideWhenReturned = ['moveTrackingNo', 'takenOutBy'];
+                            const fieldsToHideWhenReturned = ['moveTrackingNo', 'takenOutBy', 'movePurpose', 'moveDate'];
 
-                            // Hide certain fields if the item is NOT returned
                             if (!isReturned && fieldsToHideWhenNotReturned.includes(field.name)) {
                                 return null;
                             }
 
-                            // Hide other fields if the item IS returned
                             if (isReturned && fieldsToHideWhenReturned.includes(field.name)) {
                                 return null;
                             }

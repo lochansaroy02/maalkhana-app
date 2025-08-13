@@ -27,11 +27,10 @@ const Page = () => {
         srNo: '',
         underSection: '',
         releaseItemName: "",
-        recevierName: "",
+        receiverName: "", // Corrected typo here
         fathersName: "",
         address: "",
         mobile: "",
-        // Note: 'moveDate', 'takenOutBy', etc., are not part of the release update logic
     });
 
     const [caseProperty, setCaseProperty] = useState('');
@@ -56,7 +55,7 @@ const Page = () => {
             // Pre-fill the item name from existing data, but allow user to edit it
             releaseItemName: data.description || data.caseProperty || '',
             // Reset release-specific fields for the user to fill
-            recevierName: "",
+            receiverName: "", // Corrected typo here
             fathersName: "",
             address: "",
             mobile: "",
@@ -65,7 +64,7 @@ const Page = () => {
     };
 
     const resetAll = () => {
-        setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", recevierName: "", fathersName: "", address: "", mobile: "" });
+        setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "" }); // Corrected typo here
         setCaseProperty('');
         setExistingId('');
         setType('');
@@ -124,7 +123,7 @@ const Page = () => {
 
             // Create the payload with only the fields relevant to a release
             const updateData = {
-                recevierName: formData.recevierName,
+                receiverName: formData.receiverName, // Corrected typo here
                 fathersName: formData.fathersName,
                 address: formData.address,
                 mobile: formData.mobile,
@@ -133,6 +132,7 @@ const Page = () => {
                 documentUrl,
                 status: "Released", // Automatically mark the item as released
                 isReturned: true,    // Set isReturned to true
+                isRelease: true,   // Flag to identify this as a release entry
             };
 
             const success = await updateReleaseEntry(existingId, type, updateData);
@@ -162,7 +162,7 @@ const Page = () => {
     // --- FIELD DEFINITIONS (Preserved from your original code) ---
     const fields = [
         { name: "releaseItemName", label: "Release Item Name" },
-        { name: "recevierName", label: "Receiver Name" },
+        { name: "receiverName", label: "Receiver Name" }, // Corrected typo here
         { name: "fathersName", label: "Father's Name" },
         { name: "address", label: "Address" },
         { name: "mobile", label: "Mobile No." },

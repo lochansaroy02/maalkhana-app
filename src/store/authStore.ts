@@ -1,12 +1,11 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface User {
     id: string;
     name: string;
     email: string;
     role: "district" | "policeStation";
-
 }
 
 interface AuthState {
@@ -31,7 +30,12 @@ export const useAuthStore = create<AuthState>()(
             },
         }),
         {
-            name: "auth-storage", // name in localStorage
+            name: "auth-storage", // A name for the storage instance
+
+            // --- THIS IS THE ONLY CHANGE ---
+            // This line tells Zustand to use sessionStorage instead of localStorage.
+            // sessionStorage is automatically cleared when the browser tab is closed.
+            storage: createJSONStorage(() => sessionStorage),
         }
     )
 );
