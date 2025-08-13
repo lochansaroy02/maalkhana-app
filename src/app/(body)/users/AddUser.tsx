@@ -37,7 +37,7 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
                 alert('Please enter all required fields');
                 return;
             }
-            const districtId = "b27fdb2b-aa46-4990-8796-10063ee39f18"
+            const districtId = "ec15631d-1507-4312-9739-2d064c1a24ad"
 
             const fullData = {
                 ...formData, districtId

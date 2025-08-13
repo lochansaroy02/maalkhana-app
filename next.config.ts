@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
+  assetPrefix: '',
+  basePath: '',
   images: {
     domains: ["res.cloudinary.com"], // Cloudinary ke liye allow
   },
