@@ -1,27 +1,16 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-  assetPrefix: '',
-  basePath: '',
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  assetPrefix: '', // Keep empty unless you have a CDN path
+  basePath: '', // Keep empty if site is at root
   images: {
-    domains: ["res.cloudinary.com"], // Cloudinary ke liye allow
+    domains: ["res.cloudinary.com"], // allow Cloudinary images
   },
-};
-
-// next.config.js 
-module.exports = {
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // Ignore type errors on build
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true, // Ignore ESLint errors on build
   },
 };
 
-
-export default nextConfig;
+module.exports = nextConfig;
