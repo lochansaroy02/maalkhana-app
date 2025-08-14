@@ -15,7 +15,7 @@ interface TotalEntries {
 }
 
 interface TotalEntriesStore {
-    data: TotalEntries | null;
+    data: any | null;
     loading: boolean;
     error: string | null;
     fetchTotalEntries: (userId: string | undefined) => Promise<void>;

@@ -13,6 +13,30 @@ export const GET = async (req: NextRequest) => {
 
     try {
         // Run all Prisma queries concurrently for better performance
+
+        const releaseCountVehicle = await prisma.malkhanaEntry.count({
+            where: {
+                isRelease: true,
+            }
+        })
+        const isMovementVehical = await prisma.malkhanaEntry.count({
+            where: {
+                isMovement: true,
+            }
+        })
+        const releaseCountMalkhana = await prisma.seizedVehicle.count({
+            where: {
+                isRelease: true,
+            }
+        })
+        const isMovementMalkhana = await prisma.seizedVehicle.count({
+            where: {
+                isMovement: true,
+            }
+        })
+        const totalMovement = isMovementMalkhana + isMovementVehical;
+        const totalRelease = releaseCountMalkhana + releaseCountVehicle;
+
         const [
             totals,
             malkhanaEntryCount,
@@ -24,7 +48,8 @@ export const GET = async (req: NextRequest) => {
             returnedMalkhanaCount,
             desiWineCount,
             englishWineCount,
-            movementCount
+            movementCount,
+
         ] = await Promise.all([
             // Get sum of wine and cash in one query
             prisma.malkhanaEntry.aggregate({
@@ -39,13 +64,22 @@ export const GET = async (req: NextRequest) => {
             prisma.malkhanaEntry.count({ where: { status: "Nilami", userId } }),
             prisma.seizedVehicle.count({ where: { isReturned: true, userId } }),
             prisma.malkhanaEntry.count({ where: { isReturned: true, userId } }),
-            prisma.malkhanaEntry.count({ where: { wineType: "Desi", userId } }),
-            prisma.malkhanaEntry.count({ where: { wineType: "Angrezi", userId } }),
+            prisma.malkhanaEntry.aggregate({
+                _sum: {
+                    wine: true
+                },
+                where: { wineType: "Desi", userId }
+            }),
+            prisma.malkhanaEntry.aggregate({
+                _sum: {
+                    wine: true
+                },
+                where: { wineType: "Angrezi", userId }
+            }),
             prisma.malkhanaEntry.count({ where: { movePurpose: { not: null }, userId } })
         ]);
 
-        // Calculate derived totals
-        const releaseCount = destroyCount + nilamiCount;
+
         const totalEntries = malkhanaEntryCount + seizedVehicleCount;
 
         // ✅ FIXED: The response object now uses the correct keys expected by the frontend.
@@ -54,10 +88,9 @@ export const GET = async (req: NextRequest) => {
             total: totalEntries,
             breakdown: {
                 entry: malkhanaEntryCount,
-                returnVehical: returnedVehicleCount,
-                returnMalkhana: returnedMalkhanaCount,
-                movement: movementCount,
-                release: releaseCount,
+                totalReturn: returnedVehicleCount + returnedMalkhanaCount,
+                movement: totalMovement,
+                release: totalRelease,
                 siezed: seizedVehicleCount,
                 destroy: destroyCount, // Changed from 'distroyCount'
                 nilami: nilamiCount,   // Changed from 'nilamiCount'

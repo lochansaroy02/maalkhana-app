@@ -1,15 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  assetPrefix: '', // Keep empty unless you have a CDN path
-  basePath: '', // Keep empty if site is at root
+  assetPrefix: '',
+  basePath: '',
   images: {
-    domains: ["res.cloudinary.com"], // allow Cloudinary images
+    domains: ["res.cloudinary.com"],
   },
   typescript: {
-    ignoreBuildErrors: true, // Ignore type errors on build
+    ignoreBuildErrors: true,
   },
   eslint: {
-    ignoreDuringBuilds: true, // Ignore ESLint errors on build
+    ignoreDuringBuilds: true,
   },
 };
 

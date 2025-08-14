@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import AddUser from './AddUser';
 
 const Page = () => {
+    
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const { getUsers, users, deleteUsers } = useUserStore()
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false)

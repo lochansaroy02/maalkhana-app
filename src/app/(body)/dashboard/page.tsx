@@ -3,92 +3,92 @@
 import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
-import { Banknote, Car, LucideArrowDownNarrowWide, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
+import { ArrowDownNarrowWide, Banknote, Car, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
 import { useEffect } from "react";
 
 const Page = () => {
     const { fetchTotalEntries, data } = useTotalEntriesStore();
     const { user } = useAuthStore();
-
+    
     useEffect(() => {
         if (user?.id) {
             fetchTotalEntries(user.id);
         }
     }, [user?.id, fetchTotalEntries]);
 
-    // ✅ FIXED: The reportItems array now correctly accesses the data from the API.
     const reportItems = [
         {
             title: "Total Entries",
-            icon: <Menu size="50px" />,
+            icon: <Menu size={40} />,
             bgColour: "bg-cyan-500",
             value: data?.total || 0,
         },
         {
             title: "Total Malkhana Entry",
-            icon: <User size="50px" />,
+            icon: <User size={40} />,
             bgColour: "bg-red-500",
             value: data?.breakdown?.entry || 0,
         },
         {
             title: "Malkhana Movement",
-            icon: <User size="50px" />,
+            icon: <User size={40} />,
             bgColour: "bg-orange-500",
             value: data?.breakdown?.movement || 0,
         },
         {
             title: "Malkhana Release",
-            icon: <Settings size="50px" />,
+            icon: <Settings size={40} />,
             bgColour: "bg-green-500",
             value: data?.breakdown?.release || 0,
         },
         {
-            title: "Seized Vehicle",
-            icon: <Car size="50px" />,
+            title: "Seized Vehicles",
+            icon: <Car size={40} />,
             bgColour: "bg-blue-500",
             value: data?.breakdown?.siezed || 0,
         },
         {
             title: "Total Nilami",
-            icon: <Megaphone size="50px" />,
+            icon: <Megaphone size={40} />,
             bgColour: "bg-yellow-500",
-            value: data?.breakdown?.nilami || 0, // Corrected key
+            value: data?.breakdown?.nilami || 0,
         },
         {
-            title: "Total Destroy",
-            icon: <Shredder size="50px" />,
+            title: "Total Destroyed Items",
+            icon: <Shredder size={40} />,
             bgColour: "bg-pink-500",
-            value: data?.breakdown?.destroy || 0, // Corrected key
+            value: data?.breakdown?.destroy || 0,
         },
         {
-            title: "Total English Wine Entries", // Title clarified
-            icon: <Wine size="50px" />,
-            bgColour: "bg-gray-500",
-            value: data?.breakdown?.english || 0,
-        },
-        {
-            title: "Total Desi Wine Entries", // Title clarified
-            icon: <Wine size="50px" />,
-            bgColour: "bg-fuchsia-700",
-            value: data?.breakdown?.desi || 0,
-        },
-        {
-            title: "Returned Entries", // Title clarified
-            icon: <LucideArrowDownNarrowWide size="50px" />,
+            title: "Returned Entries",
+            icon: <ArrowDownNarrowWide size={40} />,
             bgColour: "bg-green-700",
-            value: (data?.breakdown?.returnVehical || 0) + (data?.breakdown?.returnMalkhana || 0),
+            value: data?.breakdown?.totalReturn || 0,
+        },
+        {
+            title: "Total English Wine",
+            icon: <Wine size={40} />,
+            bgColour: "bg-gray-500",
+            value: data?.breakdown?.english?._sum?.wine || 0,
+        },
+        {
+            title: "Total Desi Wine",
+            icon: <Wine size={40} />,
+            bgColour: "bg-fuchsia-700",
+            value: data?.breakdown?.desi?._sum?.wine || 0,
+        },
+        {
+            title: "Total Wine",
+            icon: <Wine size={40} />,
+            bgColour: "bg-purple-700",
+            value: data?.breakdown?.totalWine || 0,
+            unit: "Ltr"
         },
         {
             title: "Total Cash",
-            icon: <Banknote size="50px" />,
+            icon: <Banknote size={40} />,
             bgColour: "bg-cyan-700",
-            value: `₹ ${data?.breakdown?.totalCash || 0}`, // Corrected data access
-        },
-        {
-            title: "Total Wine (in ltr)", // Added missing card for total wine sum
-            icon: <Wine size="50px" />,
-            bgColour: "bg-purple-700",
-            value: `${data?.breakdown?.totalWine || 0} Ltr`,
+            value: `₹${(data?.breakdown?.totalCash || 0).toLocaleString('en-IN')}`,
         },
     ];
 

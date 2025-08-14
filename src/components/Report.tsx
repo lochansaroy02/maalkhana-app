@@ -43,7 +43,7 @@ const Report = ({
         }
     };
 
-    const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "photoUrl", "userId", "districtId", "_id", "__v"];
+    const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "isReturned", "isRelease", "photoUrl", "userId", "districtId", "_id", "__v"];
 
     const toggleSelect = (id: string) => {
         setSelectedIds(prev =>
