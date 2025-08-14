@@ -9,7 +9,7 @@ import { useEffect } from "react";
 const Page = () => {
     const { fetchTotalEntries, data } = useTotalEntriesStore();
     const { user } = useAuthStore();
-    
+
     useEffect(() => {
         if (user?.id) {
             fetchTotalEntries(user.id);
