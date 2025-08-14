@@ -11,11 +11,10 @@ import { Input } from './ui/input';
 const LoginForm = () => {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
-    const [role, setRole] = useState<string>("Police Station"); // Default value
+    // Default role is "Police Station", user can change it via the dropdown
+    const [role, setRole] = useState<string>("Police Station");
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const router = useRouter();
-
-    // Only need the login action here
     const { login } = useAuthStore();
 
     const handleLogin = async (e: FormEvent) => {
@@ -26,22 +25,24 @@ const LoginForm = () => {
         setIsLoading(true);
 
         try {
+            // Send the selected role along with email and password to the API
             const response = await axios.post("/api/login", {
-                email, password, role // Send role to API if needed
+                email, password, role
             });
             const data = response.data;
 
             if (data.success) {
-                // Persist user data and token to sessionStorage
+                // The user object from the API now includes the role
                 login(data.token, data.user);
                 toast.success("Successfully Logged In");
                 router.push("/dashboard");
             } else {
                 toast.error(data.message || "Login Failed. Please check your credentials.");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Login error:", error);
-            toast.error("An error occurred during login.");
+            const errorMessage = error.response?.data?.error || "An error occurred during login.";
+            toast.error(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -49,10 +50,11 @@ const LoginForm = () => {
 
     return (
         <form onSubmit={handleLogin} className='flex flex-col gap-4'>
-            {/* <div>
+            {/* 1. Enabled the dropdown for role selection */}
+            <div>
                 <label className='text-blue-100 font-semibold' htmlFor="role-select">Login AS</label>
                 <DropDown selectedValue={role} handleSelect={setRole} options={["Police Station", "District"]} />
-            </div> */}
+            </div>
 
             <div className='flex flex-col gap-2'>
                 <label className='text-blue-100' htmlFor="email">Email</label>

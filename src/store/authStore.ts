@@ -5,6 +5,9 @@ interface User {
     id: string;
     name: string;
     email: string;
+    mobile: string,
+    rank: string,
+    policeStation: string,
     role: "district" | "policeStation";
 }
 

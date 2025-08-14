@@ -1,9 +1,10 @@
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
+import { useAuthStore } from '@/store/authStore';
 import { useUserStore } from '@/store/userStore';
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 type ModalProps = {
@@ -13,7 +14,8 @@ type ModalProps = {
 
 const AddUser = ({ setIsModalOpen }: ModalProps) => {
     const { addUser } = useUserStore();
-
+    const { user, isLoggedIn } = useAuthStore()
+    const [districtId, setDistrictId] = useState<string>("")
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -24,11 +26,18 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
         role: '',
     });
 
+
+    useEffect(() => {
+        if (isLoggedIn && user?.role === "district") {
+            setDistrictId(user.id)
+        }
+    }, [user?.id])
     const roleOptions = ['admin', 'user'];
 
     const handleChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
+
 
     const handleClick = async () => {
         try {
@@ -37,7 +46,7 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
                 alert('Please enter all required fields');
                 return;
             }
-            const districtId = "ec15631d-1507-4312-9739-2d064c1a24ad"
+
 
             const fullData = {
                 ...formData, districtId

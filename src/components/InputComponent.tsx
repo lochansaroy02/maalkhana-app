@@ -8,18 +8,21 @@ interface InputProps {
     value: string | number | boolean | undefined;
     className?: string;
     setInput: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    type?: "text" | "password"
     // disabled: boolean
 }
 
 
 
-const InputComponent = ({ label, value, className, setInput, }: InputProps) => {
+const InputComponent = ({ label, value, className, setInput, type }: InputProps) => {
     return (
         <div className={cn("flex flex-col", className)}>
             <Label className="w-1/4 text-[17px] text-nowrap text-blue-100">
                 {label}
             </Label>
             <Input
+
+                type={type}
 
                 placeholder={`Enter ${label}`}
                 className="text-blue-100 placeholder:text-blue-200/50"

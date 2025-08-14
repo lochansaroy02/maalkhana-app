@@ -66,19 +66,19 @@ const Page = () => {
             value: data?.breakdown?.totalReturn || 0,
         },
         {
-            title: "Total English Wine",
+            title: "Total English Wine (in Ltr)",
             icon: <Wine size={40} />,
             bgColour: "bg-gray-500",
             value: data?.breakdown?.english?._sum?.wine || 0,
         },
         {
-            title: "Total Desi Wine",
+            title: "Total Desi Wine (in Ltr)",
             icon: <Wine size={40} />,
             bgColour: "bg-fuchsia-700",
             value: data?.breakdown?.desi?._sum?.wine || 0,
         },
         {
-            title: "Total Wine",
+            title: "Total Wine (in Ltr)",
             icon: <Wine size={40} />,
             bgColour: "bg-purple-700",
             value: data?.breakdown?.totalWine || 0,

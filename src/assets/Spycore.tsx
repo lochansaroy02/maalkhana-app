@@ -1,4 +1,4 @@
-import logo from "@/assets/spycore.jpeg"
+import logo from "@/assets/spycore.png"
 import Image from 'next/image'
 
 interface LogoProps {

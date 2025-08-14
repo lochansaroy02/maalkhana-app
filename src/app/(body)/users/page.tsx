@@ -1,21 +1,23 @@
 "use client";
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAuthStore } from '@/store/authStore';
 import { useUserStore } from '@/store/userStore';
-import { Eye, Pen, Trash2 } from 'lucide-react';
+import { Eye, Pen } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AddUser from './AddUser';
 
 const Page = () => {
-    
+    const { login, user } = useAuthStore()
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const { getUsers, users, deleteUsers } = useUserStore()
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
-    const districtId = "41b4d608-6850-4e4e-a009-b732f3b8fb7a"
+
 
     useEffect(() => {
-        getUsers(districtId);
-    }, []);
+        if (user?.role === "district")
+            getUsers(user?.id);
+    }, [user?.id]);
 
     const toggleSelection = (userId: string) => {
         setSelectedUserIds(prev =>
