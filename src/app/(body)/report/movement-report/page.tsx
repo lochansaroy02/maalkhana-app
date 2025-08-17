@@ -19,7 +19,7 @@ const page = () => {
     }, [])
 
 
-    
+
     const handleImportSuccess = (message: string) => {
         fetchMovementEntries(user?.id);
     };

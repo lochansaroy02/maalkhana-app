@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuthStore } from "@/store/authStore";
+import { useSidebarStore } from "@/store/sidebarStore";
+import { Menu } from "lucide-react";
 import Link from "next/link"; // Import the Link component
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -12,6 +14,7 @@ const Header = () => {
     const router = useRouter();
     const [hasHydrated, setHasHydrated] = useState(false);
 
+    const { isOpen, setIsOpen, toggleOpen } = useSidebarStore()
     const handleLogout = () => {
         logout();
         router.push("/");
@@ -34,11 +37,21 @@ const Header = () => {
         return null;
     }
 
+
+
+    const handleClick = () => {
+        toggleOpen()
+    }
+
     return (
-        <div className="fixed w-[80%] glass-effect z-40 bg-amber-300 flex">
+        <div className="fixed w-full  lg:w-[80%] glass-effect z-40 bg-amber-300 flex">
             <div className="flex items-center p-4 justify-between w-full">
+                <button className="lg:hidden" onClick={handleClick}>
+                    <Menu className="text-blue-100" />
+                </button>
+
                 <div>
-                    <h1 className="text-xl font-bold text-blue-300">Malkhana Application</h1>
+                    <h1 className="lg:text-xl text-base font-bold text-blue-300">Digital Malkhana</h1>
                 </div>
                 <div className="flex gap-4 px-2 items-center">
                     <Button onClick={handleLogout} className="bg-blue-500 hover:bg-blue-600 cursor-pointer">

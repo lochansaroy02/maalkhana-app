@@ -95,7 +95,7 @@ CREATE TABLE "MalkhanaRelease" (
     "moveTrackingNo" TEXT NOT NULL,
     "movePurpose" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "recevierName" TEXT NOT NULL,
+    "receiverName" TEXT NOT NULL,
     "fathersName" TEXT NOT NULL,
     "address" TEXT NOT NULL,
     "mobile" TEXT NOT NULL,

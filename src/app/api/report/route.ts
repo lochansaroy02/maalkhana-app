@@ -12,7 +12,45 @@ export const GET = async (req: NextRequest) => {
     }
 
     try {
-        // Run all Prisma queries concurrently for better performance
+
+
+
+
+        const totalCash = await prisma.malkhanaEntry.aggregate({
+            _sum: {
+                cash: true,
+            },
+            where: {
+                userId: userId, // optional if filtering by user
+            },
+        });
+        const totalDesiWine = await prisma.malkhanaEntry.aggregate({
+            _sum: {
+                wine: true,
+            },
+            where: {
+                wineType: 'Desi',
+                userId: userId, // optional if filtering by user
+            },
+        });
+
+        const totalAngreziWine = await prisma.malkhanaEntry.aggregate({
+            _sum: {
+                wine: true,
+            },
+            where: {
+                wineType: 'Angrezi',
+                userId: userId, // optional if filtering by user
+            },
+        });
+        const totalWine = await prisma.malkhanaEntry.aggregate({
+            _sum: {
+                wine: true,
+            },
+            where: {
+                userId: userId, // optional if filtering by user
+            },
+        });
 
         const releaseCountVehicle = await prisma.malkhanaEntry.count({
             where: {
@@ -32,51 +70,42 @@ export const GET = async (req: NextRequest) => {
         const isMovementMalkhana = await prisma.seizedVehicle.count({
             where: {
                 isMovement: true,
+            },
+        })
+
+        const totalYellowItem = await prisma.malkhanaEntry.aggregate({
+            _sum: {
+                yellowItemPrice: true
+            },
+            where: {
+                userId
             }
         })
         const totalMovement = isMovementMalkhana + isMovementVehical;
         const totalRelease = releaseCountMalkhana + releaseCountVehicle;
 
         const [
-            totals,
             malkhanaEntryCount,
             seizedVehicleCount,
-            wineEntryCount,
+
+
             destroyCount,
             nilamiCount,
+
             returnedVehicleCount,
-            returnedMalkhanaCount,
-            desiWineCount,
-            englishWineCount,
-            movementCount,
+            returnedMalkhanaCount
 
         ] = await Promise.all([
-            // Get sum of wine and cash in one query
-            prisma.malkhanaEntry.aggregate({
-                _sum: { wine: true, cash: true, },
-                where: { userId }
-            }),
-            // Get counts for different entry types and statuses
             prisma.malkhanaEntry.count({ where: { userId } }),
             prisma.seizedVehicle.count({ where: { userId } }),
-            prisma.malkhanaEntry.count({ where: { entryType: "Wine", userId } }),
+
+
             prisma.malkhanaEntry.count({ where: { status: "Destroy", userId } }),
             prisma.malkhanaEntry.count({ where: { status: "Nilami", userId } }),
+
             prisma.seizedVehicle.count({ where: { isReturned: true, userId } }),
             prisma.malkhanaEntry.count({ where: { isReturned: true, userId } }),
-            prisma.malkhanaEntry.aggregate({
-                _sum: {
-                    wine: true
-                },
-                where: { wineType: "Desi", userId }
-            }),
-            prisma.malkhanaEntry.aggregate({
-                _sum: {
-                    wine: true
-                },
-                where: { wineType: "Angrezi", userId }
-            }),
-            prisma.malkhanaEntry.count({ where: { movePurpose: { not: null }, userId } })
+
         ]);
 
 
@@ -85,20 +114,24 @@ export const GET = async (req: NextRequest) => {
         // ✅ FIXED: The response object now uses the correct keys expected by the frontend.
         return NextResponse.json({
             success: true,
-            total: totalEntries,
             breakdown: {
+
+                totalEntries: totalEntries,
+
                 entry: malkhanaEntryCount,
                 totalReturn: returnedVehicleCount + returnedMalkhanaCount,
                 movement: totalMovement,
                 release: totalRelease,
                 siezed: seizedVehicleCount,
-                destroy: destroyCount, // Changed from 'distroyCount'
-                nilami: nilamiCount,   // Changed from 'nilamiCount'
-                wine: wineEntryCount,
-                totalWine: totals._sum.wine || 0,
-                totalCash: totals._sum.cash || 0,
-                desi: desiWineCount,
-                english: englishWineCount
+                destroy: destroyCount,
+                nilami: nilamiCount,
+                totalCash: totalCash,
+                totalYellowItems: totalYellowItem,
+
+                desi: totalDesiWine,
+                english: totalAngreziWine,
+                totalWine: totalWine,
+
             },
         });
 

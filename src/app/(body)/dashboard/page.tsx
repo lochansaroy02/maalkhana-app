@@ -21,7 +21,7 @@ const Page = () => {
             title: "Total Entries",
             icon: <Menu size={40} />,
             bgColour: "bg-cyan-500",
-            value: data?.total || 0,
+            value: data?.breakdown.totalEntries || 0,
         },
         {
             title: "Total Malkhana Entry",
@@ -50,7 +50,7 @@ const Page = () => {
         {
             title: "Total Nilami",
             icon: <Megaphone size={40} />,
-            bgColour: "bg-yellow-500",
+            bgColour: "bg-purple-500",
             value: data?.breakdown?.nilami || 0,
         },
         {
@@ -81,19 +81,27 @@ const Page = () => {
             title: "Total Wine (in Ltr)",
             icon: <Wine size={40} />,
             bgColour: "bg-purple-700",
-            value: data?.breakdown?.totalWine || 0,
+            value: data?.breakdown.totalWine._sum.wine || 0,
             unit: "Ltr"
         },
         {
             title: "Total Cash",
             icon: <Banknote size={40} />,
             bgColour: "bg-cyan-700",
-            value: `₹${(data?.breakdown?.totalCash || 0).toLocaleString('en-IN')}`,
+            value: `₹${(data?.breakdown?.totalCash._sum.cash || 0).toLocaleString('en-IN')}`,
+        },
+        {
+            title: "Total Yellow Item",
+            icon: <Banknote size={40} />,
+            bgColour: "bg-yellow-500",
+            value: `₹${(data?.breakdown?.totalYellowItems._sum.yellowItemPrice || 0).toLocaleString('en-IN')}`,
         },
     ];
 
+    console.log(data)
+
     return (
-        <div className="flex h-screen  flex-col glass-effect">
+        <div className="flex lg:h-screen  flex-col glass-effect">
             <div className="flex justify-center py-4 border-b border-white/50 rounded-t-xl bg-maroon">
                 <h1 className="text-textColor text-2xl text-blue-100 font-bold">Dashboard</h1>
             </div>

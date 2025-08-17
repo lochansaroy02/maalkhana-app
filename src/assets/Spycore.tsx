@@ -1,13 +1,10 @@
 import logo from "@/assets/spycore.png"
 import Image from 'next/image'
 
-interface LogoProps {
-    width: number | `${number}` | undefined
-    height: number | `${number}` | undefined
-}
-const Spycore = ({ width, height }: LogoProps) => {
+
+const Spycore = () => {
     return (
-        <Image width={width} height={height} src={logo} alt='No image' />
+        <Image className="w-64" src={logo} alt='No image' />
     )
 }
 

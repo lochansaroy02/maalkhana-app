@@ -8,17 +8,25 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 export const metadata: Metadata = {
   title: "Malkhana App",
+
   description: "District-wise Property Seizure App",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+
+
+const RootLayout = async ({ children }: { children: React.ReactNode }) => {
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased gradient`}>
         {children}
+
         <Toaster position="top-right"
           reverseOrder={false} />
       </body>
     </html>
   );
 }
+
+
+export default RootLayout

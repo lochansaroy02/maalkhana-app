@@ -8,7 +8,7 @@
   - Added the required column `address` to the `SeizedVehicle` table without a default value. This is not possible if the table is not empty.
   - Added the required column `fathersName` to the `SeizedVehicle` table without a default value. This is not possible if the table is not empty.
   - Added the required column `mobile` to the `SeizedVehicle` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `recevierName` to the `SeizedVehicle` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `receiverName` to the `SeizedVehicle` table without a default value. This is not possible if the table is not empty.
   - Added the required column `releaseItemName` to the `SeizedVehicle` table without a default value. This is not possible if the table is not empty.
 
 */
@@ -30,7 +30,7 @@ ADD COLUMN     "moveTrackingNo" TEXT,
 ADD COLUMN     "name" TEXT,
 ADD COLUMN     "photo" TEXT,
 ADD COLUMN     "receviedBy" TEXT,
-ADD COLUMN     "recevierName" TEXT,
+ADD COLUMN     "receiverName" TEXT,
 ADD COLUMN     "releaseItemName" TEXT,
 ADD COLUMN     "returnBackFrom" TEXT,
 ADD COLUMN     "returnDate" TIMESTAMP(3),
@@ -48,7 +48,7 @@ ADD COLUMN     "moveTrackingNo" TEXT,
 ADD COLUMN     "name" TEXT,
 ADD COLUMN     "photo" TEXT,
 ADD COLUMN     "receviedBy" TEXT,
-ADD COLUMN     "recevierName" TEXT NOT NULL,
+ADD COLUMN     "receiverName" TEXT NOT NULL,
 ADD COLUMN     "releaseItemName" TEXT NOT NULL,
 ADD COLUMN     "returnBackFrom" TEXT,
 ADD COLUMN     "returnDate" TIMESTAMP(3),

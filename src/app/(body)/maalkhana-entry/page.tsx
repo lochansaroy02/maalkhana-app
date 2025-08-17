@@ -10,16 +10,23 @@ import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
 import { Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
 const Page = () => {
+
     const { user } = useAuthStore();
     const { addMaalkhanaEntry, updateMalkhanaEntry, getByFIR } = useMaalkhanaStore();
 
     const [firData, setFirData] = useState<any[]>([]);
     const [photoUrl, SetPhotoUrl] = useState("");
+
+    // --- MODIFIED STATE LOGIC ---
+    // This state tracks the selection in the dropdown for UI purposes (e.g., showing the 'Other' input)
+    const [dropdownSelection, setDropdownSelection] = useState('');
+    // This state holds the actual, final value for the entry type.
     const [entryType, setEntryType] = useState('');
+
     const [wine, setWine] = useState<number>(0);
     const [cash, setCash] = useState<number>(0);
     const [wineType, setWineType] = useState<string>('');
@@ -27,6 +34,9 @@ const Page = () => {
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
     const [existingId, setExistingId] = useState<string>("");
+    const [yellowItemPrice, setYellowItemPrice] = useState<number>(0);
+
+
     const [dateFields, setDateFields] = useState<{ gdDate?: Date }>({
         gdDate: new Date(),
     });
@@ -72,10 +82,21 @@ const Page = () => {
             courtName: data.courtName || '',
         });
         setStatus(data.status || '');
+        setYellowItemPrice(data.yellowItemPrice || 0)
         setWine(data.wine || 0);
         setCash(data.cash || 0);
         setWineType(data.wineType || '');
-        setEntryType(data.entryType || '');
+
+        const standardEntries = ["malkhana Entry", "FSL", "Kukri", "Cash Entry", "Wine/Daru", "Unclaimed Entry"];
+        if (data.entryType && !standardEntries.includes(data.entryType)) {
+            setDropdownSelection('Other Entry');
+            setEntryType(data.entryType);
+        } else {
+            const entry = data.entryType || '';
+            setDropdownSelection(entry);
+            setEntryType(entry);
+        }
+
         setDescription(data.description || '');
         setDateFields({ gdDate: data.gdDate ? new Date(data.gdDate) : new Date() });
         SetPhotoUrl(data.photoUrl || "");
@@ -91,6 +112,9 @@ const Page = () => {
         setWine(0);
         setCash(0);
         setWineType('');
+        setYellowItemPrice(0),
+            setDropdownSelection('');
+        setEntryType('');
         setDescription('');
         setDateFields({ gdDate: new Date() });
         SetPhotoUrl("");
@@ -98,7 +122,8 @@ const Page = () => {
     };
 
     const entryOptions = [
-        "malkhana Entry", "FSL", "Kukri", "Other Entry", "Cash Entry", "Wine/Daru", "Unclaimed Entry",
+        "malkhana Entry", "FSL", "Kurki", "Cash Entry", "Wine/Daru", "Unclaimed Entry", "Other Entry",
+        "Yellow Item"
     ];
     const statusOptions = ["Destroy", "Nilami", "Pending", "Other", "On Court"];
 
@@ -106,7 +131,6 @@ const Page = () => {
         { name: 'firNo', label: 'FIR No' },
         { name: 'srNo', label: 'Sr. No / Mud No.' },
         { name: 'caseProperty', label: 'case Property' },
-
         { name: 'gdNo', label: 'GD No' },
         { name: 'gdDate', label: 'GD Date', type: 'date' },
         { name: 'Year', label: 'Year' },
@@ -124,7 +148,6 @@ const Page = () => {
         { name: 'courtName', label: 'Court Name' },
     ];
 
-
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
@@ -133,6 +156,18 @@ const Page = () => {
         setDateFields(prev => ({ ...prev, [fieldName]: date }));
         handleInputChange(fieldName, date?.toISOString() ?? "");
     };
+
+    // --- MODIFIED HANDLER ---
+    // This function now handles the logic for setting both the UI state and the final data state
+    const handleEntryTypeSelect = (value: string) => {
+        setDropdownSelection(value); // Update the dropdown selection state
+        if (value === 'Other Entry') {
+            setEntryType(''); // Clear the final value to allow user input
+        } else {
+            setEntryType(value); // Set the final value directly
+        }
+    };
+
 
     const photoRef = useRef<HTMLInputElement>(null);
 
@@ -145,15 +180,25 @@ const Page = () => {
     };
 
     const handleSave = async () => {
-        
+
+
+
         setLoading(true);
         try {
+            if (dropdownSelection === 'Other Entry' && !entryType) {
+                toast.error("Please specify the 'Other' entry type.");
+                setLoading(false);
+                return;
+            }
+
             const userId = user?.id;
             const fullData = {
                 ...formData,
-                status, wine, cash, wineType, entryType, userId, photoUrl, description,
+                status, wine, cash, wineType,
+                entryType, // entryType state now holds the correct final value directly
+                userId, photoUrl, description,
+                yellowItemPrice,
                 gdDate: dateFields.gdDate?.toISOString() ?? '',
-
             };
 
             let success = false;
@@ -176,6 +221,7 @@ const Page = () => {
         } finally {
             setLoading(false);
         }
+
     };
 
     const handleGetByFir = async () => {
@@ -217,11 +263,8 @@ const Page = () => {
         }
     };
 
-    // This function goes on the page WITH the print button.
-    const router = useRouter()
+    const router = useRouter();
     const handlePrint = () => {
-
-
         const fullData = {
             ...formData,
             status,
@@ -231,22 +274,15 @@ const Page = () => {
             entryType,
             photoUrl,
             description,
-            // Ensure date is in a readable format, toISOString is good.
             gdDate: dateFields.gdDate?.toISOString() ?? '',
         };
-        // 2. Check if the form has essential data (like an FIR No.)
         if (!fullData.firNo && !fullData.srNo) {
             toast.error("Please fill in the form or fetch data before printing.");
             return;
         }
-
-        // 3. Save the *correct* data object to sessionStorage
         sessionStorage.setItem('printableEntryData', JSON.stringify(fullData));
-
-        // 4. Open the details page in a NEW browser tab
         window.open('/details', '_blank');
     };
-
 
     return (
         <div className='glass-effect'>
@@ -254,20 +290,47 @@ const Page = () => {
                 <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Malkhana Entry Form</h1>
             </div>
             <div className='px-8 py-4 rounded-b-md'>
-                <div className='py-2 flex items-center'>
-                    <div className='flex w-3/4 items-center gap-6'>
-                        <div className={`${entryType === 'Wine/Daru' || entryType === 'Cash Entry' ? "w-full" : "w-1/2"}`}>
-                            <DropDown label='Entry type' selectedValue={entryType} options={entryOptions} handleSelect={setEntryType} />
+                <div className='py-2 flex items-end gap-6'>
+                    <div className='flex items-end gap-6 w-3/4'>
+                        <div className={dropdownSelection === 'Other Entry' ? 'w-1/2' : 'w-1/2'}>
+                            <DropDown
+                                label='Entry type'
+                                selectedValue={dropdownSelection}
+                                options={entryOptions}
+                                handleSelect={handleEntryTypeSelect}
+                            />
                         </div>
+                        {dropdownSelection === 'Other Entry' && (
+                            <div className='w-1/2'>
+                                <InputComponent
+                                    label="Specify Other Entry"
+                                    value={entryType}
+                                    // The input field now directly sets the final entryType value
+                                    setInput={(e) => setEntryType(e.target.value)}
+                                />
+                            </div>
+                        )}
+                        {dropdownSelection === 'Yellow Item' && (
+                            <div className='w-1/2'>
+                                <InputComponent
+                                    label="Enter Yellow Item Price"
+                                    value={yellowItemPrice}
+                                    // The input field now directly sets the final entryType value
+                                    setInput={(e) => setYellowItemPrice(Number(e.target.value))}
+                                />
+                            </div>
+                        )}
                     </div>
-                    <div className={`w-full ml-6 gap-6 ${entryType === 'Wine/Daru' ? "flex" : "hidden"} items-center`}>
+
+                    <div className={`w-full ml-6 gap-6 ${dropdownSelection === 'Wine/Daru' ? "flex" : "hidden"} items-center`}>
                         <DropDown label='Wine' selectedValue={wineType} options={["Desi", "Angrezi"]} handleSelect={setWineType} />
                     </div>
-                    <div className={`w-full ml-6 gap-6 ${entryType === 'Wine/Daru' ? "flex" : "hidden"} items-center`}>
+                    <div className={`w-full ml-6 gap-6 ${dropdownSelection === 'Wine/Daru' ? "flex" : "hidden"} items-center`}>
                         <label className='text-blue-100'>Wine</label>
                         <Input type='number' value={wine} onChange={(e) => setWine(Number(e.target.value))} />
                     </div>
-                    <div className={`w-3/4 ml-18 ${entryType === 'Cash Entry' ? "flex flex-col" : "hidden"}`}>
+
+                    <div className={`w-3/4 ml-18 ${dropdownSelection === 'Cash Entry' ? "flex flex-col" : "hidden"}`}>
                         <label className='text-blue-100'>Cash</label>
                         <Input className='text-blue-100' type='number' value={cash} onChange={(e) => setCash(Number(e.target.value))} />
                     </div>
@@ -275,8 +338,10 @@ const Page = () => {
 
                 <div className='grid grid-cols-2 gap-2'>
                     {fields.map(field => {
-                        if (field.name === 'firNo' && entryType === "Unclaimed Entry") return null;
+                        if (field.name === 'firNo' && dropdownSelection === "Unclaimed Entry") return null;
 
+
+                        { entryType === 'Yellow Item' && < InputComponent label='Enter Yellow Item Price' value={yellowItemPrice} setInput={(e) => { setYellowItemPrice((Number)(e.target.value)) }} /> }
                         if (field.name === 'srNo') {
                             if (firData.length > 1) {
                                 return (
@@ -284,7 +349,7 @@ const Page = () => {
                                         <label className='text-blue-100'>Select One Sr. No / Mud No.</label>
                                         <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
                                             {firData
-                                                .filter((item: any) => item && item.srNo) // <-- THIS LINE IS ADDED
+                                                .filter((item: any) => item && item.srNo)
                                                 .map((item: any) => (
                                                     <div key={item.id || item.srNo} className="flex items-center gap-2">
                                                         <input

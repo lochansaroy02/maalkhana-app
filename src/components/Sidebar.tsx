@@ -3,15 +3,16 @@
 import Logo from '@/assets/Logo';
 import Spycore from '@/assets/Spycore';
 import { useAuthStore } from '@/store/authStore'; // 1. Import the auth store
+import { useSidebarStore } from '@/store/sidebarStore';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 
 const Sidebar = () => {
     const path = usePathname();
     const router = useRouter();
-    const { user } = useAuthStore(); // 2. Get the logged-in user from the store
+    const { user } = useAuthStore();
+    const { isOpen } = useSidebarStore()
 
-    // 3. Use useMemo to create the sidebar data based on the user's role
     const sidebarData = useMemo(() => {
         const baseRoutes = [
             { name: "Dashboard", link: "/dashboard" },
@@ -19,6 +20,7 @@ const Sidebar = () => {
             { name: "Seized vehicles", link: "/seized-vehical" },
             { name: "Malkhana Movement", link: "/maalkhana-movement" },
             { name: "Malkhana Release", link: "/maalkhana-release" },
+            { name: "Barcode", link: "/barcode" },
             { name: "Report", link: "/report/entry-report" },
         ];
 
@@ -32,12 +34,12 @@ const Sidebar = () => {
     }, [user]); // The sidebarData will re-calculate whenever the user object changes
 
     return (
-        <div className=' h-screen  w-[20%] fixed glass-effect ' >
-            <div className='p-4  flex gap-4   flex-col'>
+        <div className={` ${isOpen ? "flex" : "hidden"} h-screen   lg:flex transition-all ease-in-out duration-300  z-40  lg:w-[20%] lg:pt-0 pt-18 fixed lg:glass-effect border border-white/50 rounded-xl bg-blue  lg:bg-transparent`} >
+            <div className='p-4 h-full  flex gap-4   flex-col'>
                 <div className='flex justify-center '>
                     <Logo width={100} height={100} />
                 </div>
-                <div className='flex flex-col  gap-24 '>
+                <div className='flex flex-col justify-between   h-full  lg:gap-12  gap-6  '>
 
                     <div className='gap-2  flex  flex-col '>
                         {
@@ -60,10 +62,10 @@ const Sidebar = () => {
                             )
                         }
                     </div>
-                    <div className=' p-4  items-center flex flex-col justify-center mb-2 rounded-xl border border-white/30 bg-blue'>
-                        <Spycore height={240} width={240} />
+                    <div className=' lg:p-4  items-center flex flex-col justify-center mb-2 rounded-xl border border-white/30 bg-blue'>
+                        <Spycore />
                         <h1 className='text-blue-100'>Helpline</h1>
-                        <h2 className='text-blue-100'>+917505065746</h2>
+                        <h2 className='text-blue-100'>+917078146730</h2>
                     </div>
                 </div>
             </div>

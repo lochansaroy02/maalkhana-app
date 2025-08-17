@@ -19,11 +19,12 @@ const Page: React.FC = () => {
     const { updateVehicalEntry, addVehicle } = useSeizedVehicleStore()
     const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-
     const [isReturned, setIsReturned] = useState(false);
     const [returnBackFrom, setReturnBackFrom] = useState("");
     const [caseProperty, setCaseProperty] = useState("");
     const [type, setType] = useState<string>("")
+
+
 
     const [formData, setFormData] = useState<Partial<MovementEntry>>({
         srNo: "", name: "", moveDate: "", policeStation: "", firNo: "", underSection: "", takenOutBy: "", moveTrackingNo: "", movePurpose: "", receivedBy: "", returnDate: "",
@@ -173,13 +174,14 @@ const Page: React.FC = () => {
                     <DropDown selectedValue={type} handleSelect={setType} options={["malkhana", "siezed vehical"]} />
                 </div>
                 <div className="px-8 py-4 rounded-b-md">
-                    <div className="grid grid-cols-2 gap-12">
-                        <InputComponent label="Case Property" value={caseProperty} setInput={(e) => setCaseProperty(e.target.value)} />
-                        <div className="flex items-center space-x-2">
-                            <Checkbox checked={isReturned} onCheckedChange={(checked) => setIsReturned(!!checked)} />
-                            <label className="text-blue-100">Returned</label>
-                        </div>
-                    </div>
+                    {
+                        existingEntryId && <div className="grid grid-cols-2 gap-12">
+                            <InputComponent label="Case Property" value={caseProperty} setInput={(e) => setCaseProperty(e.target.value)} />
+                            <div className="flex items-center space-x-2">
+                                <Checkbox checked={isReturned} onCheckedChange={(checked) => setIsReturned(!!checked)} />
+                                <label className="text-blue-100">Returned</label>
+                            </div>
+                        </div>}
 
                     <div className="mt-2 grid grid-cols-2 gap-4">
                         {fields.map((field) => {

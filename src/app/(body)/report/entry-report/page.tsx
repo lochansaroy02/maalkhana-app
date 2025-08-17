@@ -9,7 +9,7 @@ import { useOpenStore } from "@/store/store";
 import { useEffect, useState } from "react";
 
 const casePropertyOptions = [
-    "malkhana Entry", "FSL", "Kukri", "Other Entry", "Cash Entry", "Wine/Daru", "Unclaimed Entry",
+    "malkhana Entry", "FSL", "Kurki", "Other Entry", "Cash Entry", "Wine/Daru", "Unclaimed Entry",
 ];
 
 const Page = () => {
@@ -21,7 +21,7 @@ const Page = () => {
     const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
     const [displayData, setDisplayData] = useState<any[]>([]);
 
-    // Fetch all data when the component first loads
+
     useEffect(() => {
         if (user?.id) {
             fetchMaalkhanaEntry(user.id);

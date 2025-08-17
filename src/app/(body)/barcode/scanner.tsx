@@ -1,46 +1,59 @@
-"use client"
-import { Html5QrcodeScanner, Html5QrcodeScanType } from "html5-qrcode"
-import { useEffect, useState } from "react"
+// src/components/BarcodeScanner.tsx
+"use client";
 
-export default function BarcodeScanner() {
-    const [entry, setEntry] = useState<any>(null)
+import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useEffect } from 'react';
+
+interface BarcodeScannerProps {
+    onScanResult: (result: { getText: () => string }) => void;
+}
+
+const qrcodeRegionId = "html5qr-code-full-region";
+
+export default function BarcodeScanner({ onScanResult }: BarcodeScannerProps) {
 
     useEffect(() => {
-        const scanner = new Html5QrcodeScanner("reader", {
-            fps: 10,
-            qrbox: 250,
-            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
-        }, true)
-
-        scanner.render(
-            async (decodedText) => {
-                try {
-                    const data = JSON.parse(decodedText)
-                    console.log("Decoded barcode JSON:", data)
-
-                    const res = await fetch(`/api/entry?id=${data.id}`)
-                    const dbEntry = await res.json()
-                    setEntry(dbEntry)
-                    scanner.clear()
-                } catch (e) {
-                    console.error("Invalid barcode data:", decodedText)
-                }
+        // 1. Create a new scanner instance.
+        const scanner = new Html5QrcodeScanner(
+            qrcodeRegionId,
+            {
+                // Scanner configuration
+                qrbox: {
+                    width: 250,
+                    height: 250,
+                },
+                fps: 10,
             },
-            (err) => {
-                console.warn("Scan error:", err)
-            }
-        )
-    }, [])
+            /* verbose= */ false
+        );
 
-    return (
-        <div className="p-4">
-            <div id="reader" className="w-full max-w-md"></div>
-            {entry && (
-                <div className="mt-4 border p-4">
-                    <h2 className="font-bold">Entry Found:</h2>
-                    <pre>{JSON.stringify(entry, null, 2)}</pre>
-                </div>
-            )}
-        </div>
-    )
+        // 2. Define the success callback.
+        const successCallback = (decodedText: string) => {
+            // We wrap the result to match the object structure the parent component expects.
+            onScanResult({ getText: () => decodedText });
+            // After a successful scan, you might want to stop the scanner.
+            scanner.clear().catch(error => {
+                console.error("Failed to clear scanner.", error);
+            });
+        };
+
+        // 3. Define the error callback (optional).
+        const errorCallback = (errorMessage: string) => {
+            // Errors are logged but do not stop the scanner.
+            // console.warn(`QR error = ${errorMessage}`);
+        };
+
+        // 4. Start the scanner.
+        scanner.render(successCallback, errorCallback);
+
+        // 5. Cleanup function: This is crucial for stopping the camera when the component unmounts.
+        return () => {
+            scanner.clear().catch(error => {
+                console.error("Failed to clear scanner on unmount.", error);
+            });
+        };
+    }, [onScanResult]); // Re-run the effect if the callback function changes.
+
+    // The library will render its UI into this div.
+    return <div id={qrcodeRegionId} />;
 }

@@ -87,30 +87,31 @@ model SeizedVehicle {
 }
 
 model MalkhanaEntry {
-  id           String  @id @default(uuid())
-  wine         Int?
-  cash         Int?
-  wineType     String
-  photoUrl     String  @default("")
-  firNo        String?
-  srNo         String?
-  gdNo         String
-  gdDate       String
-  underSection String
-  description  String?
+  id String @id @default(uuid())
 
-  Year          String
-  policeStation String
-  IOName        String
-  vadiName      String
-  HM            String
-  accused       String
-  status        String
-  entryType     String
-  place         String
-  boxNo         String
-  courtNo       String
-  courtName     String
+  firNo           String?
+  srNo            String?
+  gdNo            String
+  gdDate          String
+  underSection    String
+  yellowItemPrice Int?
+  description     String?
+  wine            Int?
+  cash            Int?
+  wineType        String
+  photoUrl        String  @default("")
+  Year            String
+  policeStation   String
+  IOName          String
+  vadiName        String
+  HM              String
+  accused         String
+  status          String
+  entryType       String
+  place           String
+  boxNo           String
+  courtNo         String
+  courtName       String
 
   //movement entry 
   isMovement     Boolean?  @default(false)
@@ -142,60 +143,4 @@ model MalkhanaEntry {
   districtId String?
   User       User?    @relation(fields: [userId], references: [id])
   userId     String?
-}
-
-// model MalkhanaMovement {
-//   id             String  @id @default(cuid())
-//   srNo           String
-//   moveDate       String
-//   firNo          String  @unique
-//   underSection   String
-//   takenOutBy     String
-//   moveTrackingNo String
-//   movePurpose    String
-//   name           String
-//   photo          String?
-//   document       String?
-
-//   isReturned     Boolean   @default(false)
-//   receviedBy     String?
-//   returnBackFrom String?
-//   returnDate     DateTime?
-
-//   createdAt  DateTime @default(now())
-//   updatedAt  DateTime @updatedAt
-//   districtId String?
-//   User       User?    @relation(fields: [userId], references: [id])
-//   userId     String?
-// }
-
-// model MalkhanaRelease {
-//   id              String @id @default(cuid())
-//   srNo            String
-//   moveDate        String
-//   firNo           String @unique
-//   underSection    String
-//   takenOutBy      String
-//   moveTrackingNo  String
-//   movePurpose     String
-//   name            String
-//   recevierName    String
-//   fathersName     String
-//   address         String
-//   mobile          String
-//   releaseItemName String
-
-//   photo    String?
-//   document String?
-
-//   createdAt  DateTime @default(now())
-//   updatedAt  DateTime @updatedAt
-//   districtId String?
-//   User       User?    @relation(fields: [userId], references: [id])
-//   userId     String?
-// }
-
-model Report {
-  id            String @id @default(cuid())
-  movementCount Int
 }

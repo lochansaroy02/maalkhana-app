@@ -40,12 +40,13 @@ export const POST = async (req: NextRequest) => {
             firNo,
             status,
             entryType,
-            isReceived,
+            isRelease,
             isMovement,
             place,
             boxNo,
             courtNo,
-            courtName
+            courtName,
+            yellowItemPrice
         } = body;
 
         const newEntry = await prisma.malkhanaEntry.create({
@@ -57,7 +58,8 @@ export const POST = async (req: NextRequest) => {
                 wine,
                 description,
                 isMovement,
-                isReceived,
+                isRelease,
+                yellowItemPrice,
 
                 wineType,
                 photoUrl,

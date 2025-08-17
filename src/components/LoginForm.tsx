@@ -49,7 +49,7 @@ const LoginForm = () => {
     };
 
     return (
-        <form onSubmit={handleLogin} className='flex flex-col gap-4'>
+        <form onSubmit={handleLogin} className='flex flex-col  gap-4'>
             {/* 1. Enabled the dropdown for role selection */}
             <div>
                 <label className='text-blue-100 font-semibold' htmlFor="role-select">Login AS</label>

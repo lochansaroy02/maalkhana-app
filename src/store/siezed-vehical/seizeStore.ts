@@ -6,8 +6,8 @@ import { create } from "zustand";
 
 interface SeizedVehicle {
     id?: string;
-    srNo: string;
-    firNo?: string,
+    srNo: string | undefined;
+    firNo?: string | undefined,
     gdNo: string;
     rtoName: string
     isMovement: boolean,
@@ -29,13 +29,13 @@ interface SeizedVehicle {
     updatedAt?: string;
 }
 interface SeizedVehicleStore {
-    vehical: SeizedVehicle,
-    vehicles: SeizedVehicle[];
+    vehical: any,
+    vehicles: any[];
     loading: boolean;
     error: string | null;
     fetchVehicles: (userId: string | undefined) => Promise<void>;
     addVehicle: (vehicle: any) => Promise<boolean>;
-    fetchByFir: (caseProperty: string, firNo?: string, srNo?: string,) => Promise<boolean>
+    getByFIR: (caseProperty: string, firNo?: string | undefined, srNo?: string | undefined,) => Promise<any>
     updateVehicalEntry: (id: string, data: any) => Promise<boolean>
     getData: (firNo: string, srNo: string) => Promise<any>
     getIdBySR: (srNo: string) => Promise<any>
@@ -116,23 +116,7 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
 
     },
 
-    fetchByFir: async (caseProperty: string, firNo?: string, srNo?: string,) => {
-        try {
-            const response = await axios.get(`/api/siezed/fir?caseProperty=${caseProperty}&firNo=${firNo}&srNo=${srNo}`)
-            const data = response.data;
-            if (data.success) {
-                set({ vehical: response.data.data })
-                return true;
-            } else {
-                console.error("❌ POST /api/siezed error: Failed to create vehicle");
-                return false
-            }
-        } catch (error: any) {
-            console.error(" error:", error.message || error);
-            return false
-        }
 
-    },
     updateVehicalEntry: async (id: string, newData: any) => {
         try {
             const response = await axios.put(`/api/siezed?id=${id}`, newData)
@@ -181,6 +165,22 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
             console.error("Error fatching data:", error);
 
         }
-    }
+    },
+    getByFIR: async (firNo: string) => {
+        try {
+            const response = await axios.get(`/api/siezed/fir?firNo=${firNo}`)
+            const data = response.data;
+            console.log(data)
+            if (data.success) {
+                set({ vehical: response.data.data })
+
+            } else {
+                console.error("❌ POST /api/siezed error: Failed to create vehicle");
+            }
+        } catch (error: any) {
+            console.error(" error:", error.message || error);
+        }
+
+    },
 
 }));

@@ -3,15 +3,15 @@ import axios from "axios";
 import { create } from "zustand";
 
 export type MovementEntry = {
-    id?: string;
-    srNo: string
+    id?: string | undefined;
+    srNo: string | undefined,
     name: string;
     moveDate: string;
     policeStation?: string,
     userId?: string | undefined;
     returnDate: string;
     returnBackFrom?: string;
-    firNo: string;
+    firNo: string | undefined;
     underSection: string;
     receivedBy?: string;
     takenOutBy?: string;
@@ -26,14 +26,14 @@ export type MovementEntry = {
 };
 
 type MovementStore = {
-    entry: MovementEntry | null;
+    entry: any | null;
     entries: MovementEntry[];
     setField: (field: keyof MovementEntry, value: any) => void;
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
     fetchMovementEntries: (userId?: string) => Promise<void>;
-    addMovementEntry: (data: MovementEntry | MovementEntry[]) => Promise<boolean>;
-    updateMovementEntry: (id: string, updatedData: MovementEntry) => Promise<boolean>;
+    addMovementEntry: (data: any | any[]) => Promise<boolean>;
+    updateMovementEntry: (id: string, updatedData: any) => Promise<boolean>;
     fetchByFIR: (type: string, caseProperty?: string, firNo?: string, srNo?: string) => Promise<any>;
 };
 
@@ -100,7 +100,7 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
         }
     },
 
-    addMovementEntry: async (data: MovementEntry | MovementEntry[]) => {
+    addMovementEntry: async (data: any | any[]) => {
         try {
             const response = await axios.post(`/api/movement`, data, {
                 headers: { "Content-Type": "application/json" },

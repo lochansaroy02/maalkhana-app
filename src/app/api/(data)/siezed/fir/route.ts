@@ -42,14 +42,14 @@ export const GET = async (req: NextRequest) => {
             documentUrl: true,
 
 
-            recevierName: true,
+            receiverName: true,
             fathersName: true,
             address: true,
             mobile: true,
             releaseItemName: true,
 
         }
-        const data = await prisma.seizedVehicle.findFirst({
+        const data = await prisma.seizedVehicle.findMany({
             where: {
                 firNo
             },

@@ -8,8 +8,8 @@ interface CardProps {
 }
 const ReportCard = ({ data, bgColour, icon, title }: CardProps) => {
     return (
-        <div className=" ">
-            <div className={`${bgColour} px-4 py-4 gap-2  h-32 w-64  rounded-lg   flex flex-col `}>
+        <div className="">
+            <div className={`${bgColour} px-4 py-4 gap-2  lg:h-32 lg:w-64   rounded-lg   flex flex-col `}>
                 <div className=" flex  gap-2  items-center ">
                     <h1 className="text-base w-3/4  text-balance   font-bold text-neutral-100  ">{title}</h1>
                     <span className="text-neutral-50">

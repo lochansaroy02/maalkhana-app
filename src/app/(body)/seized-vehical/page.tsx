@@ -155,7 +155,9 @@ const Page = () => {
                 <div className='py-4 bg-maroon w-full rounded-t-xl border-b border-white/50 flex justify-center'>
                     <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Seized Vehicle Entry</h1>
                 </div>
-                <div className='px-8 py-4 min-h-screen rounded-b-md'>
+
+
+                <div className='px-8 py-4 min-h-screen   rounded-b-md'>
                     <div className='flex items-center gap-4'>
                         <div className=''>
                             <DropDown label='Case Property' selectedValue={caseProperty} options={caseOptions} handleSelect={setCaseProperty} />
@@ -174,7 +176,7 @@ const Page = () => {
                         )}
                     </div>
                     {searchResults.length > 1 && (
-                        <div className="my-4 col-span-2 flex flex-col gap-1">
+                        <div className="my-4 c flex flex-col gap-1">
                             <label className='text-blue-100'>Multiple Records Found. Please Select One:</label>
                             <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {searchResults.map((item: any) => (
@@ -197,7 +199,6 @@ const Page = () => {
                         {fields.map(field => {
                             if (field.name === 'firNo' && (caseProperty === 'UNCLAMMED VEHICLE' || caseProperty === 'mv act')) return null;
 
-                            // ✅ FIX 5: Special rendering for the 'underSection' field
                             if (field.name === 'underSection') {
                                 return (
                                     <div key={field.name} className='flex items-end gap-2'>
@@ -231,6 +232,9 @@ const Page = () => {
                             );
                         })}
                     </div>
+
+
+
                     <div className='flex justify-center w-full'>
                         <div className='flex gap-8 px-12 mt-4'>
                             {["Save", "Modify"].map((item, index) => (

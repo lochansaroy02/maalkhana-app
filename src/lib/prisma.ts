@@ -9,7 +9,7 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
     globalForPrisma.prisma ??
     new PrismaClient({
-        errorFormat: 'minimal',
+        // errorFormat: 'minimal',
         log: ['error'],
     });
 

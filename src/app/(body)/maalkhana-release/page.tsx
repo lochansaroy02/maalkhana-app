@@ -174,11 +174,11 @@ const Page = () => {
     const caseOptions = ["Cash Property", "Kukri", "FSL", "Unclaimed", "Other Entry", "Cash Entry", "Wine", "MV Act", "ARTO", "BNS / IPC", "Excise Vehicle", "Unclaimed Vehicle", "Seizure Entry"];
 
     return (
-        <div className='glass-effect'>
+        <div className='glass-effect '>
             <div className='py-4 border bg-maroon rounded-t-xl border-gray-400 flex justify-center'>
                 <h1 className='text-2xl uppercase text-cream font-semibold'>Maalkhana Release</h1>
             </div>
-            <div className='px-8 py-4 rounded-b-md'>
+            <div className='px-8 py-4   rounded-b-md'>
                 {/* Step 1: Fetching Section */}
                 <div className='flex justify-center my-4 items-center gap-4'>
                     <label className="text-blue-100 font-semibold">1. Select Type to Release From:</label>
@@ -211,11 +211,12 @@ const Page = () => {
                 )}
 
                 {existingId && (
-                    <>
+                    <div className=''>
                         <hr className="border-gray-600 my-6" />
                         <div>
                             <h2 className="text-xl text-center text-cream font-semibold mb-4">3. Enter Release Details</h2>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+
                                 <InputComponent label='Case Property' value={caseProperty} />
                                 <InputComponent label='Under Section' value={formData.underSection} />
                                 {fields.map((field) => (
@@ -237,7 +238,7 @@ const Page = () => {
                                 <Button onClick={resetAll} className='bg-red-600'>Clear Form</Button>
                             </div>
                         </div>
-                    </>
+                    </div>
                 )}
             </div>
         </div>

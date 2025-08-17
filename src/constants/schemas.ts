@@ -65,7 +65,7 @@ export const expectedSchemas = {
         "moveTrackingNo",
         "movePurpose",
         "name",
-        "recevierName",
+        "receiverName",
         "fathersName",
         "address",
         "mobile",

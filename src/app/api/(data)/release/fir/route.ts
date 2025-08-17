@@ -20,7 +20,7 @@ export const GET = async (req: NextRequest) => {
             takenOutBy: true,
             moveTrackingNo: true,
             movePurpose: true,
-            recevierName: true,
+            receiverName: true,
 
             address: true,
             mobileNo: true,
