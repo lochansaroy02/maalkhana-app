@@ -20,7 +20,7 @@ const Sidebar = () => {
             { name: "Seized vehicles", link: "/seized-vehical" },
             { name: "Malkhana Movement", link: "/maalkhana-movement" },
             { name: "Malkhana Release", link: "/maalkhana-release" },
-            { name: "Barcode", link: "/barcode" },
+            { name: "Scan Barcode", link: "/barcode" },
             { name: "Report", link: "/report/entry-report" },
         ];
 

@@ -29,13 +29,14 @@ export const generateBarcodePDF = async (entries: any[]) => {
         const y = paddingY + row * verticalSpacing;
 
         // --- Add static "1" above the barcode ---
-        doc.text('1', x + barcodeWidth / 2, y - 2, { align: 'center' });
+        doc.text(entry.srNo, x + barcodeWidth / 2, y - 2, { align: 'center' });
 
         // --- Generate Barcode with "SR/Year" as the value ---
         const canvas = document.createElement("canvas");
 
         // Create the value string (e.g., "148/24")
-        const barcodeValue = `${entry.srNo || '??'}/${String(entry.Year || '??').slice(-2)}`;
+
+        const barcodeValue = `${entry.srNo || '??'}/${String(entry.firNo || '??')}`;
 
         JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
