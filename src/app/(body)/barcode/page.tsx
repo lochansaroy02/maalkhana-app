@@ -62,7 +62,6 @@ export default function ScanPage() {
     return (
         <div style={{ maxWidth: '600px', margin: '2rem auto', textAlign: 'center' }}>
             <h1>Case Data Scanner</h1>
-
             {isScanning && (
                 <div>
                     <p>Point your camera at a barcode.</p>
