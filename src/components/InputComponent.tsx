@@ -8,12 +8,21 @@ interface InputProps {
     label: string;
     value: string | number | boolean | undefined;
     className?: string;
-    // Make setInput optional by adding a '?'
     setInput?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     type?: "text" | "password";
+    // 1. Add the optional 'disabled' prop
+    disabled?: boolean;
 }
 
-const InputComponent = ({ label, value, className, setInput, type }: InputProps) => {
+const InputComponent = ({
+    label,
+    value,
+    className,
+    setInput,
+    type,
+    // 2. Destructure the new 'disabled' prop
+    disabled,
+}: InputProps) => {
     return (
         <div className={cn("flex flex-col", className)}>
             <Label className="w-1/4 text-[17px] text-nowrap text-blue-100">
@@ -27,6 +36,8 @@ const InputComponent = ({ label, value, className, setInput, type }: InputProps)
                 onChange={setInput}
                 readOnly={!setInput}
                 required={!!setInput}
+                // 3. Pass the 'disabled' prop to the Input element
+                disabled={disabled}
             />
         </div>
     );

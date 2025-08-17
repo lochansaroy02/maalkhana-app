@@ -171,7 +171,7 @@ const Page = () => {
         { label: "Upload Photo", id: "photo", ref: photoRef },
         { label: "Upload Document", id: "document", ref: documentRef },
     ];
-    const caseOptions = ["Cash Property", "Kukri", "FSL", "Unclaimed", "Other Entry", "Cash Entry", "Wine", "MV Act", "ARTO", "BNS / IPC", "Excise Vehicle", "Unclaimed Vehicle", "Seizure Entry"];
+    const caseOptions = ["Cash Property", "Kurki", "FSL", "Unclaimed", "Other Entry", "Cash Entry", "Wine", "MV Act", "ARTO", "BNS / IPC", "Excise Vehicle", "Unclaimed Vehicle", "Seizure Entry"];
 
     return (
         <div className='glass-effect '>
