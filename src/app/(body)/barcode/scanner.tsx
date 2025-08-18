@@ -184,7 +184,6 @@ export default function App() {
     // Load external scripts required for the components
     const jsBarcodeStatus = useScript('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js', 'JsBarcode');
     const html5QrcodeStatus = useScript('https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js', 'Html5Qrcode');
-
     const scriptsReady = jsBarcodeStatus === 'ready' && html5QrcodeStatus === 'ready';
 
     const handleScanSuccess = (decodedText, decodedResult) => {
