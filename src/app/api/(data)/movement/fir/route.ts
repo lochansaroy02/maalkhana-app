@@ -41,7 +41,7 @@ export const GET = async (req: NextRequest) => {
             if (firNo) {
                 const data = await prisma.seizedVehicle.findFirst({
                     where: {
-                        srNo
+                        firNo
                     },
                     select: selection
                 });
@@ -58,6 +58,9 @@ export const GET = async (req: NextRequest) => {
             }
 
         }
+
+        return NextResponse.json({ success: true, message: "No data found" }, { status: 500 });
+
 
 
     } catch (error) {

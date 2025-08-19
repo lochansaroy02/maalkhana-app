@@ -13,8 +13,6 @@ export const GET = async (req: NextRequest) => {
             id: true,
             firNo: true,
             srNo: true,
-            // isReturned: true,
-            // caseProperty: true,
             moveDate: true,
             underSection: true,
             takenOutBy: true,
@@ -23,7 +21,7 @@ export const GET = async (req: NextRequest) => {
             receiverName: true,
 
             address: true,
-            mobileNo: true,
+            mobile: true,
             releaseItemName: true,
             userId: true
         };
@@ -42,15 +40,15 @@ export const GET = async (req: NextRequest) => {
             return NextResponse.json({ success: true, data }, { status: 200 });
         }
 
-        if (type === "siezed vehical") {
+        if (type === "seized vehicle") {
             if (!firNo && !srNo) {
                 return NextResponse.json({ success: true, message: "please enter FirNo." }, { status: 200 });
             }
 
             if (firNo) {
-                const data = await prisma.seizedVehicle.findFirst({
+                const data = await prisma.seizedVehicle.findMany({
                     where: {
-                        srNo
+                        firNo
                     },
                     select: selection
                 });

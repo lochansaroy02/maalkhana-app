@@ -22,12 +22,12 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
     FetchByFIR: async (type: string, firNo?: string, srNo?: string) => {
         try {
             // We use our new, dedicated API route for fetching
-            const response = await axios.get(`/api/fetch-for-release`, {
+            const response = await axios.get(`/api/movement/fir?type=${type}&firNo=${firNo}&srNo=${srNo}`, {
                 params: { type, firNo, srNo }
             });
 
             if (response.data.success) {
-                return response.data.data; // Return the full record
+                return response.data.data;
             }
             return null;
 

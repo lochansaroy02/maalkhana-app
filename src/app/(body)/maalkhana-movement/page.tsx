@@ -11,18 +11,19 @@ import { useMovementStore } from "@/store/movementStore";
 import { useSeizedVehicleStore } from "@/store/siezed-vehical/seizeStore";
 import { uploadToCloudinary } from "@/utils/uploadToCloudnary";
 import { LoaderIcon } from "lucide-react";
-import React, { useRef, useState } from "react";
+// 1. IMPORT useEffect
+import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const Page: React.FC = () => {
     // --- STATE MANAGEMENT ---
     const { user } = useAuthStore();
-    const { updateMovementEntry, fetchByFIR } = useMovementStore();
+    const { updateMovementEntry, fetchByFIR, entry } = useMovementStore();
     const { updateVehicalEntry } = useSeizedVehicleStore();
 
     // Loading and Page State
-    const [isLoading, setIsLoading] = useState(false); // For saving action
-    const [isFetching, setIsFetching] = useState(false); // For fetching action
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
     const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
 
     // State for Search and Search Results
@@ -45,7 +46,6 @@ const Page: React.FC = () => {
     const photoRef = useRef<HTMLInputElement | null>(null);
     const documentRef = useRef<HTMLInputElement | null>(null);
 
-
     // --- FORM LOGIC ---
     const handleInputChange = (field: keyof MovementEntry | string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -58,16 +58,22 @@ const Page: React.FC = () => {
     };
 
     const fillForm = (entryData: any) => {
-        if (!entryData) return;
+        if (!entryData || Object.keys(entryData).length === 0) return;
 
         const id = entryData._id ?? entryData.id;
         setExistingEntryId(id);
+        setSelectedResultId(id); // Ensure radio button selection is in sync
 
-        // Pre-fill form with fetched data
         setFormData({
-            srNo: entryData.srNo, name: entryData.name, moveDate: entryData.moveDate, firNo: entryData.firNo, underSection: entryData.underSection,
-            takenOutBy: entryData.takenOutBy ?? "", moveTrackingNo: entryData.moveTrackingNo ?? "", movePurpose: entryData.movePurpose ?? "",
-            receivedBy: entryData.receivedBy ?? "", returnDate: entryData.returnDate,
+            srNo: entryData.srNo ?? "",
+            name: entryData.name ?? "",
+            firNo: entryData.firNo ?? "",
+            underSection: entryData.underSection ?? "",
+            takenOutBy: entryData.takenOutBy ?? "",
+            moveTrackingNo: entryData.moveTrackingNo ?? "",
+            movePurpose: entryData.movePurpose ?? "",
+            receivedBy: entryData.receivedBy ?? "",
+            // Keep date fields separate
         });
         setCaseProperty(entryData.caseProperty ?? "");
         setReturnBackFrom(entryData.returnBackFrom ?? "");
@@ -96,8 +102,17 @@ const Page: React.FC = () => {
         if (documentRef.current) documentRef.current.value = "";
     };
 
-
     // --- API & DATA HANDLING ---
+
+    // 2. ADD THIS useEffect TO SYNC FORM WITH STORE DATA
+    useEffect(() => {
+        // This effect runs whenever 'entry' from the store changes.
+        // It populates the form if a single record is fetched.
+        if (entry && !Array.isArray(entry) && Object.keys(entry).length > 0) {
+            fillForm(entry);
+        }
+    }, [entry]); // Dependency array: this effect runs only when 'entry' changes
+
     const getByFir = async () => {
         if (!type) return toast.error("Please select a type first.");
         if (!searchFirNo && !searchSrNo) return toast.error("Please enter an FIR No. or Sr. No.");
@@ -108,6 +123,7 @@ const Page: React.FC = () => {
         setSelectedResultId('');
 
         try {
+            // fetchByFIR updates the 'entry' in the store, which our new useEffect will catch
             const data = await fetchByFIR(type, searchFirNo, searchSrNo);
 
             if (data) {
@@ -117,9 +133,8 @@ const Page: React.FC = () => {
                     toast.success(`${dataArray.length} records found. Please select one.`);
                 } else if (dataArray.length === 1) {
                     toast.success("Data Fetched Successfully!");
-                    const entry = dataArray[0];
-                    fillForm(entry);
-                    setSelectedResultId(entry.id || entry._id);
+                    // The useEffect will handle the form filling automatically.
+                    // No need to call fillForm() here anymore.
                 } else {
                     toast.error("No record found.");
                 }
@@ -138,6 +153,7 @@ const Page: React.FC = () => {
         setSelectedResultId(resultId);
         const selectedData = searchResults.find(item => (item.id || item._id) === resultId);
         if (selectedData) {
+            // Manually fill form for multi-choice selection
             fillForm(selectedData);
         }
     };
@@ -187,8 +203,7 @@ const Page: React.FC = () => {
         }
     };
 
-
-    // --- FIELD DEFINITIONS FOR THE FORM ---
+    // --- FIELD DEFINITIONS & RENDER ---
     const fields = [
         { name: "firNo", label: "FIR No." },
         { name: "srNo", label: "Sr. No / Mal No." },
@@ -205,8 +220,8 @@ const Page: React.FC = () => {
     const returnBackOptions = ["Court", "FSL", "Other"];
     const inputFields = [{ label: "Upload Photo", id: "photo", ref: photoRef }, { label: "Upload Document", id: "document", ref: documentRef },];
 
-
     return (
+        // The JSX remains the same as your original code
         <div>
             <div className="glass-effect">
                 <div className="bg-maroon rounded-t-xl py-4 border-b border-white/50 flex justify-center">
@@ -214,7 +229,6 @@ const Page: React.FC = () => {
                 </div>
 
                 <div className="px-8 py-4 rounded-b-md">
-                    {/* Step 1: Fetching Section */}
                     <div className='w-full items-center gap-4 flex justify-center mb-4'>
                         <label className="text-blue-100 font-semibold text-nowrap">1. Select Type:</label>
                         <DropDown selectedValue={type} handleSelect={setType} options={["malkhana", "siezed vehical"]} />
@@ -230,7 +244,6 @@ const Page: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Step 2: Selection for multiple results */}
                     {searchResults.length > 1 && (
                         <div className="my-4 col-span-2 flex flex-col gap-1">
                             <label className='text-blue-100'>Multiple Records Found. Please Select One:</label>
@@ -245,13 +258,11 @@ const Page: React.FC = () => {
                         </div>
                     )}
 
-                    {/* Step 3: Main Form (conditionally rendered) */}
                     {existingEntryId && (
                         <>
                             <hr className="border-gray-600 my-6" />
                             <h2 className="text-xl text-center text-cream font-semibold mb-4">3. Update Movement Details</h2>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                                {/* CORRECTED: Added disabled prop */}
                                 <InputComponent label="Case Property" value={caseProperty} disabled />
                                 <div className="flex items-center space-x-2 pt-8">
                                     <Checkbox id="isReturnedCheck" checked={isReturned} onCheckedChange={(checked) => setIsReturned(!!checked)} />
@@ -267,8 +278,7 @@ const Page: React.FC = () => {
                                     if (!isReturned && fieldsToHideWhenNotReturned.includes(field.name)) return null;
                                     if (isReturned && fieldsToHideWhenReturned.includes(field.name)) return null;
 
-                                    // CORRECTED: Added disabled prop to read-only fields
-                                    if (field.name === 'firNo' || field.name === 'srNo' || field.name === 'underSection' || field.name === 'name') {
+                                    if (['firNo', 'srNo', 'underSection', 'name'].includes(field.name)) {
                                         return <InputComponent key={field.name} label={field.label} value={formData[field.name as keyof typeof formData] ?? ""} disabled />;
                                     }
                                     if (field.type === "date") {

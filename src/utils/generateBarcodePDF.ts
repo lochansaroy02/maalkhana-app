@@ -2,6 +2,7 @@ import JsBarcode from "jsbarcode";
 import { jsPDF } from "jspdf";
 
 export const generateBarcodePDF = async (entries: any[]) => {
+
     const doc = new jsPDF("p", "mm", "a4");
 
     const barcodesPerRow = 4;
@@ -36,7 +37,7 @@ export const generateBarcodePDF = async (entries: any[]) => {
 
         // Create the value string (e.g., "148/24")
 
-        const barcodeValue = `${entry.srNo || '??'}/${String(entry.firNo || '??')}`;
+        const barcodeValue = `${entry.id || '??'}-${entry.srNo || '??'}/${String(entry.firNo || '??')}`;
 
         JsBarcode(canvas, barcodeValue, {
             format: "CODE128",

@@ -115,7 +115,7 @@ export const PUT = async (req: NextRequest) => {
 
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
-
+        const type = searchParams.get("type")
         const body = await req.json();
         const { ...movementData } = body;
 
