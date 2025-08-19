@@ -98,7 +98,7 @@ const Page = () => {
         },
     ];
 
-    console.log(data)
+
 
     return (
         <div className="flex lg:h-screen  flex-col glass-effect">

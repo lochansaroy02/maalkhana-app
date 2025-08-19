@@ -6,6 +6,8 @@ export const GET = async (req: NextRequest) => {
     const firNo = searchParams.get("firNo");
     const type = searchParams.get("type");
     const srNo = searchParams.get("srNo");
+    const userId = searchParams.get("userId");
+
 
     console.log(firNo, type, srNo)
     try {
@@ -33,7 +35,7 @@ export const GET = async (req: NextRequest) => {
             }
             const data = await prisma.malkhanaEntry.findFirst({
                 where: {
-                    firNo
+                    firNo, userId
                 },
                 select: selection
             });
@@ -48,7 +50,8 @@ export const GET = async (req: NextRequest) => {
             if (firNo) {
                 const data = await prisma.seizedVehicle.findMany({
                     where: {
-                        firNo
+                        firNo,
+                        userId
                     },
                     select: selection
                 });
@@ -57,7 +60,7 @@ export const GET = async (req: NextRequest) => {
             if (srNo) {
                 const data = await prisma.seizedVehicle.findFirst({
                     where: {
-                        srNo
+                        srNo, userId
                     },
                     select: selection
                 });

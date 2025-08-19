@@ -51,11 +51,13 @@ export const GET = async (req: NextRequest) => {
     const { searchParams } = new URL(req.url);
     const firNo = searchParams.get("firNo");
     const srNo = searchParams.get("srNo");
+    const userId = searchParams.get("userId");
 
 
     try {
         const data = await prisma.seizedVehicle.findFirst({
             where: {
+                userId,
                 OR: [
                     firNo ? { firNo } : {},
                     srNo ? { srNo } : {}

@@ -124,7 +124,7 @@ const Page: React.FC = () => {
 
         try {
             // fetchByFIR updates the 'entry' in the store, which our new useEffect will catch
-            const data = await fetchByFIR(type, searchFirNo, searchSrNo);
+            const data = await fetchByFIR(user?.id, type, searchFirNo, searchSrNo);
 
             if (data) {
                 const dataArray = Array.isArray(data) ? data : [data];
@@ -133,8 +133,6 @@ const Page: React.FC = () => {
                     toast.success(`${dataArray.length} records found. Please select one.`);
                 } else if (dataArray.length === 1) {
                     toast.success("Data Fetched Successfully!");
-                    // The useEffect will handle the form filling automatically.
-                    // No need to call fillForm() here anymore.
                 } else {
                     toast.error("No record found.");
                 }

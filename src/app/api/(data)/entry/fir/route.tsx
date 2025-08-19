@@ -7,12 +7,13 @@ export const GET = async (req: NextRequest) => {
 
     const { searchParams } = new URL(req.url);
     const firNo = searchParams.get("firNo");
+    const userId = searchParams.get("userId");
 
 
     try {
         const data = await prisma.malkhanaEntry.findMany({
             where: {
-                firNo
+                firNo, userId
             },
         })
 

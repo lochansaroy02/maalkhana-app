@@ -50,7 +50,7 @@ const Page = () => {
 
     // Filters for release entries
     const filterByRelease = (allEntries: any[]) => {
-        const fieldsToShow = ['id', 'firNo', 'srNo', 'caseProperty', 'courtName', 'courtNo', 'boxNo', 'receiverName'];
+        const fieldsToShow = ['firNo', 'srNo', 'caseProperty', 'underSection', 'courtName', 'courtNo', 'boxNo', 'releaseItemName', 'fathersName', 'address', 'receiverName'];
         const releaseEntries = allEntries.filter(entry => entry.isRelease === true);
         return selectFields(releaseEntries, fieldsToShow);
     };

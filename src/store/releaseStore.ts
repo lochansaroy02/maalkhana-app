@@ -6,25 +6,19 @@ import { useSeizedVehicleStore } from './siezed-vehical/seizeStore';
 // This store will now correctly orchestrate fetching and updating.
 
 type ReleaseStore = {
-    // Fetches the ORIGINAL item to be released and returns it
-    FetchByFIR: (type: string, firNo?: string, srNo?: string) => Promise<any | null>;
+    fetchByFIR: (userId: string | undefined, type: string, firNo?: string, srNo?: string) => Promise<any | null>;
 
-    // Updates the ORIGINAL item with release data
     updateReleaseEntry: (id: string, type: string, updatedData: any) => Promise<boolean>;
 
-    // Reset form function (can be added if needed)
-    resetForm: () => void;
 };
 
 
 export const useReleaseStore = create<ReleaseStore>((set, get) => ({
 
-    FetchByFIR: async (type: string, firNo?: string, srNo?: string) => {
+    fetchByFIR: async (userId: string | undefined, type: string, firNo?: string, srNo?: string) => {
         try {
-            // We use our new, dedicated API route for fetching
-            const response = await axios.get(`/api/movement/fir?type=${type}&firNo=${firNo}&srNo=${srNo}`, {
-                params: { type, firNo, srNo }
-            });
+
+            const response = await axios.get(`/api/release/fir?userId=${userId}&type=${type}&firNo=${firNo}&srNo=${srNo}`);
 
             if (response.data.success) {
                 return response.data.data;

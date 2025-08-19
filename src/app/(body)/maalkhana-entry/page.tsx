@@ -226,7 +226,7 @@ const Page = () => {
 
     const handleGetByFir = async () => {
         setSelectedSrNo('');
-        const response = await getByFIR(formData.firNo);
+        const response = await getByFIR(formData.firNo, user?.id);
         const success = response?.success;
         const data = response?.data;
 

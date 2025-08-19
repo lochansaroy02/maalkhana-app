@@ -6,6 +6,7 @@ export const GET = async (req: NextRequest) => {
     const firNo = searchParams.get("firNo");
     const type = searchParams.get("type");
     const srNo = searchParams.get("srNo");
+    const userId = searchParams.get("userId")
 
 
     try {
@@ -29,7 +30,7 @@ export const GET = async (req: NextRequest) => {
         if (type === 'malkhana') {
             const data = await prisma.malkhanaEntry.findFirst({
                 where: {
-                    firNo
+                    firNo, userId
                 },
                 select: selection
             });
@@ -41,7 +42,7 @@ export const GET = async (req: NextRequest) => {
             if (firNo) {
                 const data = await prisma.seizedVehicle.findFirst({
                     where: {
-                        firNo
+                        firNo, userId
                     },
                     select: selection
                 });

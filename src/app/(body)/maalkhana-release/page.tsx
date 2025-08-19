@@ -2,6 +2,8 @@
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
+import { useAuthStore } from '@/store/authStore';
+import { useReleaseStore } from '@/store/releaseStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
 import axios from 'axios';
 import { useRef, useState } from 'react';
@@ -9,6 +11,8 @@ import toast, { LoaderIcon } from 'react-hot-toast';
 
 const Page = () => {
 
+    const { user } = useAuthStore()
+    const { fetchByFIR } = useReleaseStore()
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const [type, setType] = useState<string>("");
@@ -62,7 +66,7 @@ const Page = () => {
         if (documentRef.current) documentRef.current.value = '';
     };
 
-    // --- API CALLS ---
+
     const handleGetByFir = async () => {
         if (!type) return toast.error("Please select a type first.");
         if (!formData.firNo && !formData.srNo) return toast.error("Please enter an FIR No. or Sr. No.");
@@ -73,16 +77,10 @@ const Page = () => {
         setSelectedResultId('');
 
         try {
-            // CHANGE 1: Correct the API endpoint URL
-            const url = `/api/release/fir?type=${type}&firNo=${formData.firNo}&srNo=${formData.srNo}`;
-            const response = await fetch(url);
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
+            const data = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo)
 
-            const result = await response.json();
-            const data = result.data;
+
 
             if (data) {
 

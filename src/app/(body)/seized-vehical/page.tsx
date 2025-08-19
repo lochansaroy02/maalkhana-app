@@ -123,7 +123,7 @@ const Page = () => {
         setSelectedResultId('');
         // Do not clear the form here, so the user can see what they searched for
         try {
-            const { success, data } = await getData(formData.firNo, formData.srNo);
+            const { success, data } = await getData(user?.id, formData.firNo, formData.srNo);
             if (success && data) {
                 const dataArray = Array.isArray(data) ? data : [data];
                 if (dataArray.length > 1) {

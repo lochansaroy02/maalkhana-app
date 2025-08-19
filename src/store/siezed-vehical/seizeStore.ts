@@ -37,7 +37,7 @@ interface SeizedVehicleStore {
     addVehicle: (vehicle: any) => Promise<boolean>;
     getByFIR: (caseProperty: string, firNo?: string | undefined, srNo?: string | undefined,) => Promise<any>
     updateVehicalEntry: (id: string, data: any) => Promise<boolean>
-    getData: (firNo: string, srNo: string) => Promise<any>
+    getData: (userId: string | undefined, firNo: string, srNo: string) => Promise<any>
     getIdBySR: (srNo: string) => Promise<any>
 }
 
@@ -133,9 +133,9 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
     },
 
 
-    getData: async (firNo?: string, srNo?: string) => {
+    getData: async (userId: string | undefined, firNo?: string, srNo?: string) => {
         try {
-            const response = await axios(`api/siezed/get-data?firNo=${firNo}&srNo=${srNo}`)
+            const response = await axios(`api/siezed/get-data?userId=${userId}&firNo=${firNo}&srNo=${srNo}`)
             const data = response.data
             if (data.success) {
                 return {

@@ -1,12 +1,21 @@
+"use client";
+import { useEffect, useState } from "react";
+
 interface ScanResult {
     srNo: string;
     firNo: string;
     id: string;
 }
 const ScanResultDisplay = ({ result }: { result: ScanResult }) => {
+    const [data, setData] = useState('')
+
+    const getData = async () => {
+
+    }
+    useEffect(() => {
 
 
-
+    }, []);
     return (
         <div className="bg-green-50 border-l-4 border-green-500 text-green-800 p-6 rounded-md mb-4 text-left shadow-sm">
             <h3 className="font-bold text-xl mb-4 text-gray-800 border-b pb-2">Scan Successful: Asset Details</h3>

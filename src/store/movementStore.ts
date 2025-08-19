@@ -34,7 +34,7 @@ type MovementStore = {
     fetchMovementEntries: (userId?: string) => Promise<void>;
     addMovementEntry: (data: any | any[]) => Promise<boolean>;
     updateMovementEntry: (id: string, updatedData: any) => Promise<boolean>;
-    fetchByFIR: (type: string, caseProperty?: string, firNo?: string, srNo?: string) => Promise<any>;
+    fetchByFIR: (userId: string | undefined, type: string, caseProperty?: string, firNo?: string, srNo?: string,) => Promise<any>;
 };
 
 const initialState: MovementEntry = {
@@ -142,18 +142,15 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
         }
     },
 
-    fetchByFIR: async (type: string, firNo?: string, srNo?: string) => {
+    fetchByFIR: async (userId: string | undefined, type: string, firNo?: string, srNo?: string,) => {
         try {
-            const response = await axios.get(`/api/movement/fir?type=${type}&firNo=${firNo}&srNo=${srNo}`);
+            const response = await axios.get(`/api/movement/fir?userId=${userId}&type=${type}&firNo=${firNo}&srNo=${srNo}`);
             const data = response.data;
             if (data?.success) {
                 set({
                     entry: data.data
                 })
-                return true;
-            } else {
-
-                return false;
+                return data.data
             }
         } catch (error) {
             console.error("error in fetching data by FIR", error);
