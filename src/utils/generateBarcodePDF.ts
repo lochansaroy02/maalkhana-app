@@ -9,7 +9,7 @@ export const generateBarcodePDF = async (entries: any[]) => {
     const barcodesPerColumn = 10;
     const perPage = barcodesPerRow * barcodesPerColumn;
 
-    const barcodeWidth = 40; // mm
+    const barcodeWidth = 50; // mm
     const barcodeHeight = 15; // mm
     const paddingX = 10; // mm
     const paddingY = 15; // mm, increased for top text
@@ -29,26 +29,23 @@ export const generateBarcodePDF = async (entries: any[]) => {
         const x = paddingX + col * (barcodeWidth + paddingX);
         const y = paddingY + row * verticalSpacing;
 
-        // --- Add static "1" above the barcode ---
-        doc.text(entry.srNo, x + barcodeWidth / 2, y - 2, { align: 'center' });
+        // Add text above the barcode (e.g., Serial Number)
+        doc.text(String(entry.srNo || ''), x + barcodeWidth / 2, y - 2, { align: 'center' });
 
-        // --- Generate Barcode with "SR/Year" as the value ---
+        // --- Generate Barcode ---
         const canvas = document.createElement("canvas");
+        const barcodeValue = `${entry.srNo || '??'}/${String(entry.firNo || '??')}`;
 
-        // Create the value string (e.g., "148/24")
-
-        const barcodeValue = `${entry.id || '??'}-${entry.srNo || '??'}/${String(entry.firNo || '??')}`;
 
         JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
             width: 2,
-            height: 40,
-            displayValue: true,      // Show the value as text
-            textPosition: "bottom",  // Position text below the barcode
-            textAlign: "center",     // Center the text
+            height: 80,
+            displayValue: true,
+            textPosition: "bottom",
+            textAlign: "center",
             textMargin: 2,
-            fontSize: 10,
-            // The `text` option is not needed, it defaults to showing the barcode's value
+            fontSize: 18,       // A clear and readable font size for the text.
         });
         const imageData = canvas.toDataURL("image/png");
 
