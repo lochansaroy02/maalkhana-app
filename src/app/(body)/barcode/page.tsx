@@ -1,3 +1,5 @@
+"use client";
+
 import ScannerView from "./(data)/ScannerView";
 import { useScript } from "./(data)/useScript";
 
