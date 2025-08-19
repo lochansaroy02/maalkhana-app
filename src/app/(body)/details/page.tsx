@@ -9,7 +9,6 @@ import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
 import { Trash } from 'lucide-react';
-import { useRouter } from 'next/navigation'; // Keep this for other potential navigation
 import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
@@ -130,7 +129,7 @@ const Page = () => {
     };
     const handleGetByFir = async () => {
         setSelectedSrNo('');
-        const response = await getByFIR(formData.firNo);
+        const response = await getByFIR(formData.firNo, user?.id);
         if (response?.success) {
             const dataArray = Array.isArray(response.data) ? response.data : [response.data];
             setFirData(dataArray);
