@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import BarcodeScanner from "./BarcodeScanner";
+import ScanResultDisplay from "./ScannerDisplay";
 
 const ScannerView = () => {
     const [isScanning, setIsScanning] = useState<boolean>(false);
-    const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+    const [scanResult, setScanResult] = useState<any | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
 
     const handleScanSuccess = (decodedText: string) => {
         const parts = decodedText.split("-");
-        const resultObject: ScanResult = {
+        const resultObject = {
             srNo: parts[0] || '',
             firNo: parts[1] || '',
             id: parts[2] || ''
