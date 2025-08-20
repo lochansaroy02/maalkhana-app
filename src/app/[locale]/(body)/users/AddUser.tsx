@@ -1,3 +1,5 @@
+"use client";
+
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
@@ -14,8 +16,8 @@ type ModalProps = {
 
 const AddUser = ({ setIsModalOpen }: ModalProps) => {
     const { addUser } = useUserStore();
-    const { user, isLoggedIn } = useAuthStore()
-    const [districtId, setDistrictId] = useState<string>("")
+    const { user, isLoggedIn } = useAuthStore();
+    const [districtId, setDistrictId] = useState<string>("");
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -26,31 +28,36 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
         role: '',
     });
 
-
     useEffect(() => {
         if (isLoggedIn && user?.role === "district") {
-            setDistrictId(user.id)
+            setDistrictId(user.id);
         }
-    }, [user?.id])
-    const roleOptions = ['admin', 'user'];
+    }, [user?.id, isLoggedIn]);
+
+    // ✅ FIX: Create the options array in the correct {value, label} format.
+    // This makes it compatible with your updated DropDown component.
+    const roleOptions = [
+        { value: 'admin', label: 'Admin' },
+        { value: 'user', label: 'User' },
+    ];
 
     const handleChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-
     const handleClick = async () => {
         try {
-            const { name, email, password } = formData;
-            if (!name || !email || !password) {
-                alert('Please enter all required fields');
+            const { name, email, password, role } = formData;
+            if (!name || !email || !password || !role) {
+                // Also check for role
+                toast.error('Please enter all required fields');
                 return;
             }
 
-
             const fullData = {
-                ...formData, districtId
-            }
+                ...formData,
+                districtId
+            };
             const success = await addUser(fullData);
             if (success) {
                 setFormData({
@@ -61,15 +68,14 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
                     policeStation: '',
                     rank: '',
                     role: ''
-                })
-                toast.success("User Added")
-                setIsModalOpen(false)
+                });
+                toast.success("User Added");
+                setIsModalOpen(false);
             }
         } catch (error) {
-
+            toast.error("Failed to add user.");
+            console.error(error);
         }
-
-
     };
 
     const fields = [
@@ -108,7 +114,7 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
                             />
                         ))}
                     </div>
-                    <div className='flex justify-center'>
+                    <div className='flex justify-center mt-4'>
                         <Button onClick={handleClick} className='bg-blue'>
                             Add
                         </Button>

@@ -11,11 +11,14 @@ import { useMovementStore } from "@/store/movementStore";
 import { useSeizedVehicleStore } from "@/store/siezed-vehical/seizeStore";
 import { uploadToCloudinary } from "@/utils/uploadToCloudnary";
 import { LoaderIcon } from "lucide-react";
-// 1. IMPORT useEffect
+import { useTranslations } from "next-intl";
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const Page: React.FC = () => {
+    // i18n: Initialize translation hook from next-intl
+    const t = useTranslations('malkhanaMovementForm');
+
     // --- STATE MANAGEMENT ---
     const { user } = useAuthStore();
     const { updateMovementEntry, fetchByFIR, entry } = useMovementStore();
@@ -59,21 +62,11 @@ const Page: React.FC = () => {
 
     const fillForm = (entryData: any) => {
         if (!entryData || Object.keys(entryData).length === 0) return;
-
         const id = entryData._id ?? entryData.id;
         setExistingEntryId(id);
-        setSelectedResultId(id); // Ensure radio button selection is in sync
-
+        setSelectedResultId(id);
         setFormData({
-            srNo: entryData.srNo ?? "",
-            name: entryData.name ?? "",
-            firNo: entryData.firNo ?? "",
-            underSection: entryData.underSection ?? "",
-            takenOutBy: entryData.takenOutBy ?? "",
-            moveTrackingNo: entryData.moveTrackingNo ?? "",
-            movePurpose: entryData.movePurpose ?? "",
-            receivedBy: entryData.receivedBy ?? "",
-            // Keep date fields separate
+            srNo: entryData.srNo ?? "", name: entryData.name ?? "", firNo: entryData.firNo ?? "", underSection: entryData.underSection ?? "", takenOutBy: entryData.takenOutBy ?? "", moveTrackingNo: entryData.moveTrackingNo ?? "", movePurpose: entryData.movePurpose ?? "", receivedBy: entryData.receivedBy ?? "",
         });
         setCaseProperty(entryData.caseProperty ?? "");
         setReturnBackFrom(entryData.returnBackFrom ?? "");
@@ -85,63 +78,46 @@ const Page: React.FC = () => {
     };
 
     const resetAll = () => {
-        setIsLoading(false);
-        setIsFetching(false);
-        setExistingEntryId(null);
-        setType('');
-        setSearchFirNo('');
-        setSearchSrNo('');
-        setSearchResults([]);
-        setSelectedResultId('');
+        setIsLoading(false); setIsFetching(false); setExistingEntryId(null); setType(''); setSearchFirNo(''); setSearchSrNo(''); setSearchResults([]); setSelectedResultId('');
         setFormData({ srNo: "", name: "", moveDate: "", policeStation: "", firNo: "", underSection: "", takenOutBy: "", moveTrackingNo: "", movePurpose: "", receivedBy: "", returnDate: "", });
         setDateFields({ moveDate: new Date(), returnDate: new Date() });
-        setReturnBackFrom("");
-        setCaseProperty("");
-        setIsReturned(false);
+        setReturnBackFrom(""); setCaseProperty(""); setIsReturned(false);
         if (photoRef.current) photoRef.current.value = "";
         if (documentRef.current) documentRef.current.value = "";
     };
 
-    // --- API & DATA HANDLING ---
 
-    // 2. ADD THIS useEffect TO SYNC FORM WITH STORE DATA
     useEffect(() => {
-        // This effect runs whenever 'entry' from the store changes.
-        // It populates the form if a single record is fetched.
         if (entry && !Array.isArray(entry) && Object.keys(entry).length > 0) {
             fillForm(entry);
         }
-    }, [entry]); // Dependency array: this effect runs only when 'entry' changes
+    }, [entry]);
 
     const getByFir = async () => {
-        if (!type) return toast.error("Please select a type first.");
-        if (!searchFirNo && !searchSrNo) return toast.error("Please enter an FIR No. or Sr. No.");
+        if (!type) return toast.error(t('toasts.selectType'));
+        if (!searchFirNo && !searchSrNo) return toast.error(t('toasts.enterFirOrSr'));
 
         setIsFetching(true);
-        setSearchResults([]);
-        setExistingEntryId(null);
-        setSelectedResultId('');
+        setSearchResults([]); setExistingEntryId(null); setSelectedResultId('');
 
         try {
-            // fetchByFIR updates the 'entry' in the store, which our new useEffect will catch
             const data = await fetchByFIR(user?.id, type, searchFirNo, searchSrNo);
-
             if (data) {
                 const dataArray = Array.isArray(data) ? data : [data];
                 if (dataArray.length > 1) {
                     setSearchResults(dataArray);
-                    toast.success(`${dataArray.length} records found. Please select one.`);
+                    toast.success(t('toasts.recordsFound', { count: dataArray.length }));
                 } else if (dataArray.length === 1) {
-                    toast.success("Data Fetched Successfully!");
+                    toast.success(t('toasts.fetchSuccess'));
                 } else {
-                    toast.error("No record found.");
+                    toast.error(t('toasts.noRecord'));
                 }
             } else {
-                toast.error("No record found.");
+                toast.error(t('toasts.noRecord'));
             }
         } catch (error) {
             console.error("Error fetching by FIR:", error);
-            toast.error("Fetch failed. See console.");
+            toast.error(t('toasts.fetchFailed'));
         } finally {
             setIsFetching(false);
         }
@@ -150,52 +126,36 @@ const Page: React.FC = () => {
     const handleResultSelectionChange = (resultId: string) => {
         setSelectedResultId(resultId);
         const selectedData = searchResults.find(item => (item.id || item._id) === resultId);
-        if (selectedData) {
-            // Manually fill form for multi-choice selection
-            fillForm(selectedData);
-        }
+        if (selectedData) fillForm(selectedData);
     };
 
     const handleSave = async () => {
-        if (!existingEntryId) {
-            toast.error("No entry selected. Please fetch an entry first.");
-            return;
-        }
+        if (!existingEntryId) return toast.error(t('toasts.noEntrySelected'));
         setIsLoading(true);
         try {
-            const photoFile = photoRef.current?.files?.[0];
-            const documentFile = documentRef.current?.files?.[0];
-            const photoUrl = photoFile ? await uploadToCloudinary(photoFile) : undefined;
-            const documentUrl = documentFile ? await uploadToCloudinary(documentFile) : undefined;
+            const photoUrl = photoRef.current?.files?.[0] ? await uploadToCloudinary(photoRef.current.files[0]) : undefined;
+            const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudinary(documentRef.current.files[0]) : undefined;
 
             const fullData = {
-                ...formData,
-                moveDate: dateFields.moveDate.toISOString(),
-                returnDate: dateFields.returnDate.toISOString(),
-                returnBackFrom,
-                documentUrl,
-                photoUrl,
-                isReturned,
-                caseProperty,
-                isMovement: true,
+                ...formData, moveDate: dateFields.moveDate.toISOString(), returnDate: dateFields.returnDate.toISOString(), returnBackFrom, documentUrl, photoUrl, isReturned, caseProperty, isMovement: true,
             };
 
-            let success = false;
-            if (type === "malkhana") {
-                success = await updateMovementEntry(existingEntryId, fullData);
-            } else if (type === "siezed vehical") {
-                success = await updateVehicalEntry(existingEntryId, fullData);
-            }
+            // ✅ BUG FIX: Check against the language-independent key 'seizedVehicle' instead of the displayed text.
+            const success = (type === "malkhana")
+                ? await updateMovementEntry(existingEntryId, fullData)
+                : (type === "seizedVehicle")
+                    ? await updateVehicalEntry(existingEntryId, fullData)
+                    : false;
 
             if (success) {
-                toast.success("Movement Data Updated Successfully!");
+                toast.success(t('toasts.updateSuccess'));
                 resetAll();
             } else {
-                toast.error("Failed to update movement data.");
+                toast.error(t('toasts.updateFailed'));
             }
         } catch (error) {
             console.error("Save error:", error);
-            toast.error("Save failed. An error occurred.");
+            toast.error(t('toasts.saveFailed'));
         } finally {
             setIsLoading(false);
         }
@@ -203,53 +163,66 @@ const Page: React.FC = () => {
 
     // --- FIELD DEFINITIONS & RENDER ---
     const fields = [
-        { name: "firNo", label: "FIR No." },
-        { name: "srNo", label: "Sr. No / Mal No." },
-        { name: "underSection", label: "Under Section" },
-        { name: "name", label: "Name" },
-        { name: "moveDate", label: "Move Date", type: "date" },
-        { name: "takenOutBy", label: "Taken Out By" },
-        { name: "moveTrackingNo", label: "Move Tracking No" },
-        { name: "movePurpose", label: "Move Purpose" },
-        { name: "returnDate", label: "Return Back Date", type: "date" },
-        { name: "returnBackFrom", label: "Return Back From" },
-        { name: "receivedBy", label: "Received By" },
+        { name: "firNo", label: t('labels.firNo') },
+        { name: "srNo", label: t('labels.srNo') },
+        { name: "underSection", label: t('labels.underSection') },
+        { name: "name", label: t('labels.name') },
+        { name: "moveDate", label: t('labels.moveDate'), type: "date" },
+        { name: "takenOutBy", label: t('labels.takenOutBy') },
+        { name: "moveTrackingNo", label: t('labels.moveTrackingNo') },
+        { name: "movePurpose", label: t('labels.movePurpose') },
+        { name: "returnDate", label: t('labels.returnDate'), type: "date" },
+        { name: "returnBackFrom", label: t('labels.returnBackFrom') },
+        { name: "receivedBy", label: t('labels.receivedBy') },
     ];
-    const returnBackOptions = ["Court", "FSL", "Other"];
-    const inputFields = [{ label: "Upload Photo", id: "photo", ref: photoRef }, { label: "Upload Document", id: "document", ref: documentRef },];
+
+    // ✅ FIX: Define the options for the dropdowns here using the translation keys.
+    // This creates an array of { value: 'key', label: 'Translated Text' }
+    const typeOptions = Object.keys(t.raw('options.type')).map(key => ({
+        value: key,
+        label: t(`options.type.${key}`)
+    }));
+
+    const returnBackOptions = Object.keys(t.raw('options.returnFrom')).map(key => ({
+        value: key,
+        label: t(`options.returnFrom.${key}`)
+    }));
+
+    const inputFields = [
+        { label: t('labels.uploadPhoto'), id: "photo", ref: photoRef },
+        { label: t('labels.uploadDocument'), id: "document", ref: documentRef },
+    ];
 
     return (
-        // The JSX remains the same as your original code
         <div>
             <div className="glass-effect">
                 <div className="bg-maroon rounded-t-xl py-4 border-b border-white/50 flex justify-center">
-                    <h1 className="text-2xl uppercase text-cream font-semibold">Malkhana Movement</h1>
+                    <h1 className="text-2xl uppercase text-cream font-semibold">{t('title')}</h1>
                 </div>
-
                 <div className="px-8 py-4 rounded-b-md">
                     <div className='w-full items-center gap-4 flex justify-center mb-4'>
-                        <label className="text-blue-100 font-semibold text-nowrap">1. Select Type:</label>
-                        <DropDown selectedValue={type} handleSelect={setType} options={["malkhana", "siezed vehical"]} />
+                        <label className="text-blue-100 font-semibold text-nowrap">{t('labels.selectType')}</label>
+                        <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
                     </div>
                     <hr className="border-gray-600 my-4" />
                     <div className='mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-end'>
-                        <InputComponent label='FIR No.' value={searchFirNo} setInput={(e) => setSearchFirNo(e.target.value)} />
-                        <InputComponent label='OR Sr. No / Mal No.' value={searchSrNo} setInput={(e) => setSearchSrNo(e.target.value)} />
+                        <InputComponent label={t('labels.firNo')} value={searchFirNo} setInput={(e) => setSearchFirNo(e.target.value)} />
+                        <InputComponent label={t('labels.orSrNo')} value={searchSrNo} setInput={(e) => setSearchSrNo(e.target.value)} />
                         <div className="md:col-span-2 flex justify-center">
                             <Button onClick={getByFir} className='bg-blue-600 w-1/2' disabled={isFetching || !type}>
-                                {isFetching ? <LoaderIcon className='animate-spin' /> : '2. Fetch Record'}
+                                {isFetching ? <LoaderIcon className='animate-spin' /> : t('buttons.fetchRecord')}
                             </Button>
                         </div>
                     </div>
 
                     {searchResults.length > 1 && (
                         <div className="my-4 col-span-2 flex flex-col gap-1">
-                            <label className='text-blue-100'>Multiple Records Found. Please Select One:</label>
+                            <label className='text-blue-100'>{t('labels.multipleRecords')}</label>
                             <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {searchResults.map((item: any) => (
                                     <div key={item.id || item._id} className="flex items-center gap-2">
                                         <input type="radio" id={`result-${item.id || item._id}`} name="resultSelection" className="form-radio h-4 w-4" checked={selectedResultId === (item.id || item._id)} onChange={() => handleResultSelectionChange(item.id || item._id)} />
-                                        <label htmlFor={`result-${item.id || item._id}`} className="text-blue-100 cursor-pointer">{`SR: ${item.srNo}`}</label>
+                                        <label htmlFor={`result-${item.id || item._id}`} className="text-blue-100 cursor-pointer">{t('placeholders.srNo', { srNo: item.srNo })}</label>
                                     </div>
                                 ))}
                             </div>
@@ -259,12 +232,12 @@ const Page: React.FC = () => {
                     {existingEntryId && (
                         <>
                             <hr className="border-gray-600 my-6" />
-                            <h2 className="text-xl text-center text-cream font-semibold mb-4">3. Update Movement Details</h2>
+                            <h2 className="text-xl text-center text-cream font-semibold mb-4">{t('labels.updateDetails')}</h2>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                                <InputComponent label="Case Property" value={caseProperty} disabled />
+                                <InputComponent label={t('labels.caseProperty')} value={caseProperty} disabled />
                                 <div className="flex items-center space-x-2 pt-8">
                                     <Checkbox id="isReturnedCheck" checked={isReturned} onCheckedChange={(checked) => setIsReturned(!!checked)} />
-                                    <label htmlFor="isReturnedCheck" className="text-blue-100">Is Item Returned?</label>
+                                    <label htmlFor="isReturnedCheck" className="text-blue-100">{t('labels.isReturned')}</label>
                                 </div>
                             </div>
 
@@ -283,7 +256,7 @@ const Page: React.FC = () => {
                                         return <DatePicker key={field.name} label={field.label} date={dateFields[field.name as "moveDate" | "returnDate"]} setDate={(date) => handleDateChange(field.name as "moveDate" | "returnDate", date)} />;
                                     }
                                     if (field.name === 'returnBackFrom') {
-                                        return <DropDown key={field.name} label="Return Back From" selectedValue={returnBackFrom} options={returnBackOptions} handleSelect={setReturnBackFrom} />;
+                                        return <DropDown key={field.name} label={t('labels.returnBackFrom')} selectedValue={returnBackFrom} options={returnBackOptions} handleSelect={setReturnBackFrom} />;
                                     }
                                     return <InputComponent key={field.name} label={field.label} value={formData[field.name as keyof typeof formData] ?? ""} setInput={(e: any) => handleInputChange(field.name, e.target.value)} />;
                                 })}
@@ -297,9 +270,9 @@ const Page: React.FC = () => {
 
                             <div className="flex w-full justify-center items-center gap-4 mt-6">
                                 <Button onClick={handleSave} className="bg-green-600" disabled={isLoading}>
-                                    {isLoading ? <LoaderIcon className="animate-spin" /> : "4. Save Movement"}
+                                    {isLoading ? <LoaderIcon className="animate-spin" /> : t('buttons.saveMovement')}
                                 </Button>
-                                <Button onClick={resetAll} className="bg-red-600">Clear Form</Button>
+                                <Button onClick={resetAll} className="bg-red-600">{t('buttons.clearForm')}</Button>
                             </div>
                         </>
                     )}

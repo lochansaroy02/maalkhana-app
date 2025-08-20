@@ -9,7 +9,7 @@ export const GET = async (req: NextRequest) => {
     const userId = searchParams.get("userId");
 
 
-    console.log(firNo, type, srNo)
+
     try {
         const selection = {
             id: true,
@@ -33,7 +33,7 @@ export const GET = async (req: NextRequest) => {
             if (!firNo) {
                 return NextResponse.json({ success: true, message: "please enter FirNo." }, { status: 200 });
             }
-            const data = await prisma.malkhanaEntry.findFirst({
+            const data = await prisma.malkhanaEntry.findMany({
                 where: {
                     firNo, userId
                 },

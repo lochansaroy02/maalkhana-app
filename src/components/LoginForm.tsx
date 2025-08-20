@@ -48,12 +48,19 @@ const LoginForm = () => {
         }
     };
 
+    // ✅ FIX: Create the options array in the correct {value, label} format
+    // This makes it compatible with your updated DropDown component.
+    const roleOptions = [
+        { value: "Police Station", label: "Police Station" },
+        { value: "District", label: "District" }
+    ];
+
     return (
-        <form onSubmit={handleLogin} className='flex flex-col  gap-4'>
-            {/* 1. Enabled the dropdown for role selection */}
+        <form onSubmit={handleLogin} className='flex flex-col gap-4'>
             <div>
-                <label className='text-blue-100 font-semibold' htmlFor="role-select">Login AS</label>
-                <DropDown selectedValue={role} handleSelect={setRole} options={["Police Station", "District"]} />
+                <label className='text-blue-100 font-semibold' htmlFor="role-select">Please select role</label>
+                {/* Pass the correctly structured 'roleOptions' array */}
+                <DropDown selectedValue={role} handleSelect={setRole} options={roleOptions} />
             </div>
 
             <div className='flex flex-col gap-2'>

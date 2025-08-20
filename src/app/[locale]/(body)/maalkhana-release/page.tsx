@@ -1,4 +1,5 @@
 "use client";
+
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
@@ -6,13 +7,15 @@ import { useAuthStore } from '@/store/authStore';
 import { useReleaseStore } from '@/store/releaseStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
 import axios from 'axios';
+import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
 const Page = () => {
+    const t = useTranslations('maalkhanaReleaseForm');
 
-    const { user } = useAuthStore()
-    const { fetchByFIR } = useReleaseStore()
+    const { user } = useAuthStore();
+    const { fetchByFIR } = useReleaseStore();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const [type, setType] = useState<string>("");
@@ -20,14 +23,7 @@ const Page = () => {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
     const [formData, setFormData] = useState({
-        firNo: '',
-        srNo: '',
-        underSection: '',
-        releaseItemName: "",
-        receiverName: "",
-        fathersName: "",
-        address: "",
-        mobile: "",
+        firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "",
     });
     const [caseProperty, setCaseProperty] = useState('');
     const photoRef = useRef<HTMLInputElement>(null);
@@ -43,123 +39,73 @@ const Page = () => {
         const recordId = data.id || data._id;
         setExistingId(recordId);
         setFormData({
-            firNo: data.firNo || '',
-            srNo: data.srNo || '',
-            underSection: data.underSection || '',
-            releaseItemName: data.description || data.caseProperty || '',
-            receiverName: data.receiverName || "",
-            fathersName: data.fathersName || "",
-            address: data.address || "",
-            mobile: data.mobile || "",
+            firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', releaseItemName: data.description || data.caseProperty || '', receiverName: data.receiverName || "", fathersName: data.fathersName || "", address: data.address || "", mobile: data.mobile || "",
         });
         setCaseProperty(data.caseProperty || '');
     };
 
     const resetAll = () => {
         setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "" });
-        setCaseProperty('');
-        setExistingId('');
-        setType('');
-        setSearchResults([]);
-        setSelectedResultId('');
+        setCaseProperty(''); setExistingId(''); setType(''); setSearchResults([]); setSelectedResultId('');
         if (photoRef.current) photoRef.current.value = '';
         if (documentRef.current) documentRef.current.value = '';
     };
 
-
     const handleGetByFir = async () => {
-        if (!type) return toast.error("Please select a type first.");
-        if (!formData.firNo && !formData.srNo) return toast.error("Please enter an FIR No. or Sr. No.");
+        if (!type) return toast.error(t('toasts.selectType'));
+        if (!formData.firNo && !formData.srNo) return toast.error(t('toasts.enterFirOrSr'));
 
         setIsFetching(true);
-        setSearchResults([]);
-        setExistingId('');
-        setSelectedResultId('');
+        setSearchResults([]); setExistingId(''); setSelectedResultId('');
 
         try {
-
-            const data = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo)
-
-
-
-            if (data) {
-
-                const dataArray = Array.isArray(data) ? data : [data];
-                if (dataArray.length > 1) {
-                    setSearchResults(dataArray);
-                    toast.success(`${dataArray.length} records found. Please select one.`);
-                } else if (dataArray.length === 1) {
-                    const singleRecord = dataArray[0];
-                    toast.success("Data Fetched Successfully!");
-                    fillForm(singleRecord);
-                    setSelectedResultId(singleRecord.id || singleRecord._id);
+            const data = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
+            if (data && data.length) {
+                if (data.length > 1) {
+                    setSearchResults(data);
+                    toast.success(t('toasts.recordsFound', { count: data.length }));
                 } else {
-                    toast.error("No record found.");
+                    toast.success(t('toasts.fetchSuccess'));
+                    fillForm(data[0]);
+                    setSelectedResultId(data[0].id || data[0]._id);
                 }
             } else {
-                toast.error("No record found.");
+                toast.error(t('toasts.noRecord'));
             }
         } catch (error) {
             console.error("Error fetching by FIR:", error);
-            toast.error("Fetch failed. Please check the console for details.");
+            toast.error(t('toasts.fetchFailed'));
         } finally {
             setIsFetching(false);
         }
     };
 
     const handleSave = async () => {
-        if (!existingId) {
-            toast.error("Please fetch a valid record before saving.");
-            return;
-        }
+        if (!existingId) return toast.error(t('toasts.noRecordSelected'));
         setIsLoading(true);
         try {
-            const photoFile = photoRef.current?.files?.[0];
-            const documentFile = documentRef.current?.files?.[0];
-            const photoUrl = photoFile ? await uploadToCloudinary(photoFile) : "";
-            const documentUrl = documentFile ? await uploadToCloudinary(documentFile) : "";
+            const photoUrl = photoRef.current?.files?.[0] ? await uploadToCloudinary(photoRef.current.files[0]) : "";
+            const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudinary(documentRef.current.files[0]) : "";
 
             const updateData = {
-                receiverName: formData.receiverName,
-                fathersName: formData.fathersName,
-                address: formData.address,
-                mobile: formData.mobile,
-                releaseItemName: formData.releaseItemName,
-                photoUrl,
-                documentUrl,
-                status: "Released",
-                isReturned: true,
-                isRelease: true,
+                receiverName: formData.receiverName, fathersName: formData.fathersName, address: formData.address, mobile: formData.mobile, releaseItemName: formData.releaseItemName, photoUrl, documentUrl, status: "Released", isReturned: true, isRelease: true,
             };
-            let data;
 
-            if (type === "malkhana" && existingId) {
-                const response = await axios.put(`/api/entry?id=${existingId}`, updateData)
-                data = response.data
-
-            } if (type === "seized vehicle" && existingId) {
-                const response = await axios.put(`/api/siezed?id=${existingId}`, updateData);
-                data = response.data
-
+            let response;
+            // ✅ FIX: Logic now checks against language-independent keys ('malkhana', 'seizedVehicle')
+            if (type === "malkhana") {
+                response = await axios.put(`/api/entry?id=${existingId}`, updateData);
+            } else if (type === "seizedVehicle") {
+                response = await axios.put(`/api/siezed?id=${existingId}`, updateData);
             }
 
-            if (data.success) {
-                toast.success("data updated")
-                setFormData({
-                    address: "",
-                    fathersName: "",
-                    firNo: '',
-                    mobile: "",
-                    receiverName: '',
-                    releaseItemName: '',
-                    srNo: '',
-                    underSection: ""
-                })
+            if (response?.data.success) {
+                toast.success(t('toasts.updateSuccess'));
+                resetAll(); // Full reset on success
             }
-
         } catch (error) {
             console.error('Error saving release info:', error);
-            toast.error("An error occurred during save.");
+            toast.error(t('toasts.saveError'));
         } finally {
             setIsLoading(false);
         }
@@ -168,53 +114,55 @@ const Page = () => {
     const handleResultSelectionChange = (resultId: string) => {
         setSelectedResultId(resultId);
         const selectedData = searchResults.find(item => (item.id || item._id) === resultId);
-        if (selectedData) {
-            fillForm(selectedData);
-        }
+        if (selectedData) fillForm(selectedData);
     };
 
+    const typeOptions = Object.keys(t.raw('options.type')).map(key => ({
+        value: key, // 'malkhana', 'seizedVehicle'
+        label: t(`options.type.${key}`)
+    }));
+
     const fields = [
-        { name: "releaseItemName", label: "Release Item Name" },
-        { name: "receiverName", label: "Receiver Name" },
-        { name: "fathersName", label: "Father's Name" },
-        { name: "address", label: "Address" },
-        { name: "mobile", label: "Mobile No." },
+        { name: "releaseItemName", label: t('labels.releaseItemName') },
+        { name: "receiverName", label: t('labels.receiverName') },
+        { name: "fathersName", label: t('labels.fathersName') },
+        { name: "address", label: t('labels.address') },
+        { name: "mobile", label: t('labels.mobileNo') },
     ];
     const inputFields = [
-        { label: "Upload Photo", id: "photo", ref: photoRef },
-        { label: "Upload Document", id: "document", ref: documentRef },
+        { label: t('labels.uploadPhoto'), id: "photo", ref: photoRef },
+        { label: t('labels.uploadDocument'), id: "document", ref: documentRef },
     ];
 
     return (
         <div className='glass-effect '>
             <div className='py-4 border bg-maroon rounded-t-xl border-gray-400 flex justify-center'>
-                <h1 className='text-2xl uppercase text-cream font-semibold'>Maalkhana Release</h1>
+                <h1 className='text-2xl uppercase text-cream font-semibold'>{t('title')}</h1>
             </div>
             <div className='px-8 py-4 rounded-b-md'>
                 <div className='flex justify-center my-4 items-center gap-4'>
-                    <label className="text-blue-100 font-semibold">1. Select Type to Release From:</label>
-                    {/* CHANGE 2: Correct the value for "seized vehicle" */}
-                    <DropDown selectedValue={type} handleSelect={setType} options={["malkhana", "seized vehicle"]} />
+                    <label className="text-blue-100 font-semibold">{t('labels.selectType')}</label>
+                    <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
                 </div>
                 <hr className="border-gray-600 my-4" />
                 <div className='mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-end'>
-                    <InputComponent label='FIR No.' value={formData.firNo} setInput={(e) => handleInputChange('firNo', e.target.value)} />
-                    <InputComponent label='OR Sr. No / Mal No.' value={formData.srNo} setInput={(e) => handleInputChange('srNo', e.target.value)} />
+                    <InputComponent label={t('labels.firNo')} value={formData.firNo} setInput={(e) => handleInputChange('firNo', e.target.value)} />
+                    <InputComponent label={t('labels.orSrNo')} value={formData.srNo} setInput={(e) => handleInputChange('srNo', e.target.value)} />
                     <div className="md:col-span-2 flex justify-center">
                         <Button onClick={handleGetByFir} className='bg-blue-600 w-1/2' disabled={isFetching || !type}>
-                            {isFetching ? <LoaderIcon className='animate-spin' /> : '2. Fetch Record'}
+                            {isFetching ? <LoaderIcon className='animate-spin' /> : t('buttons.fetchRecord')}
                         </Button>
                     </div>
                 </div>
 
                 {searchResults.length > 1 && (
                     <div className="my-4 col-span-2 flex flex-col gap-1">
-                        <label className='text-blue-100'>Multiple Records Found. Please Select One:</label>
+                        <label className='text-blue-100'>{t('labels.multipleRecords')}</label>
                         <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
                             {searchResults.map((item: any) => (
                                 <div key={item.id || item._id} className="flex items-center gap-2">
                                     <input type="radio" id={`result-${item.id || item._id}`} name="resultSelection" className="form-radio h-4 w-4" checked={selectedResultId === (item.id || item._id)} onChange={() => handleResultSelectionChange(item.id || item._id)} />
-                                    <label htmlFor={`result-${item.id || item._id}`} className="text-blue-100 cursor-pointer">{`SR: ${item.srNo}`}</label>
+                                    <label htmlFor={`result-${item.id || item._id}`} className="text-blue-100 cursor-pointer">{t('placeholders.srNo', { srNo: item.srNo })}</label>
                                 </div>
                             ))}
                         </div>
@@ -225,10 +173,10 @@ const Page = () => {
                     <div>
                         <hr className="border-gray-600 my-6" />
                         <div>
-                            <h2 className="text-xl text-center text-cream font-semibold mb-4">3. Enter Release Details</h2>
+                            <h2 className="text-xl text-center text-cream font-semibold mb-4">{t('labels.enterDetails')}</h2>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                                <InputComponent label='Case Property' value={caseProperty} disabled />
-                                <InputComponent label='Under Section' value={formData.underSection} disabled />
+                                <InputComponent label={t('labels.caseProperty')} value={caseProperty} disabled />
+                                <InputComponent label={t('labels.underSection')} value={formData.underSection} disabled />
                                 {fields.map((field) => (
                                     <div key={field.name}>
                                         <InputComponent label={field.label} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name, e.target.value)} />
@@ -243,9 +191,9 @@ const Page = () => {
                             </div>
                             <div className='flex w-full px-12 justify-center items-center gap-4 mt-6'>
                                 <Button onClick={handleSave} className='bg-green-600' disabled={isLoading}>
-                                    {isLoading ? <LoaderIcon className='animate-spin' /> : '4. Save and Release'}
+                                    {isLoading ? <LoaderIcon className='animate-spin' /> : t('buttons.saveAndRelease')}
                                 </Button>
-                                <Button onClick={resetAll} className='bg-red-600'>Clear Form</Button>
+                                <Button onClick={resetAll} className='bg-red-600'>{t('buttons.clearForm')}</Button>
                             </div>
                         </div>
                     </div>

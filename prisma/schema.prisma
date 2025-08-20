@@ -13,134 +13,122 @@ model District {
   name         String
   email        String   @unique
   passwordHash String
-  users        User[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  users        User[]
 }
 
 model User {
-  id            String @id @default(uuid())
+  id            String          @id @default(uuid())
   name          String
+  email         String          @unique
+  passwordHash  String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  districtId    String
   policeStation String
   rank          String
   role          String
   mobileNo      String
-  email         String @unique
-  passwordHash  String
-
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
-  entries   MalkhanaEntry[]
-  vehicles  SeizedVehicle[]
-
-  districtId String
-  District   District @relation(fields: [districtId], references: [id])
+  entries       MalkhanaEntry[]
+  vehicles      SeizedVehicle[]
+  District      District        @relation(fields: [districtId], references: [id])
 }
 
 model SeizedVehicle {
-  id             String  @id @default(cuid())
-  srNo           String?
-  firNo          String?
-  gdNo           String
-  gdDate         String
-  underSection   String
-  vehicleType    String
-  colour         String
-  registrationNo String
-  engineNo       String
-  description    String
-  status         String
-  policeStation  String
-  ownerName      String
-  seizedBy       String
-  caseProperty   String
-
-  // movment details 
-  isReturned Boolean @default(false)
-  receviedBy String?
-
-  returnBackFrom  String?
-  takenOutBy      String?
-  moveTrackingNo  String?
-  returnDate      DateTime?
-  movePurpose     String?
-  name            String?
-  photoUrl        String?
-  document        String?
-  moveDate        String?
-  receivedBy      String?
-  documentUrl     String?
-  isMovement      Boolean?  @default(false)
-  // release details
-  isRelease       Boolean?  @default(false)
-  receiverName    String?   @map("recevierName")
-  fathersName     String?
-  address         String?
-  mobile          String?
-  releaseItemName String?
-
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  districtId String?
-  User       User?    @relation(fields: [userId], references: [id])
-  userId     String?
-}
-
-model MalkhanaEntry {
-  id String @id @default(uuid())
-
-  firNo           String?
+  id              String    @id @default(cuid())
   srNo            String?
   gdNo            String
   gdDate          String
   underSection    String
-  yellowItemPrice Int?
-  description     String?
+  vehicleType     String
+  colour          String
+  registrationNo  String
+  engineNo        String
+  description     String
+  status          String
+  policeStation   String
+  ownerName       String
+  seizedBy        String
+  caseProperty    String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  districtId      String?
+  firNo           String?
+  userId          String?
+  address         String?
+  document        String?
+  fathersName     String?
+  isReturned      Boolean   @default(false)
+  mobile          String?
+  movePurpose     String?
+  moveTrackingNo  String?
+  name            String?
+  receviedBy      String?
+  releaseItemName String?
+  returnBackFrom  String?
+  returnDate      DateTime?
+  takenOutBy      String?
+  moveDate        String?
+  documentUrl     String?
+  receivedBy      String?
+  photoUrl        String?
+  isMovement      Boolean?  @default(false)
+  isRelease       Boolean?  @default(false)
+  receiverName    String?   @map("recevierName")
+  dbName          String?
+  User            User?     @relation(fields: [userId], references: [id])
+}
+
+model MalkhanaEntry {
+  id              String    @id @default(uuid())
   wine            Int?
-  cash            Int?
   wineType        String
-  photoUrl        String  @default("")
+  srNo            String?
+  gdNo            String
+  gdDate          String
+  underSection    String
   Year            String
   policeStation   String
   IOName          String
   vadiName        String
   HM              String
   accused         String
+  firNo           String?
   status          String
   entryType       String
   place           String
   boxNo           String
   courtNo         String
   courtName       String
-
-  //movement entry 
-  isMovement     Boolean?  @default(false)
-  moveDate       String?
-  takenOutBy     String?
-  moveTrackingNo String?
-  movePurpose    String?
-  name           String?
-  caseProperty   String?
-  isReturned     Boolean?  @default(false)
-  receivedBy     String?
-  returnBackFrom String?
-  returnDate     DateTime?
-  documentUrl    String?
-
-  // release entry
-  isRelease       Boolean? @default(false)
-  receiverName    String?
-  fathersName     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  districtId      String?
+  photoUrl        String    @default("")
+  userId          String?
   address         String?
+  document        String?
+  fathersName     String?
+  isReturned      Boolean?  @default(false)
   mobile          String?
+  moveDate        String?
+  movePurpose     String?
+  moveTrackingNo  String?
+  name            String?
+  photo           String?
   releaseItemName String?
-
-  photo    String?
-  document String?
-
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  districtId String?
-  User       User?    @relation(fields: [userId], references: [id])
-  userId     String?
+  returnBackFrom  String?
+  returnDate      DateTime?
+  takenOutBy      String?
+  caseProperty    String?
+  receivedBy      String?
+  receiverName    String?
+  documentUrl     String?
+  cash            Int?
+  description     String?
+  isMovement      Boolean?  @default(false)
+  isRelease       Boolean?  @default(false)
+  yellowItemPrice Int?
+  dbName          String?
+  User            User?     @relation(fields: [userId], references: [id])
 }

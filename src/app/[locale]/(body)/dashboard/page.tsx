@@ -4,6 +4,7 @@ import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
 import { ArrowDownNarrowWide, Banknote, Car, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 const Page = () => {
@@ -16,85 +17,88 @@ const Page = () => {
         }
     }, [user?.id, fetchTotalEntries]);
 
+
+    const t = useTranslations("Dashboard");
+
     const reportItems = [
         {
-            title: "Total Entries",
+            title: t("totalEntries"),
             icon: <Menu size={40} />,
             bgColour: "bg-cyan-500",
-            value: data?.breakdown.totalEntries || 0,
+            value: data?.breakdown?.totalEntries || 0,
         },
         {
-            title: "Total Malkhana Entry",
+            title: t("totalMalkhanaEntry"),
             icon: <User size={40} />,
             bgColour: "bg-red-500",
             value: data?.breakdown?.entry || 0,
         },
         {
-            title: "Malkhana Movement",
+            title: t("malkhanaMovement"),
             icon: <User size={40} />,
             bgColour: "bg-orange-500",
             value: data?.breakdown?.movement || 0,
         },
         {
-            title: "Malkhana Release",
+            title: t("malkhanaRelease"),
             icon: <Settings size={40} />,
             bgColour: "bg-green-500",
             value: data?.breakdown?.release || 0,
         },
         {
-            title: "Seized Vehicles",
+            title: t("seizedVehicles"),
             icon: <Car size={40} />,
             bgColour: "bg-blue-500",
             value: data?.breakdown?.siezed || 0,
         },
         {
-            title: "Total Nilami",
+            title: t("totalNilami"),
             icon: <Megaphone size={40} />,
             bgColour: "bg-purple-500",
             value: data?.breakdown?.nilami || 0,
         },
         {
-            title: "Total Destroyed Items",
+            title: t("totalDestroyedItems"),
             icon: <Shredder size={40} />,
             bgColour: "bg-pink-500",
             value: data?.breakdown?.destroy || 0,
         },
         {
-            title: "Returned Entries",
+            title: t("returnedEntries"),
             icon: <ArrowDownNarrowWide size={40} />,
             bgColour: "bg-green-700",
             value: data?.breakdown?.totalReturn || 0,
         },
         {
-            title: "Total English Wine (in Ltr)",
+            title: t("totalEnglishWine"),
             icon: <Wine size={40} />,
             bgColour: "bg-gray-500",
-            value: data?.breakdown?.english?._sum?.wine || 0,
+            value: `${data?.breakdown?.english?._sum?.wine || 0} ${t("unitLtr")}`,
         },
         {
-            title: "Total Desi Wine (in Ltr)",
+            title: t("totalDesiWine"),
             icon: <Wine size={40} />,
             bgColour: "bg-fuchsia-700",
-            value: data?.breakdown?.desi?._sum?.wine || 0,
+            value: `${data?.breakdown?.desi?._sum?.wine || 0} ${t("unitLtr")}`,
         },
         {
-            title: "Total Wine (in Ltr)",
+            title: t("totalWine"),
             icon: <Wine size={40} />,
             bgColour: "bg-purple-700",
-            value: data?.breakdown.totalWine._sum.wine || 0,
-            unit: "Ltr"
+            value: `${data?.breakdown?.totalWine?._sum?.wine || 0} ${t("unitLtr")}`,
         },
         {
-            title: "Total Cash",
+            title: t("totalCash"),
             icon: <Banknote size={40} />,
             bgColour: "bg-cyan-700",
             value: `₹${(data?.breakdown?.totalCash._sum.cash || 0).toLocaleString('en-IN')}`,
         },
         {
-            title: "Total Yellow Item",
+            title: t("totalYellowItem"),
             icon: <Banknote size={40} />,
             bgColour: "bg-yellow-500",
-            value: `₹${(data?.breakdown?.totalYellowItems._sum.yellowItemPrice || 0).toLocaleString('en-IN')}`,
+            value: ` ₹${(data?.breakdown?.totalYellowItems._sum.yellowItemPrice || 0).toLocaleString('en-IN')}`,
+
         },
     ];
 

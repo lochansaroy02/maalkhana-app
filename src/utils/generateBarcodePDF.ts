@@ -5,6 +5,7 @@ export const generateBarcodePDF = async (entries: any[]) => {
 
     const doc = new jsPDF("p", "mm", "a4");
 
+
     const barcodesPerRow = 4;
     const barcodesPerColumn = 10;
     const perPage = barcodesPerRow * barcodesPerColumn;
@@ -20,7 +21,7 @@ export const generateBarcodePDF = async (entries: any[]) => {
 
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
-
+        console.log(entry)
         // Recalculate position for each barcode
         const indexOnPage = i % perPage;
         const row = Math.floor(indexOnPage / barcodesPerRow);
@@ -34,7 +35,7 @@ export const generateBarcodePDF = async (entries: any[]) => {
 
         // --- Generate Barcode ---
         const canvas = document.createElement("canvas");
-        const barcodeValue = `${entry.srNo || '??'}/${String(entry.firNo || '??')}`;
+        const barcodeValue = `${entry.dbName || '??'}/${entry.srNo || '??'}/${String(entry.firNo || '??')}`;
 
 
         JsBarcode(canvas, barcodeValue, {
