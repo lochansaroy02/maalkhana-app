@@ -1,10 +1,9 @@
 import JsBarcode from "jsbarcode";
 import { jsPDF } from "jspdf";
 
-export const generateBarcodePDF = async (entries: any[]) => {
 
+export const generateBarcodePDF = async (entries: any) => {
     const doc = new jsPDF("p", "mm", "a4");
-
 
     const barcodesPerRow = 4;
     const barcodesPerColumn = 10;
@@ -13,16 +12,14 @@ export const generateBarcodePDF = async (entries: any[]) => {
     const barcodeWidth = 50; // mm
     const barcodeHeight = 15; // mm
     const paddingX = 10; // mm
-    const paddingY = 15; // mm, increased for top text
-    const verticalSpacing = 25; // Increased vertical spacing for clarity
+    const paddingY = 15; // mm
+    const verticalSpacing = 25; // mm
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
 
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
-        console.log(entry)
-        // Recalculate position for each barcode
         const indexOnPage = i % perPage;
         const row = Math.floor(indexOnPage / barcodesPerRow);
         const col = indexOnPage % barcodesPerRow;
@@ -35,22 +32,26 @@ export const generateBarcodePDF = async (entries: any[]) => {
 
         // --- Generate Barcode ---
         const canvas = document.createElement("canvas");
-        const barcodeValue = `${entry.dbName || '??'}/${entry.srNo || '??'}/${String(entry.firNo || '??')}`;
 
+        // 1. Create an object with the desired keys.
+        // Note: Renamed 'dbName' to 'dbType' to match your desired output.
+        const barcodeData = {
+            firNo: String(entry.firNo || ''),
+            srNo: entry.srNo || '',
+            dbType: entry.dbName || '' // Assuming dbName maps to dbType
+        };
+
+        // 2. Convert the object to a JSON string. This is the value we'll encode.
+        const barcodeValue = JSON.stringify(barcodeData);
 
         JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
             width: 2,
             height: 80,
-            displayValue: true,
-            textPosition: "bottom",
-            textAlign: "center",
-            textMargin: 2,
-            fontSize: 18,       // A clear and readable font size for the text.
+            displayValue: false, // Set to false, JSON string is not human-readable
         });
         const imageData = canvas.toDataURL("image/png");
 
-        // Add the generated barcode image to the PDF document
         doc.addImage(imageData, "PNG", x, y, barcodeWidth, barcodeHeight);
 
         // Add a new page if the current one is full
@@ -61,3 +62,4 @@ export const generateBarcodePDF = async (entries: any[]) => {
 
     doc.save("barcodes.pdf");
 };
+

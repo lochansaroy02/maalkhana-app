@@ -9,16 +9,34 @@ const ScannerView = () => {
     const [scanResult, setScanResult] = useState<any | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
 
-    const handleScanSuccess = (decodedText: string) => {
-        const parts = decodedText.split("-");
-        const resultObject = {
-            srNo: parts[0] || '',
-            firNo: parts[1] || '',
-            id: parts[2] || ''
-        };
-        setScanResult(resultObject);
-        setIsScanning(false);
-        setScanError(null);
+
+    const handleScanSuccess = (decodedText: any) => {
+        try {
+            // 1. Parse the JSON string from the barcode back into an object.
+            const resultObject = JSON.parse(decodedText);
+
+            // 2. You now have a clean object with keys and values.
+            // You can add validation here to ensure all required keys exist.
+            const finalResult = {
+                firNo: resultObject.firNo || '',
+                srNo: resultObject.srNo || '',
+                dbType: resultObject.dbType || ''
+            };
+
+            // Assuming you have these state setters from your component
+            // setScanResult(finalResult);
+            // setIsScanning(false);
+            // setScanError(null);
+
+            console.log("Scan successful:", finalResult);
+
+        } catch (error) {
+            // This will catch errors if the barcode contains something other than valid JSON.
+            console.error("Failed to parse barcode data:", error);
+            // setScanError("Invalid barcode format.");
+            // setIsScanning(false);
+            // setScanResult(null);
+        }
     };
 
     const handleScanError = (errorMessage: string) => {
