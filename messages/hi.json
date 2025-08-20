@@ -13,6 +13,7 @@
     },
     "Dashboard": {
         "totalEntries": "कुल प्रविष्टियाँ",
+        "totalPoliceStation": "कुल पुलिस थाना",
         "totalMalkhanaEntry": "कुल मालख़ाना प्रविष्टि",
         "malkhanaMovement": "मालख़ाना मूवमेंट",
         "malkhanaRelease": "मालख़ाना विमोचन",

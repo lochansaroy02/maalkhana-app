@@ -34,8 +34,7 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
         }
     }, [user?.id, isLoggedIn]);
 
-    // ✅ FIX: Create the options array in the correct {value, label} format.
-    // This makes it compatible with your updated DropDown component.
+
     const roleOptions = [
         { value: 'admin', label: 'Admin' },
         { value: 'user', label: 'User' },

@@ -3,24 +3,29 @@
 import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
-import { ArrowDownNarrowWide, Banknote, Car, Megaphone, Menu, Settings, Shredder, User, Wine } from "lucide-react";
+import { ArrowDownNarrowWide, Banknote, Car, Megaphone, Menu, Settings, Shield, Shredder, User, Wine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 const Page = () => {
-    const { fetchTotalEntries, data } = useTotalEntriesStore();
-    const { user } = useAuthStore();
+    const { fetchTotalEntries, data, fetchAdminEntries } = useTotalEntriesStore();
+    const { user, } = useAuthStore();
+
+
 
     useEffect(() => {
-        if (user?.id) {
-            fetchTotalEntries(user.id);
+
+        if (user?.role === "policeStation") {
+            fetchTotalEntries(user.id)
+        } else {
+            fetchAdminEntries()
         }
     }, [user?.id, fetchTotalEntries]);
 
 
     const t = useTranslations("Dashboard");
-
     const reportItems = [
+
         {
             title: t("totalEntries"),
             icon: <Menu size={40} />,
@@ -99,6 +104,12 @@ const Page = () => {
             bgColour: "bg-yellow-500",
             value: ` ₹${(data?.breakdown?.totalYellowItems._sum.yellowItemPrice || 0).toLocaleString('en-IN')}`,
 
+        },
+        {
+            title: t("totalPoliceStation"),
+            icon: <Shield size={40} />,
+            bgColour: `bg-neutral-500 ${user?.role === 'policeStation' && "hidden"}`,
+            value: data?.breakdown?.totalPoliceStation || 0,
         },
     ];
 

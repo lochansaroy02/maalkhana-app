@@ -31,7 +31,7 @@ const Sidebar = () => {
             return [...baseRoutes, { name: "Users", link: "/users" }];
         }
         return baseRoutes;
-    }, [user, t]); // Add `t` to dependency array as it's used inside
+    }, [user, t]); 
 
     return (
         <div className={` ${isOpen ? "flex" : "hidden"} h-screen lg:flex transition-all ease-in-out duration-300 z-40 lg:w-[20%] lg:pt-0 pt-18 fixed lg:glass-effect border border-white/50 rounded-xl bg-blue `}>
@@ -39,17 +39,12 @@ const Sidebar = () => {
                 <div className='flex justify-center'>
                     <Logo width={100} height={100} />
                 </div>
-                <div className='flex flex-col justify-between h-full lg:gap-12 gap-6'>
+                <div className='flex flex-col justify-between   h-full lg:gap-10 gap-6'>
                     <div className='gap-2 flex flex-col'>
                         {sidebarData.map((item, index) => {
                             if (!item) return null;
-
-                            // ✅ FIX: This new logic correctly determines the active tab
-                            // It checks if the current path (including locale) contains the item's base link.
-                            // This works for both exact links and parent routes like '/report'.
-                            const baseLink = item.link.split('/').pop() || item.link; // e.g., 'dashboard' or 'report'
+                            const baseLink = item.link.split('/').pop() || item.link;
                             const isActive = path.includes(baseLink);
-
                             return (
                                 <div
                                     key={index}
@@ -65,7 +60,7 @@ const Sidebar = () => {
                             );
                         })}
                     </div>
-                    <div className='lg:p-4 items-center flex flex-col justify-center mb-2 rounded-xl border border-white/30 bg-blue'>
+                    <div className='lg:p-2 items-center flex flex-col justify-center mb-2 rounded-xl border border-white/30 bg-blue'>
                         <Spycore />
                         <h1 className='text-blue-100'>Helpline</h1>
                         <h2 className='text-blue-100'>+917078146730</h2>
