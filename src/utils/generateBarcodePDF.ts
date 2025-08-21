@@ -1,19 +1,31 @@
 import JsBarcode from "jsbarcode";
 import { jsPDF } from "jspdf";
 
+/**
+ * @typedef {object} BarcodeEntry
+ * @property {string | number} srNo - The serial number.
+ * @property {string | number} firNo - The FIR number.
+ * @property {string} dbName - The database name/type.
+ */
 
-export const generateBarcodePDF = async (entries: any) => {
+/**
+ * Generates a PDF document with a grid of barcodes.
+ * @param {BarcodeEntry[]} entries - An array of objects, each containing data for one barcode.
+ */
+export const generateBarcodePDF = (entries: any) => {
     const doc = new jsPDF("p", "mm", "a4");
 
+    // --- Layout Configuration ---
     const barcodesPerRow = 4;
     const barcodesPerColumn = 10;
     const perPage = barcodesPerRow * barcodesPerColumn;
 
-    const barcodeWidth = 50; // mm
-    const barcodeHeight = 15; // mm
-    const paddingX = 10; // mm
-    const paddingY = 15; // mm
-    const verticalSpacing = 25; // mm
+    const barcodeWidth = 48; // mm
+    const barcodeHeight = 16; // mm
+    const horizontalMargin = 10; // mm (left/right margin of the page)
+    const verticalMargin = 15; // mm (top/bottom margin of the page)
+    const columnSpacing = 5; // mm (space between barcode columns)
+    const rowSpacing = 28; // mm (total vertical space for one barcode row, includes text)
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
@@ -24,42 +36,44 @@ export const generateBarcodePDF = async (entries: any) => {
         const row = Math.floor(indexOnPage / barcodesPerRow);
         const col = indexOnPage % barcodesPerRow;
 
-        const x = paddingX + col * (barcodeWidth + paddingX);
-        const y = paddingY + row * verticalSpacing;
+        // Calculate position for the barcode image's top-left corner
+        const x = horizontalMargin + col * (barcodeWidth + columnSpacing);
+        const y = verticalMargin + row * rowSpacing;
 
-        // Add text above the barcode (e.g., Serial Number)
-        doc.text(String(entry.srNo || ''), x + barcodeWidth / 2, y - 2, { align: 'center' });
+        // ✅ ADDED: Add srNo at the top of the barcode (no gap)
+        // Placing the text baseline at `y - 1` puts it directly above the barcode image.
+        doc.text(String(entry.srNo || ''), x + barcodeWidth / 2, y - 1, { align: 'center' });
 
         // --- Generate Barcode ---
         const canvas = document.createElement("canvas");
 
-        // 1. Create an object with the desired keys.
-        // Note: Renamed 'dbName' to 'dbType' to match your desired output.
-        const barcodeData = {
-            firNo: String(entry.firNo || ''),
-            srNo: entry.srNo || '',
-            dbType: entry.dbName || '' // Assuming dbName maps to dbType
-        };
-
-        // 2. Convert the object to a JSON string. This is the value we'll encode.
-        const barcodeValue = JSON.stringify(barcodeData);
+        // ✅ FIXED: Encode a clean, simple string instead of JSON
+        // Format: dbname-firNo-srNo
+        const barcodeValue = `${entry.dbName || ''}-${entry.firNo || ''}-${entry.srNo || ''}`;
 
         JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
-            width: 2,
-            height: 80,
-            displayValue: false, // Set to false, JSON string is not human-readable
+            width: 1.5,       // Thinner bars for a cleaner look with simpler data
+            height: 60,       // Internal height of the bars
+            displayValue: false, // We add text manually for better control
         });
-        const imageData = canvas.toDataURL("image/png");
 
-        doc.addImage(imageData, "PNG", x, y, barcodeWidth, barcodeHeight);
+        const imageData = canvas.toDataURL("image/jpeg");
 
-        // Add a new page if the current one is full
-        if ((i + 1) % perPage === 0 && i !== entries.length - 1) {
+        // Add the barcode image to the PDF
+        doc.addImage(imageData, "JPEG", x, y, barcodeWidth, barcodeHeight);
+
+        // ✅ ADDED: Add firNo at the bottom of the barcode (no gap)
+        // Positioned relative to the bottom of the barcode image.
+        const textY = y + barcodeHeight + 3; // 3mm below the barcode
+        doc.text(String(entry.firNo || ''), x + barcodeWidth / 2, textY, { align: 'center' });
+
+
+        // Add a new page if the current one is full and there are more entries
+        if ((i + 1) % perPage === 0 && i < entries.length - 1) {
             doc.addPage();
         }
     }
 
     doc.save("barcodes.pdf");
 };
-

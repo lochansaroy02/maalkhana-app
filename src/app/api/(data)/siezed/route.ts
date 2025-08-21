@@ -59,7 +59,7 @@ export const POST = async (req: NextRequest) => {
                 ownerName,
                 seizedBy,
                 caseProperty,
-                dbName: "vehicle"
+                dbName: "v"
             },
         });
 

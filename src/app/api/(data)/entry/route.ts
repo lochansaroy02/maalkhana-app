@@ -79,7 +79,7 @@ export const POST = async (req: NextRequest) => {
                 boxNo,
                 courtNo,
                 courtName,
-                dbName: "malkhana"
+                dbName: "m"
             }
         });
 
