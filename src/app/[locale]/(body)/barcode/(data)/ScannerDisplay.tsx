@@ -1,7 +1,10 @@
 "use client";
+
+import { Html5QrcodeScanner } from "html5-qrcode";
 import { useEffect, useState } from "react";
 
-// ✅ CHANGED: Updated interface to match the parsed barcode data
+// --- Interfaces ---
+
 interface ScanResult {
     dbName: string;
     firNo: string;
@@ -14,6 +17,36 @@ interface FetchedEntryData {
     caseDetails: string;
 }
 
+
+// --- Helper Function ---
+
+/**
+ * Parses a raw barcode string (e.g., "CaseDB-FIR-123-456") into a structured object.
+ * @param barcodeText The raw string from the scanner.
+ * @returns A ScanResult object or null if parsing fails.
+ */
+const parseBarcodeData = (barcodeText: string): ScanResult | null => {
+    if (!barcodeText || typeof barcodeText !== 'string') {
+        return null;
+    }
+
+    const parts = barcodeText.split('-');
+    if (parts.length < 3) {
+        console.error("Invalid barcode format. Expected 'dbname-firNo-srNo'.");
+        return null;
+    }
+
+    // Assumes srNo is the last part, dbName is the first, and firNo is everything in between.
+    const srNo = parts.pop()!;
+    const dbName = parts.shift()!;
+    const firNo = parts.join('-'); // Re-join in case firNo contains hyphens
+
+    return { dbName, firNo, srNo };
+};
+
+
+// --- Display Component ---
+
 const ScannerDisplay = ({ result }: { result: ScanResult | null }) => {
     const [fetchedData, setFetchedData] = useState<FetchedEntryData | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -21,9 +54,7 @@ const ScannerDisplay = ({ result }: { result: ScanResult | null }) => {
 
     useEffect(() => {
         const getData = async () => {
-            // Check for a valid result object with all required properties
             if (!result || !result.srNo || !result.firNo || !result.dbName) {
-                // Clear previous results if the new scan is invalid
                 setFetchedData(null);
                 setError(null);
                 return;
@@ -34,17 +65,12 @@ const ScannerDisplay = ({ result }: { result: ScanResult | null }) => {
             setFetchedData(null);
 
             try {
-
-                // ✅ CHANGED: Added dbName to the API query for precise lookups
                 const response = await fetch(`/api/get-entry?srNo=${result.srNo}&firNo=${result.firNo}&dbName=${result.dbName}`);
-
                 if (!response.ok) {
-                    throw new Error(`Failed to fetch data: ${response.statusText}`);
+                    throw new Error(`Record not found or server error: ${response.statusText}`);
                 }
-
                 const data: FetchedEntryData = await response.json();
                 setFetchedData(data);
-
             } catch (err) {
                 console.error("API call failed:", err);
                 setError(err instanceof Error ? err.message : "An unknown error occurred.");
@@ -54,12 +80,11 @@ const ScannerDisplay = ({ result }: { result: ScanResult | null }) => {
         };
 
         getData();
-    }, [result]); // The effect re-runs when the result object changes
+    }, [result]);
 
-    // If there's no result yet, you can show a placeholder
     if (!result) {
         return (
-            <div className="bg-gray-50 border-l-4 border-gray-400 p-6 rounded-md shadow-sm">
+            <div className="bg-gray-50 border-l-4 border-gray-400 p-6 rounded-md shadow-sm mt-8">
                 <h3 className="font-bold text-xl text-gray-700">Waiting for scan...</h3>
                 <p className="text-gray-500">Scan a barcode to see asset details here.</p>
             </div>
@@ -67,12 +92,9 @@ const ScannerDisplay = ({ result }: { result: ScanResult | null }) => {
     }
 
     return (
-        <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md shadow-sm text-left">
+        <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md shadow-sm text-left mt-8">
             <h3 className="font-bold text-xl mb-4 text-gray-800 border-b pb-2">Scanned Asset Details</h3>
-
-            {/* Display the initial scanned info */}
             <div className="space-y-4 mb-6">
-                {/* ✅ ADDED: Display for dbName */}
                 <div className="flex flex-col">
                     <label className="text-sm font-semibold text-gray-600 mb-1">Scanned Database</label>
                     <p className="text-lg bg-white p-2 rounded-md border text-gray-800 border-gray-200">{result.dbName || 'N/A'}</p>
@@ -86,8 +108,6 @@ const ScannerDisplay = ({ result }: { result: ScanResult | null }) => {
                     <p className="text-lg bg-white p-2 rounded-md border text-gray-800 border-gray-200">{result.srNo || 'N/A'}</p>
                 </div>
             </div>
-
-            {/* Display loading, error, or fetched data from the database */}
             <div className="mt-4 border-t pt-4">
                 {isLoading && <p className="text-blue-600 animate-pulse">Loading database record...</p>}
                 {error && <p className="text-red-600 font-semibold">⚠️ Error: {error}</p>}
@@ -99,10 +119,76 @@ const ScannerDisplay = ({ result }: { result: ScanResult | null }) => {
                         <p><strong>Case Details:</strong> {fetchedData.caseDetails}</p>
                     </div>
                 )}
-                {!isLoading && !fetchedData && !error && <p className="text-gray-500">Fetching details from the database...</p>}
             </div>
         </div>
     );
 };
 
-export default ScannerDisplay;
+
+// --- Main Scanner Component ---
+
+const BarcodeScanner = () => {
+    const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+
+    useEffect(() => {
+        // ID of the HTML element where the scanner will be rendered.
+        const scannerRegionId = "qr-reader";
+
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+            scannerRegionId,
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }, // This can be an object or a function
+                rememberLastUsedCamera: true,
+            },
+            /* verbose= */ false
+        );
+
+        // ✅ FIXED: This is the corrected success callback
+        const onScanSuccess = (decodedText: string) => {
+            const parsedData = parseBarcodeData(decodedText);
+            if (parsedData) {
+                setScanResult(parsedData);
+                // Optional: clear the scanner after a successful scan
+                // html5QrcodeScanner.clear(); 
+            } else {
+                // Handle the case where the barcode format is invalid
+                alert("Invalid barcode format scanned.");
+            }
+        };
+
+        const onScanFailure = (error: any) => {
+            // This callback is called frequently, so keep it lightweight.
+            // console.warn(`Code scan error = ${error}`);
+        };
+
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+
+        // Cleanup function to stop the scanner when the component unmounts
+        return () => {
+            html5QrcodeScanner.clear().catch(error => {
+                console.error("Failed to clear html5QrcodeScanner.", error);
+            });
+        };
+    }, []);
+
+    return (
+        <div>
+            {/* To fix the layout warning, ensure this container is styled correctly.
+              For example, in your CSS file:
+              #scanner-container {
+                width: 100%;
+                max-width: 500px;
+                margin: 20px auto;
+              }
+            */}
+            <div id="scanner-container">
+                <div id="qr-reader"></div>
+            </div>
+
+            <ScannerDisplay result={scanResult} />
+        </div>
+    );
+};
+
+export default BarcodeScanner;
