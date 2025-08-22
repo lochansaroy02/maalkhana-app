@@ -1,8 +1,8 @@
 "use client";
 
-import { parseBarcodeData, type ScanResult } from "@/utils/parseBarcode";
-import { Html5QrcodeScanner } from "html5-qrcode";
 import { useEffect, useState } from "react";
+import { Html5QrcodeScanner } from "html5-qrcode";
+import { parseBarcodeData, type ScanResult } from "@/utils/parseBarcode";
 import ScannerDisplay from "./ScannerDisplay";
 
 const AssetScanner = () => {
@@ -10,6 +10,7 @@ const AssetScanner = () => {
     const [scanResult, setScanResult] = useState<ScanResult | null>(null);
 
     useEffect(() => {
+        // Only run this effect when we are in scanning mode
         if (!isScanning) {
             return;
         }
@@ -20,25 +21,29 @@ const AssetScanner = () => {
             /* verbose= */ false
         );
 
+        // This is the success handler that correctly parses the barcode
         const handleScanSuccess = (decodedText: string) => {
             const parsedData = parseBarcodeData(decodedText);
+
             if (parsedData) {
+                console.log(parsedData)
                 setScanResult(parsedData);
                 setIsScanning(false); // Stop scanning on success
             } else {
+                // This will alert the user if the scanned format is wrong
                 alert("Invalid barcode format scanned.");
             }
         };
 
         scanner.render(handleScanSuccess, undefined);
 
-        // Cleanup function to stop the scanner when the component unmounts or isScanning becomes false
+        // Cleanup function to stop the scanner
         return () => {
             scanner.clear().catch(error => {
                 console.error("Failed to clear html5QrcodeScanner.", error);
             });
         };
-    }, [isScanning]); // This effect depends on the isScanning state
+    }, [isScanning]); // This effect runs when 'isScanning' changes
 
     return (
         <section className="bg-white p-6 rounded-xl shadow-lg">
@@ -60,7 +65,7 @@ const AssetScanner = () => {
                 <div className="text-center">
                     <button
                         onClick={() => {
-                            setScanResult(null); // Clear previous result before starting a new scan
+                            setScanResult(null); // Clear previous result
                             setIsScanning(true);
                         }}
                         className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out transform hover:scale-105"
