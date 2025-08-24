@@ -92,7 +92,6 @@ const Page = () => {
             };
 
             let response;
-            // ✅ FIX: Logic now checks against language-independent keys ('malkhana', 'seizedVehicle')
             if (type === "malkhana") {
                 response = await axios.put(`/api/entry?id=${existingId}`, updateData);
             } else if (type === "seizedVehicle") {
@@ -118,7 +117,7 @@ const Page = () => {
     };
 
     const typeOptions = Object.keys(t.raw('options.type')).map(key => ({
-        value: key, // 'malkhana', 'seizedVehicle'
+        value: key,
         label: t(`options.type.${key}`)
     }));
 
@@ -155,14 +154,27 @@ const Page = () => {
                     </div>
                 </div>
 
+                {/* --- NEW ---: This block renders radio buttons when multiple results are found */}
                 {searchResults.length > 1 && (
                     <div className="my-4 col-span-2 flex flex-col gap-1">
                         <label className='text-blue-100'>{t('labels.multipleRecords')}</label>
                         <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
                             {searchResults.map((item: any) => (
                                 <div key={item.id || item._id} className="flex items-center gap-2">
-                                    <input type="radio" id={`result-${item.id || item._id}`} name="resultSelection" className="form-radio h-4 w-4" checked={selectedResultId === (item.id || item._id)} onChange={() => handleResultSelectionChange(item.id || item._id)} />
-                                    <label htmlFor={`result-${item.id || item._id}`} className="text-blue-100 cursor-pointer">{t('placeholders.srNo', { srNo: item.srNo })}</label>
+                                    <input
+                                        type="radio"
+                                        id={`result-${item.id || item._id}`}
+                                        name="resultSelection"
+                                        className="form-radio h-4 w-4"
+                                        checked={selectedResultId === (item.id || item._id)}
+                                        onChange={() => handleResultSelectionChange(item.id || item._id)}
+                                    />
+                                    <label
+                                        htmlFor={`result-${item.id || item._id}`}
+                                        className="text-blue-100 cursor-pointer"
+                                    >
+                                        {t('placeholders.srNo', { srNo: item.srNo })}
+                                    </label>
                                 </div>
                             ))}
                         </div>
@@ -179,13 +191,22 @@ const Page = () => {
                                 <InputComponent label={t('labels.underSection')} value={formData.underSection} disabled />
                                 {fields.map((field) => (
                                     <div key={field.name}>
-                                        <InputComponent label={field.label} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name, e.target.value)} />
+                                        <InputComponent
+                                            label={field.label}
+                                            value={formData[field.name as keyof typeof formData]}
+                                            setInput={(e) => handleInputChange(field.name, e.target.value)}
+                                        />
                                     </div>
                                 ))}
                                 {inputFields.map((item, index) => (
                                     <div key={index} className='flex flex-col gap-2'>
                                         <label className='text-nowrap text-blue-100' htmlFor={item.id}>{item.label}</label>
-                                        <input ref={item.ref} className='w-full text-blue-100 rounded-xl glass-effect px-2 py-1' id={item.id} type='file' />
+                                        <input
+                                            ref={item.ref}
+                                            className='w-full text-blue-100 rounded-xl glass-effect px-2 py-1'
+                                            id={item.id}
+                                            type='file'
+                                        />
                                     </div>
                                 ))}
                             </div>
