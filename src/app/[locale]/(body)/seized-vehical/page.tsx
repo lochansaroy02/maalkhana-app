@@ -68,6 +68,43 @@ const Page = () => {
     };
 
     const handleSave = async () => {
+        // --- START: VALIDATION LOGIC ---
+        const fieldLabels = {
+            firNo: t('labels.firNo'),
+            gdNo: t('labels.gdNo'),
+            vehicleType: t('labels.vehicleType'),
+            colour: t('labels.colour'),
+            registrationNo: t('labels.registrationNo'),
+            policeStation: t('labels.policeStation'),
+            caseProperty: t('labels.caseProperty'),
+        };
+
+        const requiredFields = [
+            { key: 'caseProperty', value: caseProperty },
+            { key: 'gdNo', value: formData.gdNo },
+            { key: 'vehicleType', value: formData.vehicleType },
+            { key: 'colour', value: formData.colour },
+            { key: 'policeStation', value: formData.policeStation },
+            { key: 'registrationNo', value: formData.registrationNo },
+        ];
+
+        // Conditionally require firNo
+        if (caseProperty !== 'unclaimed' && caseProperty !== 'mvAct') {
+            requiredFields.push({ key: 'firNo', value: formData.firNo });
+        }
+
+        const emptyFields = requiredFields
+            .filter(field => !field.value)
+            .map(field => fieldLabels[field.key as keyof typeof fieldLabels]);
+
+        if (emptyFields.length > 0) {
+            toast.error("Please enter all required entries");
+            return;
+        }
+        // --- END: VALIDATION LOGIC ---
+
+        if (isLoading) return;
+
         try {
             setIsLoading(true);
             const fullVehicleData = {

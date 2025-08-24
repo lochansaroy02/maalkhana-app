@@ -143,6 +143,33 @@ const Page = () => {
     };
 
     const handleSave = async () => {
+
+        if (loading) return;
+
+        const requiredFields: { key: string, value: any }[] = [
+            { key: 'caseProperty', value: formData.caseProperty },
+            { key: 'gdNo', value: formData.gdNo },
+            { key: 'gdDate', value: dateFields.gdDate },
+            { key: 'Year', value: formData.Year },
+            { key: 'policeStation', value: formData.policeStation },
+        ];
+
+        // Only require FIR No if it's not an "unclaimed" item
+        if (dropdownSelection !== 'unclaimed') {
+            requiredFields.push({ key: 'firNo', value: formData.firNo });
+        }
+
+        // Find which fields are empty and get their translated labels
+        const emptyFields = requiredFields
+            .filter(field => !field.value)
+            .map(field => t(`${baseKey}.fields.${fieldKeyMap[field.key]}`));
+
+        if (emptyFields.length > 0) {
+            // NOTE: You might need to add this translation key to your localization file.
+            // e.g., "requiredFieldsError": "Please fill out the following required fields"
+            toast.error('Please fill all required fields');
+            return;
+        }
         setLoading(true);
         try {
             if (dropdownSelection === 'other' && !entryType) {
