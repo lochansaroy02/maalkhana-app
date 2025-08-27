@@ -62,7 +62,7 @@ const ScannerDisplay = ({ result }: { result: any }) => {
             try {
                 // Fetch all records with the same FIR number
                 const response = await axios.get(
-                    `/api/barcode?dbName=${result.dbName}&firNo=${result.firNo}`
+                    `/api/barcode?dbName=${result.dbName}&firNo=${result.firNo}&srNo=${result.srNo}`
                 );
 
                 const responseData = response.data;

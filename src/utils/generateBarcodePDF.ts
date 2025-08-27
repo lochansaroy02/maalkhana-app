@@ -53,7 +53,7 @@ export const generateBarcodePDF = (entries: any) => {
 
         JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
-            width: 1.5,       // Thinner bars for a cleaner look with simpler data
+            width: 1.5,       
             height: 60,       // Internal height of the bars
             displayValue: false, // We add text manually for better control
         });
@@ -62,9 +62,7 @@ export const generateBarcodePDF = (entries: any) => {
 
         // Add the barcode image to the PDF
         doc.addImage(imageData, "JPEG", x, y, barcodeWidth, barcodeHeight);
-
-        // ✅ ADDED: Add firNo at the bottom of the barcode (no gap)
-        // Positioned relative to the bottom of the barcode image.
+        
         const textY = y + barcodeHeight + 3; // 3mm below the barcode
         doc.text(String(entry.firNo || ''), x + barcodeWidth / 2, textY, { align: 'center' });
 
