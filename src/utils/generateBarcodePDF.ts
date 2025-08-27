@@ -1,30 +1,18 @@
+import JsBarcode from "jsbarcode";
+import { jsPDF } from "jspdf";
 
-/**
- * @typedef {object} BarcodeEntry
- * @property {string | number} srNo - The serial number.
- * @property {string | number} firNo - The FIR number.
- * @property {string} dbName - The database name/type.
- */
+export const generateBarcodePDF = async (entries: any) => {
+    const doc = new jsPDF("p", "mm", "a4");
 
-/**
- * Generates a PDF document with a grid of barcodes.
- * @param {BarcodeEntry[]} entries - An array of objects, each containing data for one barcode.
- */
-export const generateBarcodePDF = (entries: any) => {
-    // Note: The jsPDF and JsBarcode functions are now available on the global window object.
-    const doc = new window.jspdf.jsPDF("p", "mm", "a4");
-
-    // --- Layout Configuration ---
     const barcodesPerRow = 4;
     const barcodesPerColumn = 10;
     const perPage = barcodesPerRow * barcodesPerColumn;
 
-    const barcodeWidth = 48; // mm
-    const barcodeHeight = 16; // mm
-    const horizontalMargin = 10; // mm (left/right margin of the page)
-    const verticalMargin = 15; // mm (top/bottom margin of the page)
-    const columnSpacing = 5; // mm (space between barcode columns)
-    const rowSpacing = 28; // mm (total vertical space for one barcode row, includes text)
+    const barcodeWidth = 50; // mm
+    const barcodeHeight = 15; // mm
+    const paddingX = 10; // mm
+    const paddingY = 15; // mm
+    const verticalSpacing = 25; // mm
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
@@ -35,39 +23,33 @@ export const generateBarcodePDF = (entries: any) => {
         const row = Math.floor(indexOnPage / barcodesPerRow);
         const col = indexOnPage % barcodesPerRow;
 
-        // Calculate position for the barcode image's top-left corner
-        const x = horizontalMargin + col * (barcodeWidth + columnSpacing);
-        const y = verticalMargin + row * rowSpacing;
+        const x = paddingX + col * (barcodeWidth + paddingX);
+        const y = paddingY + row * verticalSpacing;
 
-        // ✅ ADDED: Add srNo at the top of the barcode (no gap)
-        // Placing the text baseline at `y - 1` puts it directly above the barcode image.
+        // Add srNo at the top of the barcode
         doc.text(String(entry.srNo || ''), x + barcodeWidth / 2, y - 1, { align: 'center' });
 
         // --- Generate Barcode ---
         const canvas = document.createElement("canvas");
 
-        // ✅ FIXED: Encode a clean, simple string instead of JSON
-        // Format: dbname-firNo-srNo
+        // Format the barcode value as "dbName-firNo-srNo"
         const barcodeValue = `${entry.dbName || ''}-${entry.firNo || ''}-${entry.srNo || ''}`;
 
-        window.JsBarcode(canvas, barcodeValue, {
+        JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
-            width: 1.5,
-            height: 60,       // Internal height of the bars
-            displayValue: false, // We add text manually for better control
+            width: 2,
+            height: 80,
+            displayValue: false, // Don't display the human-readable text
         });
+        const imageData = canvas.toDataURL("image/png");
 
-        const imageData = canvas.toDataURL("image/jpeg");
+        doc.addImage(imageData, "PNG", x, y, barcodeWidth, barcodeHeight);
 
-        // Add the barcode image to the PDF
-        doc.addImage(imageData, "JPEG", x, y, barcodeWidth, barcodeHeight);
+        // Add firNo at the bottom of the barcode with 3mm space
+        doc.text(String(entry.firNo || ''), x + barcodeWidth / 2, y + barcodeHeight + 3, { align: 'center' });
 
-        const textY = y + barcodeHeight + 3; // 3mm below the barcode
-        doc.text(String(entry.firNo || ''), x + barcodeWidth / 2, textY, { align: 'center' });
-
-
-        // Add a new page if the current one is full and there are more entries
-        if ((i + 1) % perPage === 0 && i < entries.length - 1) {
+        // Add a new page if the current one is full
+        if ((i + 1) % perPage === 0 && i !== entries.length - 1) {
             doc.addPage();
         }
     }
