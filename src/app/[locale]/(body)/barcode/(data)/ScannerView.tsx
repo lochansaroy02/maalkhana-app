@@ -23,10 +23,7 @@ const ScannerView = () => {
                 dbType: resultObject.dbType || ''
             };
 
-            // Assuming you have these state setters from your component
-            // setScanResult(finalResult);
-            // setIsScanning(false);
-            // setScanError(null);
+      
 
             console.log("Scan successful:", finalResult);
 

@@ -2,9 +2,9 @@
 "use client";
 
 import { useState } from 'react';
-import ScannerDisplay from './(data)/ScannerDisplay';
-import BarcodeScanner from './(data)/BarcodeScanner';
 // Correct the import paths
+import BarcodeScanner from "./(data)/BarcodeScanner";
+import ScannerDisplay from "./(data)/ScannerDisplay";
 
 export default function App() {
     const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -14,7 +14,7 @@ export default function App() {
     // This function handles a successful scan result
     const handleScanSuccess = (decodedText: string) => {
         try {
-            // Your barcode data is a string like "dbname-firNo-srNo"
+            // Your barcode data is a string like "m-101/2025-1"
             const parts = decodedText.split('-');
             if (parts.length === 3) {
                 const [dbName, firNo, srNo] = parts;

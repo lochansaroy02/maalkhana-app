@@ -4,8 +4,8 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 
-// The next.js dynamic import and jspdf library are not supported directly in the Canvas environment,
-// so we'll load the library via a script tag.
+// We must load external libraries via a script tag in a useEffect hook
+// because direct imports from node_modules are not supported in this environment.
 interface Window {
     jspdf: any;
 }
@@ -61,7 +61,6 @@ const ScannerDisplay = ({ result }: { result: any }) => {
 
             try {
                 // Fetch all records with the same FIR number
-                // The URL was updated from '/api/barcode' to '/api/seized'
                 const response = await axios.get(
                     `/api/barcode?dbName=${result.dbName}&firNo=${result.firNo}`
                 );
