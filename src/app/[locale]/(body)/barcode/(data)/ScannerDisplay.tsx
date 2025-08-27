@@ -14,10 +14,12 @@ const LuFileJson = (props: any) => (
 );
 
 const ScannerDisplay = ({ result }: {
+
+
     result: any
 }) => {
     if (!result) return null;
-
+    console.log(result)
     return (
         <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md shadow-sm text-left mb-6">
             <h3 className="font-bold text-xl mb-4 text-gray-800 border-b pb-2">Scanned Asset Details</h3>
