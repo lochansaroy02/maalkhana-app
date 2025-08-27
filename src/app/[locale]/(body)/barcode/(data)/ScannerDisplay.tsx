@@ -1,55 +1,22 @@
+// barcode/(data)/ScannerDisplay.tsx
 "use client";
 
-import type { ScanResult } from "@/utils/parseBarcode"; // Import the type
-import { useEffect, useState } from "react";
+// Use inline SVG icons to avoid external library dependencies.
+const LuFileJson = (props: any) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <path d="M8 12h3"></path>
+        <path d="M8 18h3"></path>
+        <path d="M15 12h1"></path>
+        <path d="M15 18h1"></path>
+    </svg>
+);
 
-// Interface for the data fetched from your API
-interface FetchedEntryData {
-    entryId: string;
-    itemName: string;
-    caseDetails: string;
-}
-
-// Props for this component
-interface ScannerDisplayProps {
-    result: ScanResult | null;
-}
-
-const ScannerDisplay = ({ result }: ScannerDisplayProps) => {
-    const [fetchedData, setFetchedData] = useState<FetchedEntryData | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        const getData = async () => {
-            if (!result) {
-                setFetchedData(null);
-                setError(null);
-                return;
-            }
-
-            setIsLoading(true);
-            setError(null);
-            setFetchedData(null);
-
-            try {
-                const response = await fetch(`/api/get-entry?srNo=${result.srNo}&firNo=${result.firNo}&dbName=${result.dbName}`);
-                if (!response.ok) {
-                    throw new Error(`Record not found or server error: ${response.statusText}`);
-                }
-                const data: FetchedEntryData = await response.json();
-                setFetchedData(data);
-            } catch (err) {
-                console.error("API call failed:", err);
-                setError(err instanceof Error ? err.message : "An unknown error occurred.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        getData();
-    }, [result]);
-
-    if (!result) return null; // Don't render anything if there's no result
+const ScannerDisplay = ({ result }: {
+    result: any
+}) => {
+    if (!result) return null;
 
     return (
         <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-md shadow-sm text-left mb-6">
@@ -67,18 +34,6 @@ const ScannerDisplay = ({ result }: ScannerDisplayProps) => {
                     <label className="text-sm font-semibold text-gray-600 mb-1">Scanned Serial No.</label>
                     <p className="text-lg bg-white p-2 rounded-md border text-gray-800 border-gray-200">{result.srNo || 'N/A'}</p>
                 </div>
-            </div>
-            <div className="mt-4 border-t pt-4">
-                {isLoading && <p className="text-blue-600 animate-pulse">Loading database record...</p>}
-                {error && <p className="text-red-600 font-semibold">⚠️ Error: {error}</p>}
-                {fetchedData && (
-                    <div className="space-y-4 text-gray-800">
-                        <h4 className="font-bold text-lg">Database Record Found:</h4>
-                        <p><strong>Entry ID:</strong> {fetchedData.entryId}</p>
-                        <p><strong>Item Name:</strong> {fetchedData.itemName}</p>
-                        <p><strong>Case Details:</strong> {fetchedData.caseDetails}</p>
-                    </div>
-                )}
             </div>
         </div>
     );

@@ -1,37 +1,89 @@
+// barcode/page.tsx
 "use client";
 
-import ScannerView from "./(data)/ScannerView";
-import { useScript } from "./(data)/useScript";
+import { useState } from 'react';
+import ScannerDisplay from './(data)/ScannerDisplay';
+import BarcodeScanner from './(data)/BarcodeScanner';
+// Correct the import paths
 
 export default function App() {
-    // Load external scripts required for the application
-    const jsBarcodeStatus = useScript('https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js', 'JsBarcode');
-    const html5QrcodeStatus = useScript('https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js', 'Html5Qrcode');
-    const jspdfStatus = useScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf');
+    const [isScanning, setIsScanning] = useState<boolean>(false);
+    const [scanResult, setScanResult] = useState<any | null>(null);
+    const [scanError, setScanError] = useState<string | null>(null);
 
-    const scriptsReady = jsBarcodeStatus === 'ready' && html5QrcodeStatus === 'ready' && jspdfStatus === 'ready';
+    // This function handles a successful scan result
+    const handleScanSuccess = (decodedText: string) => {
+        try {
+            // Your barcode data is a string like "dbname-firNo-srNo"
+            const parts = decodedText.split('-');
+            if (parts.length === 3) {
+                const [dbName, firNo, srNo] = parts;
+                setScanResult({ dbName, firNo, srNo });
+                setScanError(null);
+                setIsScanning(false);
+            } else {
+                setScanError("Invalid barcode format. Expected 'dbname-firNo-srNo'.");
+                setIsScanning(false);
+            }
+        } catch (err) {
+            setScanError("Failed to process scanned data.");
+            setIsScanning(false);
+        }
+    };
 
-    // Display a loading screen until all external scripts are ready.
-    if (!scriptsReady) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
-                <div className="text-center">
-                    <h1 className="text-2xl font-semibold text-gray-700">Loading Libraries...</h1>
-                    <p className="text-gray-500">Please wait a moment.</p>
-                </div>
-            </div>
-        );
-    }
+    // This function handles any errors during the scan
+    const handleScanError = (errorMessage: string) => {
+        setScanError(errorMessage);
+        setIsScanning(false);
+    };
+
+    // Resets the state to start a new scan
+    const resetScanner = () => {
+        setScanResult(null);
+        setScanError(null);
+        setIsScanning(true);
+    };
 
     return (
-        <div className="bg-gray-50 min-h-screen font-sans">
-            <div className="container mx-auto p-4 md:p-8 max-w-2xl">
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen font-sans text-gray-800 p-4 sm:p-8 flex flex-col items-center">
+            <div className="max-w-4xl w-full bg-white rounded-xl shadow-2xl p-6 sm:p-10 transition-all duration-300 transform scale-95 hover:scale-100">
+
                 <header className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-gray-800">Maalkhana Asset Manager</h1>
-                    <p className="text-gray-500 mt-2">Generate and Scan Asset Barcodes</p>
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-indigo-700">Maalkhana Asset Manager</h1>
+                    <p className="text-md sm:text-lg text-gray-600 mt-2">Generate and Scan Asset Barcodes</p>
                 </header>
                 <main className="space-y-8">
-                    <ScannerView />
+                    <section className="bg-white p-6 rounded-xl shadow-lg">
+                        <h2 className="text-2xl font-semibold text-gray-700 border-b pb-3 mb-4">Scan Asset</h2>
+
+                        {isScanning ? (
+                            <div>
+                                <BarcodeScanner onScanSuccess={handleScanSuccess} onScanError={handleScanError} />
+                                <button
+                                    onClick={() => setIsScanning(false)}
+                                    className="mt-4 w-full bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="text-center">
+                                {scanResult && <ScannerDisplay result={scanResult} />}
+                                {scanError && (
+                                    <div className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mb-4">
+                                        <h3 className="font-bold text-lg">Scan Error</h3>
+                                        <p>{scanError}</p>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={resetScanner}
+                                    className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out transform hover:scale-105"
+                                >
+                                    {scanResult ? 'Scan Another Item' : 'Start Camera Scan'}
+                                </button>
+                            </div>
+                        )}
+                    </section>
                 </main>
             </div>
         </div>

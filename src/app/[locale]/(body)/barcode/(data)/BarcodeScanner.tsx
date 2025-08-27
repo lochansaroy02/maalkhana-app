@@ -1,67 +1,113 @@
-import { useEffect, useRef } from "react";
+// barcode/(data)/BarcodeScanner.tsx
+"use client";
 
-const BarcodeScanner = ({ onScanSuccess, onScanError }: any) => {
-    const scannerRegionId = "barcode-scanner-region";
-    const html5QrcodeRef = useRef<any>(null);
+import { useEffect, useRef, useState } from "react";
+
+// Props interface for the BarcodeScanner component to ensure type safety.
+interface BarcodeScannerProps {
+    onScanSuccess: (decodedText: string) => void;
+    onScanError: (errorMessage: string) => void;
+}
+
+// Use inline SVG icons and type the props to avoid external library dependencies.
+const LuScan = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+        <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+        <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+        <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+    </svg>
+);
+
+const BarcodeScanner = ({ onScanSuccess, onScanError }: BarcodeScannerProps) => {
+    // Add explicit types to useRef to connect them to the DOM elements and API objects.
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+
+    const barcodeDetectorRef = useRef<any | null>(null);
+    const intervalRef = useRef<number | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (!isMobile) {
-            onScanError("Barcode scanning is only available on mobile devices.");
-            return;
-        }
-        if (typeof window.Html5Qrcode === 'undefined') {
-            onScanError("Scanner library not loaded.");
+        // Initialize BarcodeDetector once on component mount if supported by the browser.
+        if ('BarcodeDetector' in window) {
+            //@ts-ignore
+            barcodeDetectorRef.current = new window.BarcodeDetector();
+        } else {
+            onScanError("Your browser does not support the native BarcodeDetector API. Please try a different browser like Chrome or Edge.");
             return;
         }
 
-        const setupScanner = async () => {
-            if (!html5QrcodeRef.current) {
-                html5QrcodeRef.current = new window.Html5Qrcode(scannerRegionId, {
-                    verbose: true,
-                    formatsToSupport: [window.Html5QrcodeSupportedFormats.CODE_128]
-                });
-            }
-            const html5Qrcode = html5QrcodeRef.current;
-
+        let stream: MediaStream | null = null;
+        const startScan = async () => {
+            setIsLoading(true);
             try {
-                const devices = await window.Html5Qrcode.getCameras();
-                if (devices && devices.length) {
-                    const backCamera = devices.find((device: { label: string }) => device.label.toLowerCase().includes('back'));
-                    const cameraId = backCamera ? backCamera.id : devices[0].id;
-                    await html5Qrcode.start(
-                        cameraId,
-                        { fps: 10, qrbox: { width: 280, height: 150 } },
-                        (decodedText: string) => {
-                            onScanSuccess(decodedText);
-                            if (html5Qrcode?.getState() === window.Html5QrcodeScannerState.SCANNING) {
-                                html5Qrcode.stop();
+                // Request access to the camera with the environment (back) facing mode
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    await videoRef.current.play();
+                    setIsLoading(false);
+
+                    // Start scanning every 500ms
+                    intervalRef.current = window.setInterval(async () => {
+                        if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+                            try {
+                                const barcodes = await (barcodeDetectorRef.current as any).detect(videoRef.current);
+                                if (barcodes.length > 0) {
+                                    onScanSuccess(barcodes[0].rawValue);
+                                    // Stop scanning as soon as a barcode is detected
+                                    stopScan();
+                                }
+                            } catch (error) {
+                                // Ignore detection errors to keep scanning
+                                console.error("Error during barcode detection:", error);
                             }
-                        },
-                        () => { }
-                    );
-                } else {
-                    onScanError("No cameras found on this device.");
+                        }
+                    }, 500);
                 }
             } catch (err) {
-                const errorMessage = err instanceof Error ? err.message : String(err);
-                onScanError(`Scanner Error: ${errorMessage}. Please ensure camera permissions are granted.`);
+                // Handle camera access errors
+                console.error("Camera access error:", err);
+                onScanError("Failed to access camera. Please ensure permissions are granted.");
             }
         };
 
-        setupScanner();
-
-        return () => {
-            if (html5QrcodeRef.current?.isScanning) {
-                html5QrcodeRef.current.stop().catch((err: Error) => console.error("Error stopping scanner", err));
+        const stopScan = () => {
+            if (intervalRef.current !== null) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
             }
         };
+
+        startScan();
+
+        // Cleanup function to stop the camera when the component unmounts
+        return () => stopScan();
     }, [onScanSuccess, onScanError]);
 
     return (
-        <div className="p-4 border rounded-lg bg-gray-100">
-            <div id={scannerRegionId} style={{ width: '100%', minHeight: '300px' }}></div>
+        <div className="flex flex-col items-center justify-center border-4 border-dashed border-gray-300 rounded-xl p-4 min-h-[300px] relative">
+            {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-50/70 z-10">
+                    <p className="text-gray-500 font-semibold text-center">Loading Camera...</p>
+                </div>
+            )}
+            <video
+                ref={videoRef}
+                className="w-full h-full object-cover rounded-xl"
+                playsInline
+                style={{ display: isLoading ? 'none' : 'block' }}
+            />
+            {!isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-2/3 h-1/4 border-2 border-green-500 rounded-md animate-pulse"></div>
+                </div>
+            )}
         </div>
     );
 };
-export default BarcodeScanner
+
+export default BarcodeScanner;

@@ -1,373 +1,284 @@
 "use client";
-import InputComponent from '@/components/InputComponent';
-import { Button } from '@/components/ui/button';
-import DatePicker from '@/components/ui/datePicker';
-import DropDown from '@/components/ui/DropDown';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useAuthStore } from '@/store/authStore';
-import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
-import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
-import { Trash } from 'lucide-react';
-import { useTranslations } from 'next-intl';
-import { useRef, useState } from 'react';
-import toast, { LoaderIcon } from 'react-hot-toast';
 
-// TODO: Import your actual useTranslation hook here
-// import { useTranslation } from 'path/to/your/i18n/hook';
+import InputComponent from "@/components/InputComponent";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import DatePicker from "@/components/ui/datePicker";
+import DropDown from "@/components/ui/DropDown";
+import { useAuthStore } from "@/store/authStore";
+import type { MovementEntry } from "@/store/movementStore";
+import { useMovementStore } from "@/store/movementStore";
+import { useSeizedVehicleStore } from "@/store/siezed-vehical/seizeStore";
+import { uploadToCloudinary } from "@/utils/uploadToCloudnary";
+import { LoaderIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
+import React, { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 
-const Page = () => {
-    // In a real app, this hook would come from your i18n library (e.g., 'next-intl' or 'react-i18next').
-    const t = useTranslations('entry');
-    const baseKey = 'malkhanaEntryForm';
+const Page: React.FC = () => {
+    // i18n: Initialize translation hook from next-intl
+    const t = useTranslations('malkhanaMovementForm');
 
+    // --- STATE MANAGEMENT ---
     const { user } = useAuthStore();
-    const { addMaalkhanaEntry, updateMalkhanaEntry, getByFIR } = useMaalkhanaStore();
+    const { updateMovementEntry, fetchByFIR, entry } = useMovementStore();
+    const { updateVehicalEntry } = useSeizedVehicleStore();
 
-    // State to hold the array of data fetched by FIR No.
-    const [firData, setFirData] = useState<any[]>([]);
-    const [photoUrl, SetPhotoUrl] = useState("");
-    const [dropdownSelection, setDropdownSelection] = useState('');
-    const [entryType, setEntryType] = useState('');
-    const [wine, setWine] = useState<number>(0);
-    const [cash, setCash] = useState<number>(0);
-    const [wineType, setWineType] = useState<string>('');
-    const [status, setStatus] = useState<string>('');
-    const [description, setDescription] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [existingId, setExistingId] = useState<string>("");
-    const [yellowItemPrice, setYellowItemPrice] = useState<number>(0);
+    // Loading and Page State
+    const [isLoading, setIsLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
+    const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
 
-    const [dateFields, setDateFields] = useState<{ gdDate?: Date }>({
-        gdDate: new Date(),
+    // State for Search and Search Results
+    const [type, setType] = useState<string>("");
+    const [searchFirNo, setSearchFirNo] = useState("");
+    const [searchSrNo, setSearchSrNo] = useState("");
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [selectedResultId, setSelectedResultId] = useState<string>('');
+
+    // State for Form Data
+    const [isReturned, setIsReturned] = useState(false);
+    const [returnBackFrom, setReturnBackFrom] = useState("");
+    const [caseProperty, setCaseProperty] = useState("");
+    const [formData, setFormData] = useState<Partial<MovementEntry>>({
+        srNo: "", name: "", policeStation: "", firNo: "", underSection: "", takenOutBy: "", moveTrackingNo: "", movePurpose: "", receivedBy: "",
     });
-
-    // --- NEW ---: State to track the selected Sr. No. from the radio buttons
-    const [selectedSrNo, setSelectedSrNo] = useState<string>('');
-
-    const [formData, setFormData] = useState({
-        firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '',
+    const [dateFields, setDateFields] = useState<{ moveDate: Date; returnDate: Date }>({
+        moveDate: new Date(), returnDate: new Date(),
     });
+    const photoRef = useRef<HTMLInputElement | null>(null);
+    const documentRef = useRef<HTMLInputElement | null>(null);
 
-    const populateForm = (data: any) => {
-        if (!data) return;
-        setExistingId(data.id || "");
+    // --- FORM LOGIC ---
+    const handleInputChange = (field: keyof MovementEntry | string, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleDateChange = (fieldName: "moveDate" | "returnDate", date: Date | undefined) => {
+        const actualDate = date ?? new Date();
+        setDateFields((prev) => ({ ...prev, [fieldName]: actualDate, }));
+        handleInputChange(fieldName, actualDate.toISOString());
+    };
+
+    const fillForm = (entryData: any) => {
+        if (!entryData || Object.keys(entryData).length === 0) return;
+        const id = entryData._id ?? entryData.id;
+        setExistingEntryId(id);
+        setSelectedResultId(id);
         setFormData({
-            firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', caseProperty: data.caseProperty || '', gdNo: data.gdNo || '', Year: data.Year || '', policeStation: data.policeStation || '', IOName: data.IOName || '', vadiName: data.vadiName || '', HM: data.HM || '', accused: data.accused || '', place: data.place || '', boxNo: data.boxNo || '', courtNo: data.courtNo || '', courtName: data.courtName || '',
+            srNo: entryData.srNo ?? "", name: entryData.name ?? "", firNo: entryData.firNo ?? "", underSection: entryData.underSection ?? "", takenOutBy: entryData.takenOutBy ?? "", moveTrackingNo: entryData.moveTrackingNo ?? "", movePurpose: entryData.movePurpose ?? "", receivedBy: entryData.receivedBy ?? "",
         });
-        setStatus(data.status || '');
-        setYellowItemPrice(data.yellowItemPrice || 0)
-        setWine(data.wine || 0);
-        setCash(data.cash || 0);
-        setWineType(data.wineType || '');
+        setCaseProperty(entryData.caseProperty ?? "");
+        setReturnBackFrom(entryData.returnBackFrom ?? "");
+        setIsReturned(entryData.isReturned ?? false);
+        setDateFields({
+            moveDate: entryData.moveDate ? new Date(entryData.moveDate) : new Date(),
+            returnDate: entryData.returnDate ? new Date(entryData.returnDate) : new Date(),
+        });
+    };
 
-        const entryTypeKey = data.entryTypeKey || '';
-        setDropdownSelection(entryTypeKey);
-        if (entryTypeKey === 'other') {
-            setEntryType(data.entryType);
-        } else {
-            setEntryType(t(`${baseKey}.entryType.options.${entryTypeKey}`));
+    const resetAll = () => {
+        setIsLoading(false); setIsFetching(false); setExistingEntryId(null); setType(''); setSearchFirNo(''); setSearchSrNo(''); setSearchResults([]); setSelectedResultId('');
+        setFormData({ srNo: "", name: "", moveDate: "", policeStation: "", firNo: "", underSection: "", takenOutBy: "", moveTrackingNo: "", movePurpose: "", receivedBy: "", returnDate: "", });
+        setDateFields({ moveDate: new Date(), returnDate: new Date() });
+        setReturnBackFrom(""); setCaseProperty(""); setIsReturned(false);
+        if (photoRef.current) photoRef.current.value = "";
+        if (documentRef.current) documentRef.current.value = "";
+    };
+
+
+    useEffect(() => {
+        if (entry && !Array.isArray(entry) && Object.keys(entry).length > 0) {
+            fillForm(entry);
         }
+    }, [entry]);
 
-        setDescription(data.description || '');
-        setDateFields({ gdDate: data.gdDate ? new Date(data.gdDate) : new Date() });
-        SetPhotoUrl(data.photoUrl || "");
-    };
+    // ✅ FIX: This function's logic now mirrors the working reference component.
+    const getByFir = async () => {
+        if (!type) return toast.error(t('toasts.selectType'));
+        if (!searchFirNo && !searchSrNo) return toast.error(t('toasts.enterFirOrSr'));
 
-    const clearForm = () => {
-        // Preserve firNo for user convenience when switching between Sr. Nos.
-        setFormData(prev => ({
-            firNo: prev.firNo,
-            srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '',
-        }));
-        setExistingId("");
-        setStatus(''); setWine(0); setCash(0); setWineType(''); setYellowItemPrice(0); setDropdownSelection(''); setEntryType(''); setDescription('');
-        setDateFields({ gdDate: new Date() });
-        SetPhotoUrl("");
-        if (photoRef.current) photoRef.current.value = '';
-    };
+        setIsFetching(true);
+        setSearchResults([]);
+        setExistingEntryId(null);
+        setSelectedResultId('');
 
-    const entryOptionKeys = ["malkhana", "fsl", "kurki", "cash", "wine", "unclaimed", "other", "yellowItem"];
-    const entryOptions = entryOptionKeys.map(key => ({
-        value: key,
-        label: t(`${baseKey}.entryType.options.${key}`)
-    }));
+        try {
+            const data = await fetchByFIR(user?.id, type, searchFirNo, searchSrNo);
 
-    const statusOptionKeys = ["destroy", "nilami", "pending", "other", "onCourt"];
-    const statusOptions = statusOptionKeys.map(key => ({
-        value: key,
-        label: t(`${baseKey}.statusOptions.${key}`)
-    }));
-
-    const wineTypeOptions = [
-        { value: 'desi', label: t(`${baseKey}.wineSection.options.desi`) },
-        { value: 'angrezi', label: t(`${baseKey}.wineSection.options.angrezi`) }
-    ];
-
-    const fieldKeyMap: { [key: string]: string } = {
-        firNo: 'firNo', srNo: 'srNo', caseProperty: 'caseProperty', gdNo: 'gdNo', gdDate: 'gdDate', Year: 'year', policeStation: 'policeStation', IOName: 'ioName', vadiName: 'vadiName', status: 'status', HM: 'hm', accused: 'accused', underSection: 'underSection', description: 'description', place: 'place', boxNo: 'boxNo', courtNo: 'courtNo', courtName: 'courtName'
-    };
-
-    const fields = Object.keys(fieldKeyMap).map(fieldName => ({
-        name: fieldName,
-        label: t(`${baseKey}.fields.${fieldKeyMap[fieldName]}`),
-        type: (fieldName === 'gdDate') ? 'date' : (fieldName === 'status') ? 'dropdown' : (fieldName === 'description') ? 'textarea' : 'text',
-        options: (fieldName === 'status') ? statusOptions : undefined
-    }));
-
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
-    const handleDateChange = (fieldName: string, date: Date | undefined) => {
-        setDateFields(prev => ({ ...prev, [fieldName]: date }));
-    };
-
-    const handleEntryTypeSelect = (value: string) => {
-        setDropdownSelection(value);
-        if (value === 'other') {
-            setEntryType('');
-        } else {
-            setEntryType(t(`${baseKey}.entryType.options.${value}`));
+            if (data && data.length > 0) {
+                if (data.length > 1) {
+                    // Multiple records found, show radio buttons
+                    setSearchResults(data);
+                    toast.success(t('toasts.recordsFound', { count: data.length }));
+                } else {
+                    // Exactly one record found, fill the form directly
+                    fillForm(data[0]);
+                    toast.success(t('toasts.fetchSuccess'));
+                }
+            } else {
+                // No records found
+                toast.error(t('toasts.noRecord'));
+            }
+        } catch (error) {
+            console.error("Error fetching by FIR:", error);
+            toast.error(t('toasts.fetchFailed'));
+        } finally {
+            setIsFetching(false);
         }
     };
 
-    const photoRef = useRef<HTMLInputElement>(null);
-
-    // --- NEW ---: Handler for when a user selects an Sr. No. radio button
-    const handleSrNoSelectionChange = (srNo: string) => {
-        setSelectedSrNo(srNo);
-        const selectedData = firData.find((item: any) => item.srNo === srNo);
-        if (selectedData) {
-            populateForm(selectedData);
-        }
+    const handleResultSelectionChange = (resultId: string) => {
+        setSelectedResultId(resultId);
+        const selectedData = searchResults.find(item => (item.id || item._id) === resultId);
+        if (selectedData) fillForm(selectedData);
     };
 
     const handleSave = async () => {
-        if (loading) return;
-
-        const requiredFields: { key: string, value: any }[] = [
-            { key: 'caseProperty', value: formData.caseProperty },
-            { key: 'gdNo', value: formData.gdNo },
-            { key: 'gdDate', value: dateFields.gdDate },
-            { key: 'Year', value: formData.Year },
-            { key: 'policeStation', value: formData.policeStation },
-        ];
-
-        if (dropdownSelection !== 'unclaimed') {
-            requiredFields.push({ key: 'firNo', value: formData.firNo });
-        }
-
-        const emptyFields = requiredFields
-            .filter(field => !field.value)
-            .map(field => t(`${baseKey}.fields.${fieldKeyMap[field.key]}`));
-
-        if (emptyFields.length > 0) {
-            toast.error('Please fill all required fields');
-            return;
-        }
-
-        setLoading(true);
+        if (!existingEntryId) return toast.error(t('toasts.noEntrySelected'));
+        setIsLoading(true);
         try {
-            if (dropdownSelection === 'other' && !entryType) {
-                toast.error(t(`${baseKey}.toasts.specifyOtherError`));
-                setLoading(false);
-                return;
-            }
+            const photoUrl = photoRef.current?.files?.[0] ? await uploadToCloudinary(photoRef.current.files[0]) : undefined;
+            const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudinary(documentRef.current.files[0]) : undefined;
+
             const fullData = {
-                ...formData, status, wine, cash, wineType, entryType, entryTypeKey: dropdownSelection, userId: user?.id, photoUrl, description, yellowItemPrice, gdDate: dateFields.gdDate?.toISOString() ?? '',
+                ...formData, moveDate: dateFields.moveDate.toISOString(), returnDate: dateFields.returnDate.toISOString(), returnBackFrom, documentUrl, photoUrl, isReturned, caseProperty, isMovement: true,
             };
-            let success = false;
-            if (existingId) {
-                success = await updateMalkhanaEntry(existingId, fullData);
-                toast.success(t(`${baseKey}.toasts.updateSuccess`));
-            } else {
-                success = await addMaalkhanaEntry(fullData);
-                toast.success(t(`${baseKey}.toasts.addSuccess`));
-            }
+
+            const success = (type === "malkhana")
+                ? await updateMovementEntry(existingEntryId, fullData)
+                : (type === "seizedVehicle")
+                    ? await updateVehicalEntry(existingEntryId, fullData)
+                    : false;
+
             if (success) {
-                // --- MODIFIED ---: Reset all related states on successful save
-                clearForm();
-                setFormData({ firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '' });
-                setFirData([]);
-                setSelectedSrNo('');
+                toast.success(t('toasts.updateSuccess'));
+                resetAll();
+            } else {
+                toast.error(t('toasts.updateFailed'));
             }
         } catch (error) {
             console.error("Save error:", error);
+            toast.error(t('toasts.saveFailed'));
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
-    // --- MODIFIED ---: Updated logic to handle single vs. multiple results
-    const handleGetByFir = async () => {
-        setSelectedSrNo('');
-        const response = await getByFIR(formData.firNo, user?.id);
-        if (response?.success) {
-            const dataArray = Array.isArray(response.data) ? response.data : [response.data];
-            setFirData(dataArray);
+    const fields = [
+        { name: "underSection", label: t('labels.underSection') },
+        { name: "name", label: t('labels.name') },
+        { name: "moveDate", label: t('labels.moveDate'), type: "date" },
+        { name: "takenOutBy", label: t('labels.takenOutBy') },
+        { name: "moveTrackingNo", label: t('labels.moveTrackingNo') },
+        { name: "movePurpose", label: t('labels.movePurpose') },
+        { name: "returnDate", label: t('labels.returnDate'), type: "date" },
+        { name: "returnBackFrom", label: t('labels.returnBackFrom') },
+        { name: "receivedBy", label: t('labels.receivedBy') },
+    ];
 
-            if (dataArray.length === 1) {
-                // If only one result, populate the form automatically
-                populateForm(dataArray[0]);
-                setSelectedSrNo(dataArray[0].srNo);
-            } else {
-                // If multiple results, clear the form to await user selection
-                clearForm();
-            }
-        } else {
-            setFirData([]);
-            toast.error(t(`${baseKey}.toasts.firNotFound`));
-        }
-    };
+    const typeOptions = Object.keys(t.raw('options.type')).map(key => ({
+        value: key,
+        label: t(`options.type.${key}`)
+    }));
 
-    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        try {
-            setLoading(true);
-            const uploadedUrl = await uploadToCloudinary(file);
-            SetPhotoUrl(uploadedUrl);
-            toast.success(t(`${baseKey}.toasts.photoUploadSuccess`));
-        } catch (err) {
-            console.error(err);
-            toast.error(t(`${baseKey}.toasts.photoUploadError`));
-        } finally {
-            setLoading(false);
-        }
-    };
+    const returnBackOptions = Object.keys(t.raw('options.returnFrom')).map(key => ({
+        value: key,
+        label: t(`options.returnFrom.${key}`)
+    }));
 
-    const handlePrint = () => {
-        const fullData = {
-            ...formData, status, wine, cash, wineType, entryType, photoUrl, description, gdDate: dateFields.gdDate?.toISOString() ?? '',
-        };
-        if (!fullData.firNo && !fullData.srNo) {
-            toast.error(t(`${baseKey}.toasts.printError`));
-            return;
-        }
-        sessionStorage.setItem('printableEntryData', JSON.stringify(fullData));
-        window.open('/details', '_blank');
-    };
+    const inputFields = [
+        { label: t('labels.uploadPhoto'), id: "photo", ref: photoRef },
+        { label: t('labels.uploadDocument'), id: "document", ref: documentRef },
+    ];
 
     return (
-        <div className='glass-effect'>
-            <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
-                <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>{t(`${baseKey}.title`)}</h1>
-            </div>
-            <div className='px-8 py-4 rounded-b-md'>
-                <div className='py-2 flex items-end gap-6'>
-                    <div className='flex items-end gap-6 w-3/4'>
-                        <div className={dropdownSelection === 'other' ? 'w-1/2' : 'w-1/2'}>
-                            <DropDown label={t(`${baseKey}.entryType.label`)} selectedValue={dropdownSelection} options={entryOptions} handleSelect={handleEntryTypeSelect} />
-                        </div>
-                        {dropdownSelection === 'other' && (
-                            <div className='w-1/2'>
-                                <InputComponent label={t(`${baseKey}.entryType.specifyOther`)} value={entryType} setInput={(e) => setEntryType(e.target.value)} />
-                            </div>
-                        )}
-                        {dropdownSelection === 'yellowItem' && (
-                            <div className='w-1/2'>
-                                <InputComponent label={t(`${baseKey}.entryType.yellowItemPrice`)} value={yellowItemPrice} setInput={(e) => setYellowItemPrice(Number(e.target.value))} />
-                            </div>
-                        )}
-                    </div>
-                    <div className={`w-full ml-6 gap-6 ${dropdownSelection === 'wine' ? "flex" : "hidden"} items-center`}>
-                        <DropDown label={t(`${baseKey}.wineSection.typeLabel`)} selectedValue={wineType} options={wineTypeOptions} handleSelect={setWineType} />
-                    </div>
-                    <div className={`w-full ml-6 gap-6 ${dropdownSelection === 'wine' ? "flex" : "hidden"} items-center`}>
-                        <label className='text-blue-100'>{t(`${baseKey}.wineSection.quantityLabel`)}</label>
-                        <Input type='number' value={wine} onChange={(e) => setWine(Number(e.target.value))} />
-                    </div>
-                    <div className={`w-3/4 ml-18 ${dropdownSelection === 'cash' ? "flex flex-col" : "hidden"}`}>
-                        <label className='text-blue-100'>{t(`${baseKey}.cashSection.label`)}</label>
-                        <Input className='text-blue-100' type='number' value={cash} onChange={(e) => setCash(Number(e.target.value))} />
-                    </div>
+        <div>
+            <div className="glass-effect">
+                <div className="bg-maroon rounded-t-xl py-4 border-b border-white/50 flex justify-center">
+                    <h1 className="text-2xl uppercase text-cream font-semibold">{t('title')}</h1>
                 </div>
+                <div className="px-8 py-4 rounded-b-md">
+                    <div className='w-full items-center gap-4 flex justify-center mb-4'>
+                        <label className="text-blue-100 font-semibold text-nowrap">{t('labels.selectType')}</label>
+                        <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
+                    </div>
+                    <hr className="border-gray-600 my-4" />
+                    <div className='mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-end'>
+                        <InputComponent label={t('labels.firNo')} value={searchFirNo} setInput={(e) => setSearchFirNo(e.target.value)} />
+                        <InputComponent label={t('labels.orSrNo')} value={searchSrNo} setInput={(e) => setSearchSrNo(e.target.value)} />
+                        <div className="md:col-span-2 flex justify-center">
+                            <Button onClick={getByFir} className='bg-blue-600 w-1/2' disabled={isFetching || !type}>
+                                {isFetching ? <LoaderIcon className='animate-spin' /> : t('buttons.fetchRecord')}
+                            </Button>
+                        </div>
+                    </div>
 
-                <div className='grid lg:grid-cols-2 gap-2'>
-                    {fields.map(field => {
-                        if (field.name === 'firNo' && dropdownSelection === "unclaimed") return null;
-
-                        // --- NEW ---: Conditional rendering logic for the Sr. No. field
-                        if (field.name === 'srNo') {
-                            // If more than one entry exists for the FIR, show radio buttons
-                            if (firData.length > 1) {
-                                return (
-                                    <div key="srNo-radios" className="col-span-2 flex flex-col gap-1">
-                                        <label className='text-blue-100'>{t(`${baseKey}.fields.selectSrNo`)}</label>
-                                        <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
-                                            {firData.filter((item: any) => item && item.srNo).map((item: any) => (
-                                                <div key={item.id || item.srNo} className="flex items-center gap-2">
-                                                    <input
-                                                        type="radio"
-                                                        id={`srNo-${item.srNo}`}
-                                                        name="srNoSelection"
-                                                        className="form-radio h-4 w-4"
-                                                        checked={selectedSrNo === item.srNo}
-                                                        onChange={() => handleSrNoSelectionChange(item.srNo)}
-                                                    />
-                                                    <label htmlFor={`srNo-${item.srNo}`} className="text-blue-100 cursor-pointer">{item.srNo}</label>
-                                                </div>
-                                            ))}
-                                        </div>
+                    {searchResults.length > 1 && (
+                        <div className="my-4 col-span-2 flex flex-col gap-1">
+                            <label className='text-blue-100'>{t('labels.multipleRecords')}</label>
+                            <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {searchResults.map((item: any) => (
+                                    <div key={item.id || item._id} className="flex items-center gap-2">
+                                        <input type="radio" id={`result-${item.id || item._id}`} name="resultSelection" className="form-radio h-4 w-4" checked={selectedResultId === (item.id || item._id)} onChange={() => handleResultSelectionChange(item.id || item._id)} />
+                                        <label htmlFor={`result-${item.id || item._id}`} className="text-blue-100 cursor-pointer">{t('placeholders.srNo', { srNo: item.srNo })}</label>
                                     </div>
-                                );
-                            } else {
-                                // Otherwise, show the standard input field
-                                return <InputComponent key={field.name} label={field.label} value={formData.srNo} setInput={(e) => handleInputChange(field.name, e.target.value)} />;
-                            }
-                        }
-                        if (field.type === 'dropdown') {
-                            return <DropDown key={field.name} label={field.label} selectedValue={status} options={field.options || []} handleSelect={setStatus} />;
-                        }
-                        if (field.type === 'textarea') {
-                            return (
-                                <div key={field.name} className='flex flex-col col-span-1 gap-1'>
-                                    <label className='text-blue-100' htmlFor={field.name}>{field.label}</label>
-                                    <Textarea className='text-blue-100' id={field.name} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t(`${baseKey}.placeholders.enterDescription`)} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {existingEntryId && (
+                        <>
+                            <hr className="border-gray-600 my-6" />
+                            <h2 className="text-xl text-center text-cream font-semibold mb-4">{t('labels.updateDetails')}</h2>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                <InputComponent label={t('labels.caseProperty')} value={caseProperty} disabled />
+                                <div className="flex items-center space-x-2 pt-8">
+                                    <Checkbox id="isReturnedCheck" checked={isReturned} onCheckedChange={(checked) => setIsReturned(!!checked)} />
+                                    <label htmlFor="isReturnedCheck" className="text-blue-100">{t('labels.isReturned')}</label>
                                 </div>
-                            );
-                        }
-                        if (field.type === 'date') {
-                            return <DatePicker key={field.name} label={field.label} date={dateFields[field.name as keyof typeof dateFields]} setDate={(date) => handleDateChange(field.name, date)} />;
-                        }
-                        return (
-                            <div key={field.name}>
-                                {field.name === 'firNo' ? (
-                                    <div className='flex items-end justify-between'>
-                                        <InputComponent className='w-3/4' label={field.label} value={formData.firNo} setInput={(e) => handleInputChange(field.name, e.target.value)} />
-                                        <Button type="button" className="h-10 lg:text-base bg-blue text-white" onClick={handleGetByFir}>{t(`${baseKey}.buttons.fetchData`)}</Button>
-                                    </div>
-                                ) : (
-                                    <InputComponent label={field.label} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name, e.target.value)} />
-                                )}
                             </div>
-                        );
-                    })}
-                </div>
 
-                <div className='w-full'>
-                    <div className='flex flex-row mt-4 gap-2'>
-                        <div className='w-[40%]'>
-                            <label className='text-nowrap text-blue-100' htmlFor="photo">{t(`${baseKey}.photoUpload.label`)}</label>
-                            <input ref={photoRef} className='text-blue-100 rounded-xl glass-effect px-2 py-1' id="photo" type='file' onChange={handlePhotoChange} />
-                        </div>
-                        <div className='w-[60%] flex flex-col gap-4 relative'>
-                            {photoUrl && <Button onClick={() => SetPhotoUrl("")} className='absolute right-0 bg-red-800 hover:bg-red-500 cursor-pointer'><Trash /></Button>}
-                            {photoUrl && <img src={photoUrl} className='rounded-md w-full h-full border' alt="upload preview" />}
-                        </div>
-                    </div>
-                </div>
-                <div className='flex w-full px-12 justify-between mt-4'>
-                    {[{ key: 'save', action: handleSave }, { key: 'print', action: handlePrint }].map((item) => (
-                        <Button key={item.key} onClick={item.action} className='cursor-pointer'>
-                            {loading && item.key === "save" ? <LoaderIcon className='animate-spin' /> : t(`${baseKey}.buttons.${item.key}`)}
-                        </Button>
-                    ))}
+                            <div className="mt-2 grid grid-cols-2 gap-4">
+                                {fields.map((field) => {
+                                    const fieldsToHideWhenNotReturned = ['receivedBy', 'returnBackFrom', 'returnDate'];
+                                    const fieldsToHideWhenReturned = ['moveTrackingNo', 'takenOutBy', 'movePurpose', 'moveDate'];
+
+                                    if (!isReturned && fieldsToHideWhenNotReturned.includes(field.name)) return null;
+                                    if (isReturned && fieldsToHideWhenReturned.includes(field.name)) return null;
+
+                                    if (['underSection', 'name'].includes(field.name)) {
+                                        return <InputComponent key={field.name} label={field.label} value={formData[field.name as keyof typeof formData] ?? ""} disabled />;
+                                    }
+                                    if (field.type === "date") {
+                                        return <DatePicker key={field.name} label={field.label} date={dateFields[field.name as "moveDate" | "returnDate"]} setDate={(date) => handleDateChange(field.name as "moveDate" | "returnDate", date)} />;
+                                    }
+                                    if (field.name === 'returnBackFrom') {
+                                        return <DropDown key={field.name} label={t('labels.returnBackFrom')} selectedValue={returnBackFrom} options={returnBackOptions} handleSelect={setReturnBackFrom} />;
+                                    }
+                                    return <InputComponent key={field.name} label={field.label} value={formData[field.name as keyof typeof formData] ?? ""} setInput={(e: any) => handleInputChange(field.name, e.target.value)} />;
+                                })}
+                                {inputFields.map((item, index) => (
+                                    <div key={index} className="flex flex-col gap-2">
+                                        <label className="text-blue-100">{item.label}</label>
+                                        <input ref={item.ref} className="text-blue-100 rounded-xl glass-effect px-2 py-1" id={item.id} type="file" />
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex w-full justify-center items-center gap-4 mt-6">
+                                <Button onClick={handleSave} className="bg-green-600" disabled={isLoading}>
+                                    {isLoading ? <LoaderIcon className="animate-spin" /> : t('buttons.saveMovement')}
+                                </Button>
+                                <Button onClick={resetAll} className="bg-red-600">{t('buttons.clearForm')}</Button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 
-export default Page;
+export default Page;    
