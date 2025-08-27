@@ -8,28 +8,46 @@ export async function GET(req: NextRequest) {
 
         const dbName = searchParams.get("dbName");
         const firNo = searchParams.get("firNo");
-        const srNo = searchParams.get("srNo");
+        const srNo = searchParams.get("srNo"); // This can be optional now
 
-        let data = null;
-
-        // Ensure all required parameters are present for a precise search
-        if (!dbName || !firNo || !srNo) {
+        // Check for required parameters for the initial search
+        if (!dbName || !firNo) {
             return NextResponse.json(
-                { success: false, error: "Missing required parameters: dbName, firNo, and srNo" },
+                { success: false, error: "Missing required parameters: dbName and firNo" },
                 { status: 400 }
             );
         }
 
+        let data = null;
+
         switch (dbName) {
             case "m":
-                data = await prisma.malkhanaEntry.findFirst({
-                    where: { firNo: String(firNo), srNo: String(srNo) },
-                });
+                // If a specific srNo is provided, find that single record
+                if (srNo) {
+                    data = await prisma.malkhanaEntry.findFirst({
+                        where: { firNo: String(firNo), srNo: String(srNo) },
+                    });
+                } else {
+                    // Otherwise, find all entries for that firNo
+                    data = await prisma.malkhanaEntry.findMany({
+                        where: { firNo: String(firNo) },
+                        orderBy: { createdAt: "desc" }
+                    });
+                }
                 break;
             case "v":
-                data = await prisma.seizedVehicle.findFirst({
-                    where: { firNo: String(firNo), srNo: String(srNo) },
-                });
+                // If a specific srNo is provided, find that single record
+                if (srNo) {
+                    data = await prisma.seizedVehicle.findFirst({
+                        where: { firNo: String(firNo), srNo: String(srNo) },
+                    });
+                } else {
+                    // Otherwise, find all entries for that firNo
+                    data = await prisma.seizedVehicle.findMany({
+                        where: { firNo: String(firNo) },
+                        orderBy: { createdAt: "desc" }
+                    });
+                }
                 break;
             default:
                 return NextResponse.json(
@@ -38,17 +56,18 @@ export async function GET(req: NextRequest) {
                 );
         }
 
-        if (data) {
+        if (data && (Array.isArray(data) ? data.length > 0 : data)) {
+            // Return the data as an array for multiple results, or a single object
             return NextResponse.json({ success: true, data }, { status: 200 });
         } else {
             return NextResponse.json(
-                { success: false, data: null, message: "Record not found." },
+                { success: false, data: null, message: "Record(s) not found." },
                 { status: 404 }
             );
         }
 
     } catch (error) {
-        console.error("GET /api/siezed error:", error);
+        console.error("GET /api/seized error:", error);
         return NextResponse.json(
             { success: false, error: "Failed to fetch seized entries" },
             { status: 500 }

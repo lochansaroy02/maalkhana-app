@@ -3,8 +3,13 @@
 
 import axios from "axios";
 import { useEffect, useState } from "react";
-// We must load external libraries via a script tag in a useEffect hook
-// because direct imports from node_modules are not supported in this environment.
+
+// The next.js dynamic import and jspdf library are not supported directly in the Canvas environment,
+// so we'll load the library via a script tag.
+interface Window {
+    jspdf: any;
+}
+declare const window: Window;
 
 // Use inline SVG icons to avoid external library dependencies.
 const LuFileJson = (props: any) => (
@@ -19,7 +24,8 @@ const LuFileJson = (props: any) => (
 );
 
 const ScannerDisplay = ({ result }: { result: any }) => {
-    const [fetchedData, setFetchedData] = useState<any>(null);
+    const [recordOptions, setRecordOptions] = useState<any[]>([]);
+    const [selectedRecord, setSelectedRecord] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isJsPdfLoaded, setIsJsPdfLoaded] = useState(false);
@@ -41,45 +47,59 @@ const ScannerDisplay = ({ result }: { result: any }) => {
 
     // This useEffect will run whenever the 'result' prop changes
     useEffect(() => {
-        const getData = async () => {
-            // Do not make an API call if there is no valid result object
-            if (!result || !result.dbName || !result.firNo || !result.srNo) {
-                setFetchedData(null);
+        const fetchRecords = async () => {
+            if (!result || !result.dbName || !result.firNo) {
+                setRecordOptions([]);
                 setError(null);
                 return;
             }
 
             setIsLoading(true);
             setError(null);
-            setFetchedData(null);
+            setRecordOptions([]);
+            setSelectedRecord(null);
 
             try {
+                // Fetch all records with the same FIR number
+                // The URL was updated from '/api/barcode' to '/api/seized'
                 const response = await axios.get(
-                    `/api/barcode?dbName=${result.dbName}&firNo=${result.firNo}&srNo=${result.srNo}`
+                    `/api/barcode?dbName=${result.dbName}&firNo=${result.firNo}`
                 );
 
                 const responseData = response.data;
 
                 if (responseData.success && responseData.data) {
-                    console.log(responseData.data);
-                    setFetchedData(responseData.data);
+                    // If the API returns an array, set the options
+                    if (Array.isArray(responseData.data)) {
+                        setRecordOptions(responseData.data);
+                    } else {
+                        // If it's a single object, there's only one option
+                        setSelectedRecord(responseData.data);
+                    }
                 } else {
                     setError(responseData.message || "Record not found.");
                 }
             } catch (err) {
                 console.error("API call failed:", err);
-                setError("Failed to fetch data from the server.");
+                setError("Failed to fetch data from the server. Please check the API endpoint.");
             } finally {
                 setIsLoading(false);
             }
         };
 
-        getData();
-    }, [result]); // Add 'result' to the dependency array
+        fetchRecords();
+    }, [result]);
+
+    // Handle selection of a specific serial number
+    const handleSelectSrNo = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedSrNo = e.target.value;
+        const record = recordOptions.find(item => item.srNo === selectedSrNo);
+        setSelectedRecord(record);
+    };
 
     // This function handles the PDF download
     const handleDownloadPdf = () => {
-        if (!fetchedData || !isJsPdfLoaded || !window.jspdf) {
+        if (!selectedRecord || !isJsPdfLoaded || !window.jspdf) {
             alert("PDF library is still loading. Please try again in a moment.");
             return;
         }
@@ -95,7 +115,7 @@ const ScannerDisplay = ({ result }: { result: any }) => {
         doc.setFontSize(12);
 
         // Loop through the fetched data and add to the PDF
-        for (const [key, value] of Object.entries(fetchedData)) {
+        for (const [key, value] of Object.entries(selectedRecord)) {
             // Filter out empty or null values and non-essential fields
             if (value && typeof value !== 'object' && key !== 'id') {
                 const formattedKey = key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
@@ -109,7 +129,7 @@ const ScannerDisplay = ({ result }: { result: any }) => {
             }
         }
 
-        doc.save(`report_${fetchedData.firNo || 'unknown'}.pdf`);
+        doc.save(`report_${selectedRecord.firNo || 'unknown'}.pdf`);
     };
 
     if (!result) return null;
@@ -126,25 +146,51 @@ const ScannerDisplay = ({ result }: { result: any }) => {
                     <label className="text-sm font-semibold text-gray-600 mb-1">Scanned FIR No.</label>
                     <p className="text-lg bg-white p-2 rounded-md border text-gray-800 border-gray-200">{result.firNo || 'N/A'}</p>
                 </div>
-            </div>
-            <div className="flex flex-col">
-                <label className="text-sm font-semibold text-gray-600 mb-1">Scanned Serial No.</label>
-                <p className="text-lg bg-white p-2 rounded-md border text-gray-800 border-gray-200">{result.srNo || 'N/A'}</p>
+                <div className="flex flex-col">
+                    <label className="text-sm font-semibold text-gray-600 mb-1">Scanned Serial No.</label>
+                    <p className="text-lg bg-white p-2 rounded-md border text-gray-800 border-gray-200">{result.srNo || 'N/A'}</p>
+                </div>
             </div>
             <div className="mt-4 border-t pt-4">
-                {isLoading && <p className="text-blue-600 animate-pulse">Loading database record...</p>}
+                {isLoading && <p className="text-blue-600 animate-pulse">Loading database records...</p>}
                 {error && <p className="text-red-600 font-semibold">⚠️ Error: {error}</p>}
-                {fetchedData && (
+
+                {/* Show radio buttons for multiple records */}
+                {recordOptions.length > 1 && !selectedRecord && (
+                    <div className="mb-4">
+                        <h4 className="font-bold text-lg mb-2">Select a Serial Number:</h4>
+                        {recordOptions.map(record => (
+                            <div key={record.srNo} className="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    id={`srNo-${record.srNo}`}
+                                    name="srNo"
+                                    value={record.srNo}
+                                    onChange={handleSelectSrNo}
+                                    className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                />
+                                <label htmlFor={`srNo-${record.srNo}`} className="text-gray-700">
+                                    Serial Number: {record.srNo}
+                                </label>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Show detailed data for a single selected record */}
+                {selectedRecord && (
                     <div className="space-y-4 text-gray-800">
                         <h4 className="font-bold text-lg">Database Record Found:</h4>
-                        {Object.entries(fetchedData).map(([key, value]) => (
+                        {Object.entries(selectedRecord).map(([key, value]) => (
                             <p key={key}>
                                 <strong>{key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}:</strong> {String(value)}
                             </p>
                         ))}
                     </div>
                 )}
-                {fetchedData && (
+
+                {/* Show Download PDF button only for a selected record */}
+                {selectedRecord && (
                     <div className="mt-6 flex justify-center">
                         <button
                             onClick={handleDownloadPdf}
