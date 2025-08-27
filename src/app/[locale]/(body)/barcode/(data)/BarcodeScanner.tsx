@@ -1,4 +1,3 @@
-// barcode/(data)/BarcodeScanner.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -22,13 +21,11 @@ const LuScan = (props: React.SVGProps<SVGSVGElement>) => (
 const BarcodeScanner = ({ onScanSuccess, onScanError }: BarcodeScannerProps) => {
     // Add explicit types to useRef to connect them to the DOM elements and API objects.
     const videoRef = useRef<HTMLVideoElement | null>(null);
-
     const barcodeDetectorRef = useRef<any | null>(null);
     const intervalRef = useRef<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Initialize BarcodeDetector once on component mount if supported by the browser.
         if ('BarcodeDetector' in window) {
             //@ts-ignore
             barcodeDetectorRef.current = new window.BarcodeDetector();
@@ -41,32 +38,27 @@ const BarcodeScanner = ({ onScanSuccess, onScanError }: BarcodeScannerProps) => 
         const startScan = async () => {
             setIsLoading(true);
             try {
-                // Request access to the camera with the environment (back) facing mode
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
                     await videoRef.current.play();
                     setIsLoading(false);
 
-                    // Start scanning every 500ms
                     intervalRef.current = window.setInterval(async () => {
                         if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
                             try {
                                 const barcodes = await (barcodeDetectorRef.current as any).detect(videoRef.current);
                                 if (barcodes.length > 0) {
                                     onScanSuccess(barcodes[0].rawValue);
-                                    // Stop scanning as soon as a barcode is detected
                                     stopScan();
                                 }
                             } catch (error) {
-                                // Ignore detection errors to keep scanning
                                 console.error("Error during barcode detection:", error);
                             }
                         }
                     }, 500);
                 }
             } catch (err) {
-                // Handle camera access errors
                 console.error("Camera access error:", err);
                 onScanError("Failed to access camera. Please ensure permissions are granted.");
             }
@@ -83,8 +75,6 @@ const BarcodeScanner = ({ onScanSuccess, onScanError }: BarcodeScannerProps) => 
         };
 
         startScan();
-
-        // Cleanup function to stop the camera when the component unmounts
         return () => stopScan();
     }, [onScanSuccess, onScanError]);
 
@@ -95,12 +85,7 @@ const BarcodeScanner = ({ onScanSuccess, onScanError }: BarcodeScannerProps) => 
                     <p className="text-gray-500 font-semibold text-center">Loading Camera...</p>
                 </div>
             )}
-            <video
-                ref={videoRef}
-                className="w-full h-full object-cover rounded-xl"
-                playsInline
-                style={{ display: isLoading ? 'none' : 'block' }}
-            />
+            <video ref={videoRef} className="w-full h-full object-cover rounded-xl" playsInline style={{ display: isLoading ? 'none' : 'block' }} />
             {!isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-2/3 h-1/4 border-2 border-green-500 rounded-md animate-pulse"></div>

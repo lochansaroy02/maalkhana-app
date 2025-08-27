@@ -1,20 +1,24 @@
-// barcode/page.tsx
 "use client";
 
 import { useState } from 'react';
-// Correct the import paths
 import BarcodeScanner from "./(data)/BarcodeScanner";
 import ScannerDisplay from "./(data)/ScannerDisplay";
 
+// Define a type for the data returned from the barcode scan
+export interface BarcodeResult {
+    dbName: string;
+    firNo: string;
+    srNo: string;
+}
+
 export default function App() {
     const [isScanning, setIsScanning] = useState<boolean>(false);
-    const [scanResult, setScanResult] = useState<any | null>(null);
+    const [scanResult, setScanResult] = useState<BarcodeResult | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
 
     // This function handles a successful scan result
     const handleScanSuccess = (decodedText: string) => {
         try {
-            // Your barcode data is a string like "m-101/2025-1"
             const parts = decodedText.split('-');
             if (parts.length === 3) {
                 const [dbName, firNo, srNo] = parts;

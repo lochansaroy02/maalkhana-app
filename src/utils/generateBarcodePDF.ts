@@ -1,5 +1,3 @@
-import JsBarcode from "jsbarcode";
-import { jsPDF } from "jspdf";
 
 /**
  * @typedef {object} BarcodeEntry
@@ -13,7 +11,8 @@ import { jsPDF } from "jspdf";
  * @param {BarcodeEntry[]} entries - An array of objects, each containing data for one barcode.
  */
 export const generateBarcodePDF = (entries: any) => {
-    const doc = new jsPDF("p", "mm", "a4");
+    // Note: The jsPDF and JsBarcode functions are now available on the global window object.
+    const doc = new window.jspdf.jsPDF("p", "mm", "a4");
 
     // --- Layout Configuration ---
     const barcodesPerRow = 4;
@@ -51,9 +50,9 @@ export const generateBarcodePDF = (entries: any) => {
         // Format: dbname-firNo-srNo
         const barcodeValue = `${entry.dbName || ''}-${entry.firNo || ''}-${entry.srNo || ''}`;
 
-        JsBarcode(canvas, barcodeValue, {
+        window.JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
-            width: 1.5,       
+            width: 1.5,
             height: 60,       // Internal height of the bars
             displayValue: false, // We add text manually for better control
         });
@@ -62,7 +61,7 @@ export const generateBarcodePDF = (entries: any) => {
 
         // Add the barcode image to the PDF
         doc.addImage(imageData, "JPEG", x, y, barcodeWidth, barcodeHeight);
-        
+
         const textY = y + barcodeHeight + 3; // 3mm below the barcode
         doc.text(String(entry.firNo || ''), x + barcodeWidth / 2, textY, { align: 'center' });
 
