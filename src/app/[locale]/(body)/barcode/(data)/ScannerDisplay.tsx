@@ -60,10 +60,11 @@ const ScannerDisplay = ({ result }: { result: BarcodeResult | null }) => {
 
             try {
                 const response = await axios.get(
-                    `/api/seized?dbName=${result.dbName}&firNo=${result.firNo}`
+                    `/api/barcode?dbName=${result.dbName}&firNo=${result.firNo}&srNo=${result.srNo}`
                 );
 
                 const responseData = response.data;
+                console.log(responseData.data);
 
                 if (responseData.success && responseData.data) {
                     if (Array.isArray(responseData.data)) {
