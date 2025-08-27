@@ -61,6 +61,7 @@ const ScannerDisplay = ({ result }: { result: any }) => {
                 const responseData = response.data;
 
                 if (responseData.success && responseData.data) {
+                    console.log(responseData.data);
                     setFetchedData(responseData.data);
                 } else {
                     setError(responseData.message || "Record not found.");
