@@ -1,13 +1,13 @@
 "use client";
 import InputComponent from '@/components/InputComponent';
 import { Button } from '@/components/ui/button';
+import DatePicker from '@/components/ui/datePicker';
 import DropDown from '@/components/ui/DropDown';
 import { useAuthStore } from '@/store/authStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-
 
 const Page = () => {
     const t = useTranslations('seizedVehicleForm');
@@ -23,25 +23,28 @@ const Page = () => {
     const [caseProperty, setCaseProperty] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    // 💡 FIX 1: The `status` state is now part of the main formData, removing redundancy.
+    const [gdDate, setGdDate] = useState<Date | undefined>();
+
     const [formData, setFormData] = useState({
-        srNo: '', firNo: '', gdNo: '', gdDate: '', vehicleType: '', colour: '', registrationNo: '', engineNo: '', description: '', policeStation: '', ownerName: '', status: '',
+        srNo: '', firNo: '', gdNo: '', vehicleType: '', colour: '', registrationNo: '', engineNo: '', description: '', policeStation: '', ownerName: '', status: '',
     });
 
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    // Auto-set 'underSection' when 'caseProperty' changes
+    const handleDateChange = (date: Date | undefined) => {
+        setGdDate(date);
+    };
+
     useEffect(() => {
-        if (caseProperty === 'mvAct') { // Logic now uses keys
+        if (caseProperty === 'mvAct') {
             setUnderSection('207');
         } else {
             setUnderSection('');
         }
     }, [caseProperty]);
 
-    // i18n: Use keys for logic and map to translated labels for display
     const statusOptionKeys = ["destroy", "nilami", "pending", "other", "onCourt"];
     const statusOptions = statusOptionKeys.map(key => ({
         value: key,
@@ -56,8 +59,9 @@ const Page = () => {
 
     const clearForm = () => {
         setFormData({
-            srNo: '', firNo: '', gdNo: '', gdDate: '', vehicleType: '', colour: '', registrationNo: '', engineNo: '', description: '', policeStation: '', ownerName: '', status: '',
+            srNo: '', firNo: '', gdNo: '', vehicleType: '', colour: '', registrationNo: '', engineNo: '', description: '', policeStation: '', ownerName: '', status: '',
         });
+        setGdDate(undefined);
         setCaseProperty('');
         setSeizedBy('');
         setRTOName('');
@@ -68,10 +72,10 @@ const Page = () => {
     };
 
     const handleSave = async () => {
-        // --- START: VALIDATION LOGIC ---
         const fieldLabels = {
             firNo: t('labels.firNo'),
             gdNo: t('labels.gdNo'),
+            gdDate: t('labels.gdDate'),
             vehicleType: t('labels.vehicleType'),
             colour: t('labels.colour'),
             registrationNo: t('labels.registrationNo'),
@@ -82,13 +86,13 @@ const Page = () => {
         const requiredFields = [
             { key: 'caseProperty', value: caseProperty },
             { key: 'gdNo', value: formData.gdNo },
+            { key: 'gdDate', value: gdDate },
             { key: 'vehicleType', value: formData.vehicleType },
             { key: 'colour', value: formData.colour },
             { key: 'policeStation', value: formData.policeStation },
             { key: 'registrationNo', value: formData.registrationNo },
         ];
 
-        // Conditionally require firNo
         if (caseProperty !== 'unclaimed' && caseProperty !== 'mvAct') {
             requiredFields.push({ key: 'firNo', value: formData.firNo });
         }
@@ -101,7 +105,6 @@ const Page = () => {
             toast.error("Please enter all required entries");
             return;
         }
-        // --- END: VALIDATION LOGIC ---
 
         if (isLoading) return;
 
@@ -109,6 +112,7 @@ const Page = () => {
             setIsLoading(true);
             const fullVehicleData = {
                 ...formData,
+                gdDate: gdDate?.toISOString() || '',
                 caseProperty,
                 seizedBy,
                 rtoName,
@@ -136,8 +140,9 @@ const Page = () => {
         if (!data) return;
         setExistingId(data.id || data._id);
         setFormData({
-            srNo: data?.srNo || '', firNo: data?.firNo || '', gdNo: data?.gdNo || '', gdDate: data?.gdDate || '', vehicleType: data?.vehicleType || '', colour: data?.colour || '', registrationNo: data?.registrationNo || '', engineNo: data?.engineNo || '', description: data?.description || '', policeStation: data?.policeStation || '', ownerName: data?.ownerName || '', status: data?.status || '',
+            srNo: data?.srNo || '', firNo: data?.firNo || '', gdNo: data?.gdNo || '', vehicleType: data?.vehicleType || '', colour: data?.colour || '', registrationNo: data?.registrationNo || '', engineNo: data?.engineNo || '', description: data?.description || '', policeStation: data?.policeStation || '', ownerName: data?.ownerName || '', status: data?.status || '',
         });
+        setGdDate(data?.gdDate ? new Date(data.gdDate) : undefined);
         setCaseProperty(data?.caseProperty || '');
         setSeizedBy(data?.seizedBy || '');
         setRTOName(data?.rtoName || '');
@@ -229,7 +234,9 @@ const Page = () => {
                 )}
                 <div className='mt-2 grid lg:grid-cols-2 gap-2'>
                     {fields.map(field => {
-                        if (field.name === 'firNo' && (caseProperty === 'unclaimed' || caseProperty === 'mvAct')) return null;
+                        if (field.name === 'firNo' && (caseProperty === 'unclaimed' || caseProperty === 'mvAct')) {
+                            return null;
+                        }
 
                         if (field.name === 'underSection') {
                             return (
@@ -254,25 +261,51 @@ const Page = () => {
                             );
                         }
 
-                        return (
-                            <div key={field.name} className='flex items-end gap-2'>
-                                <InputComponent
-                                    label={field.label}
-                                    value={formData[field.name as keyof typeof formData]}
-                                    setInput={e => handleInputChange(field.name, e.target.value)}
-                                />
-                                {(field.name === 'srNo' && (caseProperty === "mvAct" || caseProperty === "unclaimed")) && (
+                        if (field.name === 'gdDate') {
+                            return <DatePicker key={field.name} label={field.label} date={gdDate} setDate={handleDateChange} />;
+                        }
+
+                        // The below logic for a flex container is what was causing the width issues.
+                        // I've moved the InputComponent outside the flex container unless a button is needed.
+                        if (field.name === 'srNo' && (caseProperty === "mvAct" || caseProperty === "unclaimed")) {
+                            return (
+                                <div key={field.name} className='flex items-end gap-2'>
+                                    <InputComponent
+                                        className="flex-grow" // This class makes the input take up remaining space
+                                        label={field.label}
+                                        value={formData[field.name as keyof typeof formData]}
+                                        setInput={e => handleInputChange(field.name, e.target.value)}
+                                    />
                                     <Button className='bg-green-600 text-white' onClick={handleGet}>{t('buttons.search')}</Button>
-                                )}
-                                {field.name === 'firNo' && (
+                                </div>
+                            );
+                        }
+
+                        if (field.name === 'firNo') {
+                            return (
+                                <div key={field.name} className='flex items-end gap-2'>
+                                    <InputComponent
+                                        className="flex-grow"
+                                        label={field.label}
+                                        value={formData.firNo}
+                                        setInput={e => handleInputChange('firNo', e.target.value)}
+                                    />
                                     <Button className='bg-purple-600 text-white' onClick={handleGet}>{t('buttons.getByFir')}</Button>
-                                )}
-                            </div>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <InputComponent
+                                key={field.name}
+                                label={field.label}
+                                value={formData[field.name as keyof typeof formData]}
+                                setInput={e => handleInputChange(field.name, e.target.value)}
+                            />
                         );
                     })}
                 </div>
                 <div className='flex justify-center w-full mt-4'>
-                    {/* 💡 FIX 2: Replaced confusing dual buttons with a single, intelligent button */}
                     <Button
                         onClick={handleSave}
                         className='bg-blue text-blue-100 cursor-pointer'
