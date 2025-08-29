@@ -2,11 +2,10 @@
 
 import DisplayScannedData from "@/components/DisplayScannedData";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import html2canvas from "html2canvas"; // Import html2canvas
+import { useEffect, useRef, useState } from "react";
 import { BarcodeResult } from "../page";
 
-// We must load external libraries via a script tag in a useEffect hook
-// because direct imports from node_modules are not supported in this environment.
 interface Window {
     jspdf: any;
 }
@@ -21,6 +20,9 @@ const ScannerDisplay = ({ result }: { result: BarcodeResult | null }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isJsPdfLoaded, setIsJsPdfLoaded] = useState(false);
+
+    // Create a ref for the div to be downloaded
+    const divToDownloadRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const script = document.createElement("script");
@@ -70,67 +72,44 @@ const ScannerDisplay = ({ result }: { result: BarcodeResult | null }) => {
         fetchRecord();
     }, [result]);
 
-    const handleDownloadPdf = () => {
-        if (!selectedRecord || !isJsPdfLoaded || !window.jspdf) {
-            alert("PDF library is still loading. Please try again in a moment.");
+    const handleDownloadPdf = async () => {
+        if (!divToDownloadRef.current || !isJsPdfLoaded || !window.jspdf) {
+            alert("Content or PDF library is not ready. Please try again.");
             return;
         }
 
-        const doc = new window.jspdf.jsPDF();
-        let yPos = 20;
-        const leftMargin = 20;
-        const rightMargin = 190;
-        const borderPadding = 10;
-        const lineHeight = 7;
-        const columnSeparator = 100;
-
-        // Draw a border around the page
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        doc.rect(borderPadding, borderPadding, pageWidth - 2 * borderPadding, pageHeight - 2 * borderPadding);
-
-        doc.setFontSize(18);
-        doc.text("Scanned Asset Report", pageWidth / 2, yPos, { align: "center" });
-        yPos += 15;
-        doc.setFontSize(12);
-
-        const excludedKeys = [
-            "id", "createdAt", "updatedAt", "userId", "districtId", "photoUrl", "document", "documentUrl", "isMovement", "isRelease",
-            "wine", "wineType", "address", "fathersName", "isReturned", "mobile", "moveDate", "movePurpose", "moveTrackingNo", "name",
-            "photo", "releaseItemName", "returnBackFrom", "returnDate", "takenOutBy", "receivedBy", "receiverName", "cash", "yellowItemPrice", "dbName"
-        ];
-
-        const formatKey = (key: string) => {
-            return key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase());
-        };
-
-        Object.keys(selectedRecord)
-            .filter(key => {
-                const value = selectedRecord[key];
-                return !excludedKeys.includes(key) && (value !== null && value !== "" && value !== 0);
-            })
-            .forEach(key => {
-                const value = selectedRecord[key];
-                const formattedKey = formatKey(key);
-
-                // Check for new page before adding text
-                if (yPos > pageHeight - borderPadding - 10) {
-                    doc.addPage();
-                    doc.rect(borderPadding, borderPadding, pageWidth - 2 * borderPadding, pageHeight - 2 * borderPadding);
-                    yPos = borderPadding + 10;
-                }
-
-                doc.setFont("helvetica", "bold");
-                doc.text(`${formattedKey}:`, leftMargin, yPos);
-
-                doc.setFont("helvetica", "normal");
-                const textLines = doc.splitTextToSize(String(value), rightMargin - columnSeparator - 10);
-                doc.text(textLines, columnSeparator, yPos);
-
-                yPos += (textLines.length * lineHeight);
+        try {
+            // Use html2canvas to render the div to a canvas
+            const canvas = await html2canvas(divToDownloadRef.current, {
+                scale: 2 // Increase scale for better image quality in the PDF
             });
 
-        doc.save(`report_${selectedRecord.firNo || 'unknown'}.pdf`);
+            const imgData = canvas.toDataURL('image/jpeg', 1.0); // Convert canvas to a data URL
+
+            const doc = new window.jspdf.jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210; // A4 width in mm
+            const pageHeight = 297; // A4 height in mm
+            const imgHeight = canvas.height * imgWidth / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            doc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            // Add new pages if the content overflows
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                doc.addPage();
+                doc.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            doc.save(`report_${selectedRecord?.firNo || 'unknown'}.pdf`);
+
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            alert("Failed to generate PDF. Please try again.");
+        }
     };
 
     if (!result) return null;
@@ -165,7 +144,8 @@ const ScannerDisplay = ({ result }: { result: BarcodeResult | null }) => {
                 </div>
             </div>
             <div className="mt-4 border-t pt-4">
-                <DisplayScannedData selectedRecord={selectedRecord} />
+                {/* Pass the ref to the child component */}
+                <DisplayScannedData selectedRecord={selectedRecord} divRef={divToDownloadRef} />
                 <div className="mt-6 flex justify-center">
                     <button onClick={handleDownloadPdf} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105">
                         Download PDF Report

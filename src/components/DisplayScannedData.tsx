@@ -1,6 +1,7 @@
 "use client";
 
-const DisplayScannedData = ({ selectedRecord }: { selectedRecord: any }) => {
+
+const DisplayScannedData = ({ selectedRecord, divRef }: { selectedRecord: any, divRef: any }) => {
 
     const excludedKeys = [
         "id", "createdAt", "updatedAt", "userId", "districtId", "photoUrl", "document", "documentUrl", "isMovement", "isRelease",
@@ -17,7 +18,7 @@ const DisplayScannedData = ({ selectedRecord }: { selectedRecord: any }) => {
     }
 
     return (
-        <div className="p-4 bg-white font-sans">
+        <div ref={divRef} className="p-4 bg-white font-sans">
             <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Scanned Record Details</h1>
             <div className="flex flex-col space-y-4">
                 {Object.keys(selectedRecord)
