@@ -18,7 +18,7 @@ const DisplayScannedData = ({ selectedRecord, divRef }: { selectedRecord: any, d
     }
 
     return (
-        <div ref={divRef} className="p-4 bg-white font-sans">
+        <div ref={divRef} className=" bg-white font-sans">
             <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Scanned Record Details</h1>
             <div className="flex flex-col space-y-4">
                 {Object.keys(selectedRecord)
@@ -27,7 +27,7 @@ const DisplayScannedData = ({ selectedRecord, divRef }: { selectedRecord: any, d
                         return !excludedKeys.includes(key) && (value !== null && value !== "" && value !== 0);
                     })
                     .map(key => (
-                        <div key={key} className="flex">
+                        <div key={key} className="flex text-sm">
                             <div className="flex-1 text-left text-gray-600 font-medium">{formatKey(key)}</div>
                             <div className="flex-1 text-left text-gray-800">{String(selectedRecord[key])}</div>
                         </div>

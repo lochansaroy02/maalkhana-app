@@ -21,7 +21,6 @@ const ScannerDisplay = ({ result }: { result: BarcodeResult | null }) => {
     const [error, setError] = useState<string | null>(null);
     const [isJsPdfLoaded, setIsJsPdfLoaded] = useState(false);
 
-    // Create a ref for the div to be downloaded
     const divToDownloadRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
