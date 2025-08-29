@@ -50,7 +50,7 @@ export default function App() {
 
     return (
         <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen font-sans text-gray-800 p-4 sm:p-8 flex flex-col items-center">
-            <div className="max-w-4xl w-full bg-white rounded-xl shadow-2xl p-6 sm:p-10 transition-all duration-300 transform scale-95 hover:scale-100">
+            <div className="max-w-4xl w-full bg-white rounded-xl shadow-2xl p-6 sm:p-8 transition-all duration-300 transform scale-95 hover:scale-100">
 
                 <header className="text-center mb-8">
                     <h1 className="text-3xl sm:text-4xl font-extrabold text-indigo-700">Maalkhana Asset Manager</h1>

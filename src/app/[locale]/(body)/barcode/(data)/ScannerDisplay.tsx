@@ -146,7 +146,7 @@ const ScannerDisplay = ({ result }: { result: BarcodeResult | null }) => {
                 {/* Pass the ref to the child component */}
                 <DisplayScannedData selectedRecord={selectedRecord} divRef={divToDownloadRef} />
                 <div className="mt-6 flex justify-center">
-                    <button onClick={handleDownloadPdf} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105">
+                    <button onClick={handleDownloadPdf} className="bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold py-2 px-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-105">
                         Download PDF Report
                     </button>
                 </div>
