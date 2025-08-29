@@ -77,12 +77,21 @@ const ScannerDisplay = ({ result }: { result: BarcodeResult | null }) => {
         }
 
         const doc = new window.jspdf.jsPDF();
-        let yPos = 10;
-        const margin = 10;
+        let yPos = 20;
+        const leftMargin = 20;
+        const rightMargin = 190;
+        const borderPadding = 10;
+        const lineHeight = 7;
+        const columnSeparator = 100;
+
+        // Draw a border around the page
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.rect(borderPadding, borderPadding, pageWidth - 2 * borderPadding, pageHeight - 2 * borderPadding);
 
         doc.setFontSize(18);
-        doc.text("Scanned Asset Report", margin, yPos);
-        yPos += 10;
+        doc.text("Scanned Asset Report", pageWidth / 2, yPos, { align: "center" });
+        yPos += 15;
         doc.setFontSize(12);
 
         const excludedKeys = [
@@ -103,13 +112,22 @@ const ScannerDisplay = ({ result }: { result: BarcodeResult | null }) => {
             .forEach(key => {
                 const value = selectedRecord[key];
                 const formattedKey = formatKey(key);
-                const textLines = doc.splitTextToSize(`${formattedKey}: ${value}`, 180);
-                doc.text(textLines, margin, yPos);
-                yPos += (textLines.length * 7);
-                if (yPos > 280) {
+
+                // Check for new page before adding text
+                if (yPos > pageHeight - borderPadding - 10) {
                     doc.addPage();
-                    yPos = margin;
+                    doc.rect(borderPadding, borderPadding, pageWidth - 2 * borderPadding, pageHeight - 2 * borderPadding);
+                    yPos = borderPadding + 10;
                 }
+
+                doc.setFont("helvetica", "bold");
+                doc.text(`${formattedKey}:`, leftMargin, yPos);
+
+                doc.setFont("helvetica", "normal");
+                const textLines = doc.splitTextToSize(String(value), rightMargin - columnSeparator - 10);
+                doc.text(textLines, columnSeparator, yPos);
+
+                yPos += (textLines.length * lineHeight);
             });
 
         doc.save(`report_${selectedRecord.firNo || 'unknown'}.pdf`);

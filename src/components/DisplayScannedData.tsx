@@ -2,7 +2,6 @@
 
 const DisplayScannedData = ({ selectedRecord }: { selectedRecord: any }) => {
 
-
     const excludedKeys = [
         "id", "createdAt", "updatedAt", "userId", "districtId", "photoUrl", "document", "documentUrl", "isMovement", "isRelease",
         "wine", "wineType", "address", "fathersName", "isReturned", "mobile", "moveDate", "movePurpose", "moveTrackingNo", "name",
