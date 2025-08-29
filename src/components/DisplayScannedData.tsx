@@ -1,8 +1,7 @@
 "use client";
 
-import { RefObject } from "react";
 
-const DisplayScannedData = ({ selectedRecord, divRef }: { selectedRecord: any, divRef: RefObject<HTMLDivElement> }) => {
+const DisplayScannedData = ({ selectedRecord, divRef }: { selectedRecord: any, divRef: any }) => {
 
     const excludedKeys = [
         "id", "createdAt", "updatedAt", "userId", "districtId", "photoUrl", "document", "documentUrl", "isMovement", "isRelease",
