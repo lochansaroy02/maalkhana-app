@@ -2,10 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import axios from "axios";
-import { useParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 export default function EntryReportDetail() {
     const { id } = useParams();
+    const router = useRouter()
     const [entry, setEntry] = useState<any>(null);
     const [fieldsToDisplay, setFieldsToDisplay] = useState<any[]>([]);
 
@@ -90,7 +92,12 @@ export default function EntryReportDetail() {
 
     return (
         <div className="p-8 bg-gray-100 min-h-screen flex flex-col items-center">
-            <Button className="cursor-pointer   my-4 ">Print</Button>
+            <div className="flex  mb-2  gap-4   ">
+                <Button onClick={() => {
+                    router.back()
+                }} className="cursor-pointer   "><span><ArrowLeft /></span>Back</Button>
+                <Button className="cursor-pointer    ">Print</Button>
+            </div>
             <div ref={divRef} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
                 <div className="border border-gray-400 p-8">
                     <div className="text-center border-b pb-4 mb-6">

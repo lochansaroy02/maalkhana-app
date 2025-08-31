@@ -5,15 +5,48 @@ export const GET = async (req: NextRequest) => {
 
     const { searchParams } = new URL(req.url);
     const srNo = searchParams.get("srNo");
+    const userId = searchParams.get("userId");
+
     try {
         const selection = {
-            // movement entry
             id: true,
-            userId: true
+            srNo: true,
+            firNo: true,
+            gdNo: true,
+            gdDate: true,
+            underSection: true,
+            vehicleType: true,
+            colour: true,
+
+            engineNo: true,
+            description: true,
+            status: true,
+            policeStation: true,
+            ownerName: true,
+            seizedBy: true,
+            caseProperty: true,
+            receviedBy: true,
+            returnBackFrom: true,
+            takenOutBy: true,
+            moveTrackingNo: true,
+            returnDate: true,
+            movePurpose: true,
+            name: true,
+            photoUrl: true,
+            document: true,
+            moveDate: true,
+            receivedBy: true,
+            documentUrl: true,
+            receiverName: true,
+            fathersName: true,
+            address: true,
+            mobile: true,
+            releaseItemName: true,
+
         }
         const data = await prisma.seizedVehicle.findFirst({
             where: {
-                srNo
+                srNo, userId
             },
             select: selection
         })

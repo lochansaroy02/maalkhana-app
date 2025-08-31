@@ -5,11 +5,11 @@ export const GET = async (req: NextRequest) => {
 
     const { searchParams } = new URL(req.url);
     const firNo = searchParams.get("firNo");
+    const userId = searchParams.get("userId");
 
 
     try {
         const selection = {
-
             id: true,
             srNo: true,
             firNo: true,
@@ -26,8 +26,6 @@ export const GET = async (req: NextRequest) => {
             ownerName: true,
             seizedBy: true,
             caseProperty: true,
-
-
             receviedBy: true,
             returnBackFrom: true,
             takenOutBy: true,
@@ -40,8 +38,6 @@ export const GET = async (req: NextRequest) => {
             moveDate: true,
             receivedBy: true,
             documentUrl: true,
-
-
             receiverName: true,
             fathersName: true,
             address: true,
@@ -51,7 +47,7 @@ export const GET = async (req: NextRequest) => {
         }
         const data = await prisma.seizedVehicle.findMany({
             where: {
-                firNo
+                firNo, userId
             },
             select: selection
 

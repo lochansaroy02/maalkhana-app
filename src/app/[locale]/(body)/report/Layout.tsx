@@ -30,7 +30,7 @@ const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
     }, [user?.id, fetchMaalkhanaEntry, fetchMovementData, fetchVehicles]); // Dependencies ensure it runs only once
 
     return (
-        <div className='relative h-screen glass-effect'>
+        <div className='relative  glass-effect'>
             {/* Header */}
             <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
                 <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Reports</h1>
@@ -39,10 +39,10 @@ const Layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
             {/* Sub Header */}
             <ReportHeader />
 
-            {/* Page content will be rendered here */}
+
             {children}
 
-            {/* Modal */}
+
             {isOpen && (
                 <Modal>
                     <div

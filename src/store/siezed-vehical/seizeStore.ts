@@ -35,10 +35,10 @@ interface SeizedVehicleStore {
     error: string | null;
     fetchVehicles: (userId: string | undefined) => Promise<void>;
     addVehicle: (vehicle: any) => Promise<boolean>;
-    getByFIR: (caseProperty: string, firNo?: string | undefined, srNo?: string | undefined,) => Promise<any>
+    getByFIR: (userId: string | undefined, firNo: string) => Promise<any>
     updateVehicalEntry: (id: string, data: any) => Promise<boolean>
     getData: (userId: string | undefined, firNo: string, srNo: string) => Promise<any>
-    getIdBySR: (srNo: string) => Promise<any>
+    getBySR: (userId: string | undefined, srNo: string) => Promise<any>
 }
 
 const initialState = {
@@ -154,12 +154,12 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
             };
         }
     },
-    getIdBySR: async (srNo: string) => {
+    getBySR: async (userId: string | undefined, srNo: string) => {
         try {
-            const response = await axios(`api/siezed/sr?srNo=${srNo}`)
+            const response = await axios(`api/siezed/sr?userId=${userId}&srNo=${srNo}`)
             const data = response.data
             if (data.success) {
-
+                console.log(data.data)
                 return {
                     success: data.success,
                     data: data.data
@@ -171,17 +171,16 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
 
         }
     },
-    getByFIR: async (firNo: string) => {
+    getByFIR: async (userId: string | undefined, firNo: string) => {
         try {
-            const response = await axios.get(`/api/siezed/fir?firNo=${firNo}`)
+            const response = await axios.get(`/api/siezed/fir?userId=${userId}&firNo=${firNo}`)
             const data = response.data;
-            console.log(data)
             if (data.success) {
-                set({ vehical: response.data.data })
-
-            } else {
-                console.error("❌ POST /api/siezed error: Failed to create vehicle");
+                return data
             }
+            return null;
+
+
         } catch (error: any) {
             console.error(" error:", error.message || error);
         }

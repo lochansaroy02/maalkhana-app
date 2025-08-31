@@ -49,7 +49,6 @@ const Report = ({
         'name',
         'releaseItemName',
         'returnDate',
-
         'description',
         'wine',
         'wineType',
@@ -72,7 +71,6 @@ const Report = ({
 
     const formatValue = (key: string, value: any) => {
         if (key === "createdAt" || key === "updatedAt" || key === 'gdDate' || key === 'moveDate' || key == 'returnDate') {
-            // Check if value is valid before creating a Date object
             return value ? new Date(value).toLocaleDateString('en-IN') : "-";
         }
         if (key === "isReturned") {
@@ -83,7 +81,7 @@ const Report = ({
 
     const handleExport = () => {
         if (data && data.length > 0) {
-            exportToExcel(data, "report_data");
+            exportToExcel(data, "report_data", orderedKeys);
         }
     };
 
@@ -121,23 +119,15 @@ const Report = ({
     };
 
     const handleDoubleClick = (item: any) => {
-        // You can remove this section as it's not directly related to the heading order issue
-        const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "userId", "districtId", "_id", "__v", ''];
-
-        // Get all keys and filter out the excluded ones
         const allKeys = Object.keys(item).filter(key => !excluded.includes(key));
-
-        // Create a new array to store the keys in the desired order
         const sortedVisibleKeys: string[] = [];
 
-        // Add the keys from our predefined order list first
         orderedKeys.forEach(key => {
             if (allKeys.includes(key)) {
                 sortedVisibleKeys.push(key);
             }
         });
 
-        // Add any remaining keys that were not in the predefined list
         allKeys.forEach(key => {
             if (!sortedVisibleKeys.includes(key)) {
                 sortedVisibleKeys.push(key);
@@ -168,14 +158,12 @@ const Report = ({
             </div>
 
             {data && data.length > 0 ? (
-                <div className="overflow-x-auto   h-fit rounded-lg">
-                    <table className="min-w-full table-auto border-collapse">
-                        <thead className="bg-gray-700/50 border border-white rounded-xl text-sm font-semibold text-white">
+                <div className="overflow-x-auto h-fit ">
+                    <table className="min-w-full table-auto border border-white/50  border-collapse">
+                        <thead className="bg-gray-700/50   text-sm font-semibold text-white">
                             <tr>
                                 <th className="px-4 py-2 text-center">Select</th>
-                                {/* Iterate over orderedKeys to control the column order
-                                    and filter out excluded keys
-                                */}
+                                <th className="px-4 py-2 text-left capitalize">Sr. No.</th>
                                 {orderedKeys
                                     .filter((key) => !excluded.includes(key))
                                     .map((key) => (
@@ -185,24 +173,23 @@ const Report = ({
                                     ))}
                             </tr>
                         </thead>
-                        <tbody className="bg-white text-black">
-                            {data.map((item) => (
+                        <tbody className="bg-white/90 text-black">
+                            {data.map((item, index) => (
                                 <tr
                                     onDoubleClick={() => handleDoubleClick(item)}
                                     key={item.id}
-                                    className="text-sm cursor-pointer  hover:bg-gray-300 "
+                                    className="text-sm cursor-pointer hover:bg-gray-300"
                                 >
-                                    <td className="px-4 py-2 text-center">
+                                    <td className="px-4 border border-black py-2 text-center">
                                         <input
                                             type="checkbox"
                                             className="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
                                             checked={selectedIds.includes(item.id)}
                                             onChange={() => toggleSelect(item.id)}
-                                            onClick={(e) => e.stopPropagation()} // Prevents double-click from firing on checkbox click
+                                            onClick={(e) => e.stopPropagation()}
                                         />
                                     </td>
-                                    {/* Iterate over orderedKeys here as well to ensure data cells match the header order
-                                    */}
+                                    <td className="px-4 border border-black py-2">{index + 1}</td>
                                     {orderedKeys
                                         .filter((key) => !excluded.includes(key))
                                         .map((key) => (
@@ -216,8 +203,8 @@ const Report = ({
                     </table>
                 </div>
             ) : (
-                <div className="h-64 flex items-center justify-center w-full glass-effect rounded-lg mt-4">
-                    <p className="text-gray-400 text-xl">No data available</p>
+                <div className="h-80 flex items-center glass-effect justify-center w-full rounded-lg mt-4">
+                    <h1 className="text-blue-100 text-2xl">No data available</h1>
                 </div>
             )}
         </div>

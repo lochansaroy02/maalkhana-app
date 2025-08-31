@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 
 const casePropertyOptions = [
     "malkhana Entry", "FSL", "Kurki", "Other Entry", "Cash Entry", "Wine/Daru", "Unclaimed Entry",
+    "Yellow Item"
 ];
 
 const Page = () => {
@@ -80,7 +81,7 @@ const Page = () => {
     // Reworked filtering logic to handle all report types
     useEffect(() => {
         let filteredData = [...entries];
-        
+
         if (reportType === "movement") {
             //@ts-ignore
             filteredData = filterByMovement(entries);
@@ -109,7 +110,6 @@ const Page = () => {
 
     const handleImportSuccess = () => {
         if (user?.id) {
-            // Refresh data after a successful import.
             fetchMaalkhanaEntry(user.id);
         }
     };
@@ -117,8 +117,8 @@ const Page = () => {
     return (
         <>
             {/* Filter Section */}
-            <div className="p-4 glass-effect">
-                <div className="flex flex-wrap gap-4 items-center">
+            <div className="p-4  mx-2  glass-effect">
+                <div className="flex  flex-wrap gap-4 items-center">
                     <h1 className="text-lg font-semibold text-white">Filter by Entry Type:</h1>
                     {casePropertyOptions.map((property) => (
                         <div key={property} className="flex items-center space-x-2">

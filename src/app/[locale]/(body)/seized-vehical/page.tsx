@@ -13,7 +13,7 @@ const Page = () => {
     const t = useTranslations('seizedVehicleForm');
 
     const { user } = useAuthStore();
-    const { addVehicle, getData, updateVehicalEntry } = useSeizedVehicleStore();
+    const { addVehicle, getData, updateVehicalEntry, getByFIR, getBySR } = useSeizedVehicleStore();
     const [existingId, setExistingId] = useState<string>("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
@@ -156,23 +156,35 @@ const Page = () => {
         setUnderSection(data?.underSection || '');
     };
 
-    const handleGet = async () => {
+    const handleGetByFir = async () => {
         setSearchResults([]);
         setSelectedResultId('');
         try {
-            const data = await getData(user?.id, formData.firNo, formData.srNo);
-            if (data?.length) {
+
+            const response = await getByFIR(user?.id, formData.firNo)
+            const data = response.data
+            if (response.success) {
                 if (data.length > 1) {
-                    setSearchResults(data);
+                    setSearchResults(data)
                     toast.success(t('toasts.recordsFound', { count: data.length }));
                 } else {
                     toast.success(t('toasts.fetchSuccess'));
                     formFill(data[0]);
                     setSelectedResultId(data[0].id || data[0]._id);
                 }
-            } else {
-                toast.error(t('toasts.noData'));
             }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            toast.error(t('toasts.fetchFailed'));
+        }
+    }
+
+    const handleGetBySR = async () => {
+        setSearchResults([]);
+        setSelectedResultId('');
+        try {
+            const data = await getBySR(user?.id, formData.srNo);
+
         } catch (error) {
             console.error("Error fetching data:", error);
             toast.error(t('toasts.fetchFailed'));
@@ -281,7 +293,8 @@ const Page = () => {
                                         value={formData[field.name as keyof typeof formData]}
                                         setInput={e => handleInputChange(field.name, e.target.value)}
                                     />
-                                    <Button className='bg-green-600 text-white' onClick={handleGet}>{t('buttons.search')}</Button>
+                                    <Button className='bg-green-600 text-white'
+                                        onClick={handleGetBySR}>{t('buttons.search')}</Button>
                                 </div>
                             );
                         }
@@ -295,7 +308,10 @@ const Page = () => {
                                         value={formData.firNo}
                                         setInput={e => handleInputChange('firNo', e.target.value)}
                                     />
-                                    <Button className='bg-purple-600 text-white' onClick={handleGet}>{t('buttons.getByFir')}</Button>
+                                    <Button className='bg-purple-600 text-white'
+                                        onClick={handleGetByFir}>
+                                        {t('buttons.getByFir')}
+                                    </Button>
                                 </div>
                             );
                         }
