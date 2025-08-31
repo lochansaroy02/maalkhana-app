@@ -68,13 +68,19 @@ const Page = () => {
         const returnEntries = allEntries.filter(entry => entry.isReturned === true);
         return selectFields(returnEntries, fieldsToShow);
     };
+    const filterbyMalkhana = (allEntries: any[]) => {
+        const fieldsToShow = ['firNo', 'srNo', 'entryType', 'caseProperty', 'gdNo', 'gdDate', 'Year', 'policeStation', 'vadiName'];
+        const returnEntries = allEntries.filter(entry => entry.isReturned === true);
+        return selectFields(returnEntries, fieldsToShow);
+    };
+
+
 
 
     // Reworked filtering logic to handle all report types
     useEffect(() => {
-        let filteredData = [...entries]; // Start with all available entries.
-
-        // Step 1: Filter based on the global report type from the dropdown.
+        let filteredData = [...entries];
+        
         if (reportType === "movement") {
             //@ts-ignore
             filteredData = filterByMovement(entries);
@@ -129,7 +135,6 @@ const Page = () => {
                 </div>
             </div>
 
-            {/* Report Table */}
             <Report
                 data={displayData}
                 onImportClick={() => setIsModalOpen(true)}

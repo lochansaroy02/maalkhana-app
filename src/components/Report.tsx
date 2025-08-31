@@ -26,6 +26,50 @@ const Report = ({
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+    const orderedKeys = [
+        'firNo',
+        'srNo',
+        'gdNo',
+        'gdDate',
+        'underSection',
+        'caseProperty',
+        'policeStation',
+        'I O Name',
+        'vadiName',
+        'accused',
+        'status',
+        'entryType',
+        'place',
+        'boxNo',
+        'courtNo',
+        'courtName',
+        'address',
+        'fathersName',
+        'mobile',
+        'name',
+        'releaseItemName',
+        'returnDate',
+
+        'description',
+        'wine',
+        'wineType',
+        'Year',
+        'HM',
+        'moveDate',
+        'movePurpose',
+        'moveTrackingNo',
+        'returnBackFrom',
+        'takenOutBy',
+        'receivedBy',
+        'receiverName',
+        'documentUrl',
+        'cash',
+        'isMovement',
+        'isRelease',
+        'yellowItemPrice',
+        'dbName'
+    ];
+
     const formatValue = (key: string, value: any) => {
         if (key === "createdAt" || key === "updatedAt" || key === 'gdDate' || key === 'moveDate' || key == 'returnDate') {
             // Check if value is valid before creating a Date object
@@ -43,7 +87,7 @@ const Report = ({
         }
     };
 
-    const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "isReturned", "isRelease", "photoUrl", "userId", "districtId", "_id", "__v"];
+    const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "isReturned", "isRelease", "photoUrl", "userId", "districtId", "_id", "__v", ""];
 
     const toggleSelect = (id: string) => {
         setSelectedIds(prev =>
@@ -76,15 +120,32 @@ const Report = ({
         await generateBarcodePDF(selectedData);
     };
 
-
     const handleDoubleClick = (item: any) => {
-        const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "userId", "districtId", "_id", "__v"];
+        // You can remove this section as it's not directly related to the heading order issue
+        const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "userId", "districtId", "_id", "__v", ''];
 
-        const visibleKeys = Object.keys(item).filter(key => !excluded.includes(key));
-        console.log(visibleKeys)
+        // Get all keys and filter out the excluded ones
+        const allKeys = Object.keys(item).filter(key => !excluded.includes(key));
 
-        sessionStorage.setItem('visibleReportFields', JSON.stringify(visibleKeys));
+        // Create a new array to store the keys in the desired order
+        const sortedVisibleKeys: string[] = [];
 
+        // Add the keys from our predefined order list first
+        orderedKeys.forEach(key => {
+            if (allKeys.includes(key)) {
+                sortedVisibleKeys.push(key);
+            }
+        });
+
+        // Add any remaining keys that were not in the predefined list
+        allKeys.forEach(key => {
+            if (!sortedVisibleKeys.includes(key)) {
+                sortedVisibleKeys.push(key);
+            }
+        });
+
+        sessionStorage.setItem('visibleReportFields', JSON.stringify(sortedVisibleKeys));
+        console.log(sortedVisibleKeys)
 
         router.push(`/report/entry-report/${item.id}`);
     }
@@ -112,11 +173,14 @@ const Report = ({
                         <thead className="bg-gray-700/50 border border-white rounded-xl text-sm font-semibold text-white">
                             <tr>
                                 <th className="px-4 py-2 text-center">Select</th>
-                                {Object.keys(data[0])
+                                {/* Iterate over orderedKeys to control the column order
+                                    and filter out excluded keys
+                                */}
+                                {orderedKeys
                                     .filter((key) => !excluded.includes(key))
                                     .map((key) => (
                                         <th key={key} className="px-4 py-2 text-left capitalize">
-                                            {key.replace(/([A-Z])/g, ' $1').trim()} {/* Adds space before capital letters for readability */}
+                                            {key}
                                         </th>
                                     ))}
                             </tr>
@@ -137,11 +201,13 @@ const Report = ({
                                             onClick={(e) => e.stopPropagation()} // Prevents double-click from firing on checkbox click
                                         />
                                     </td>
-                                    {Object.entries(item)
-                                        .filter(([key]) => !excluded.includes(key))
-                                        .map(([key, value]) => (
+                                    {/* Iterate over orderedKeys here as well to ensure data cells match the header order
+                                    */}
+                                    {orderedKeys
+                                        .filter((key) => !excluded.includes(key))
+                                        .map((key) => (
                                             <td key={key} className="px-4 border border-black py-2">
-                                                {formatValue(key, value)}
+                                                {formatValue(key, item[key])}
                                             </td>
                                         ))}
                                 </tr>

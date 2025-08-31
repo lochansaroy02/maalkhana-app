@@ -29,7 +29,6 @@ const Page = () => {
     const photoRef = useRef<HTMLInputElement>(null);
     const documentRef = useRef<HTMLInputElement>(null);
 
-    // --- FORM LOGIC ---
     const handleInputChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
@@ -38,10 +37,10 @@ const Page = () => {
         if (!data) return;
         const recordId = data.id || data._id;
         setExistingId(recordId);
-        setFormData({
-            firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', releaseItemName: data.description || data.caseProperty || '', receiverName: data.receiverName || "", fathersName: data.fathersName || "", address: data.address || "", mobile: data.mobile || "",
-        });
         setCaseProperty(data.caseProperty || '');
+        setFormData({
+            firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', releaseItemName: data.releaseItemName || '', receiverName: data.receiverName || "", fathersName: data.fathersName || "", address: data.address || "", mobile: data.mobile || "",
+        });
     };
 
     const resetAll = () => {
@@ -63,10 +62,12 @@ const Page = () => {
             if (data && data.length) {
                 if (data.length > 1) {
                     setSearchResults(data);
+                    console.log(data.caseProperty);
                     toast.success(t('toasts.recordsFound', { count: data.length }));
                 } else {
                     toast.success(t('toasts.fetchSuccess'));
                     fillForm(data[0]);
+                    console.log(data[0].caseProperty);
                     setSelectedResultId(data[0].id || data[0]._id);
                 }
             } else {

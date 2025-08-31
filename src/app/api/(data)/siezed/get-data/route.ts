@@ -55,18 +55,36 @@ export const GET = async (req: NextRequest) => {
 
 
     try {
-        const data = await prisma.seizedVehicle.findFirst({
-            where: {
-                userId,
-                OR: [
-                    firNo ? { firNo } : {},
-                    srNo ? { srNo } : {}
-                ]
-            },
-            select: selection
-        });
 
-        return NextResponse.json({ success: true, data: data }, { status: 200 });
+        if (!srNo) {
+            const data = await prisma.seizedVehicle.findMany({
+                where: {
+                    userId,
+                    firNo
+                },
+                select: selection
+            });
+
+            return NextResponse.json({ success: true, data: data }, { status: 200 });
+        }
+        if (!firNo) {
+            const data = await prisma.seizedVehicle.findFirst({
+                where: {
+                    userId,
+                    srNo
+
+                },
+                select: selection
+            });
+
+            return NextResponse.json({ success: true, data: data }, { status: 200 });
+        }
+        return NextResponse.json({
+            success: true,
+            message: "data not found"
+        }, { status: 200 });
+
+
 
     } catch (error) {
         console.error("GET /api/firNo error:", error);

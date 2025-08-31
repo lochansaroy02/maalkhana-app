@@ -151,7 +151,8 @@
                 "nilami": "Nilami",
                 "pending": "Pending",
                 "other": "Other",
-                "onCourt": "On Court"
+                "onCourt": "On Court",
+                "otherStatus": "Other Status"
             }
         },
         "buttons": {

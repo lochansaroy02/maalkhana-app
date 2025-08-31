@@ -28,7 +28,7 @@ export const GET = async (req: NextRequest) => {
             userId: true
         };
         if (type === 'malkhana') {
-            const data = await prisma.malkhanaEntry.findFirst({
+            const data = await prisma.malkhanaEntry.findMany({
                 where: {
                     firNo, userId
                 },
@@ -37,10 +37,10 @@ export const GET = async (req: NextRequest) => {
             return NextResponse.json({ success: true, data }, { status: 200 });
         }
 
-        if (type === "siezed vehical") {
+        if (type === "seizedVehicle") {
 
             if (firNo) {
-                const data = await prisma.seizedVehicle.findFirst({
+                const data = await prisma.seizedVehicle.findMany({
                     where: {
                         firNo, userId
                     },

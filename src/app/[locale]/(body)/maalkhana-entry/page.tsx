@@ -13,16 +13,9 @@ import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
-// TODO: Import your actual useTranslation hook here
-// import { useTranslation } from 'path/to/your/i18n/hook';
-
-
 const Page = () => {
-    // In a real app, this hook would come from your i18n library (e.g., 'next-intl' or 'react-i18next').
-    // The mock implementation has been removed as requested.
     const t = useTranslations('entry');
     const baseKey = 'malkhanaEntryForm';
-
 
     const { user } = useAuthStore();
     const { addMaalkhanaEntry, updateMalkhanaEntry, getByFIR } = useMaalkhanaStore();
@@ -30,6 +23,7 @@ const Page = () => {
     const [firData, setFirData] = useState<any[]>([]);
     const [photoUrl, SetPhotoUrl] = useState("");
     const [dropdownSelection, setDropdownSelection] = useState('');
+    const [otherStatus, setOtherStatus] = useState('');
     const [entryType, setEntryType] = useState('');
     const [wine, setWine] = useState<number>(0);
     const [cash, setCash] = useState<number>(0);
@@ -75,7 +69,6 @@ const Page = () => {
         SetPhotoUrl(data.photoUrl || "");
     };
 
-
     const clearForm = () => {
         setFormData(prev => ({
             firNo: prev.firNo,
@@ -105,7 +98,6 @@ const Page = () => {
         { value: 'angrezi', label: t(`${baseKey}.wineSection.options.angrezi`) }
     ];
 
-    // Mapping from form field name to translation key suffix
     const fieldKeyMap: { [key: string]: string } = {
         firNo: 'firNo', srNo: 'srNo', caseProperty: 'caseProperty', gdNo: 'gdNo', gdDate: 'gdDate', Year: 'year', policeStation: 'policeStation', IOName: 'ioName', vadiName: 'vadiName', status: 'status', HM: 'hm', accused: 'accused', underSection: 'underSection', description: 'description', place: 'place', boxNo: 'boxNo', courtNo: 'courtNo', courtName: 'courtName'
     };
@@ -143,7 +135,6 @@ const Page = () => {
     };
 
     const handleSave = async () => {
-
         if (loading) return;
 
         const requiredFields: { key: string, value: any }[] = [
@@ -154,32 +145,44 @@ const Page = () => {
             { key: 'policeStation', value: formData.policeStation },
         ];
 
-        // Only require FIR No if it's not an "unclaimed" item
         if (dropdownSelection !== 'unclaimed') {
             requiredFields.push({ key: 'firNo', value: formData.firNo });
         }
 
-        // Find which fields are empty and get their translated labels
         const emptyFields = requiredFields
             .filter(field => !field.value)
             .map(field => t(`${baseKey}.fields.${fieldKeyMap[field.key]}`));
 
         if (emptyFields.length > 0) {
-            // NOTE: You might need to add this translation key to your localization file.
-            // e.g., "requiredFieldsError": "Please fill out the following required fields"
             toast.error('Please fill all required fields');
             return;
         }
+
+        if (dropdownSelection === 'other' && !entryType) {
+            toast.error(t(`${baseKey}.toasts.specifyOtherError`));
+            return;
+        }
+
         setLoading(true);
+
         try {
-            if (dropdownSelection === 'other' && !entryType) {
-                toast.error(t(`${baseKey}.toasts.specifyOtherError`));
-                setLoading(false);
-                return;
-            }
+            const finalStatus = status === 'other' ? otherStatus : status;
+
             const fullData = {
-                ...formData, status, wine, cash, wineType, entryType, entryTypeKey: dropdownSelection, userId: user?.id, photoUrl, description, yellowItemPrice, gdDate: dateFields.gdDate?.toISOString() ?? '',
+                ...formData,
+                status: finalStatus,
+                wine,
+                cash,
+                wineType,
+                entryType,
+                entryTypeKey: dropdownSelection,
+                userId: user?.id,
+                photoUrl,
+                description,
+                yellowItemPrice,
+                gdDate: dateFields.gdDate?.toISOString() ?? '',
             };
+
             let success = false;
             if (existingId) {
                 success = await updateMalkhanaEntry(existingId, fullData);
@@ -188,6 +191,7 @@ const Page = () => {
                 success = await addMaalkhanaEntry(fullData);
                 toast.success(t(`${baseKey}.toasts.addSuccess`));
             }
+
             if (success) {
                 clearForm();
                 setFormData({ firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '' });
@@ -196,6 +200,7 @@ const Page = () => {
             }
         } catch (error) {
             console.error("Save error:", error);
+            toast.error(t(`${baseKey}.toasts.saveError`));
         } finally {
             setLoading(false);
         }
@@ -304,6 +309,7 @@ const Page = () => {
                                 return <InputComponent key={field.name} label={field.label} value={formData.srNo} setInput={(e) => handleInputChange(field.name, e.target.value)} />;
                             }
                         }
+
                         if (field.type === 'dropdown') {
                             return <DropDown key={field.name} label={field.label} selectedValue={status} options={field.options || []} handleSelect={setStatus} />;
                         }
@@ -331,6 +337,9 @@ const Page = () => {
                             </div>
                         );
                     })}
+                    {status === 'other' && (
+                        <InputComponent label='Other Status' setInput={(e) => setOtherStatus(e.target.value)} value={otherStatus} />
+                    )}
                 </div>
 
                 <div className='w-full'>
@@ -353,7 +362,7 @@ const Page = () => {
                     ))}
                 </div>
             </div>
-        </div >
+    </div >
     );
 };
 

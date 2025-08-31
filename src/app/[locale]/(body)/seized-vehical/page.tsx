@@ -22,6 +22,7 @@ const Page = () => {
     const [underSection, setUnderSection] = useState('');
     const [caseProperty, setCaseProperty] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [otherStatus, setOtherStatus] = useState('');
 
     const [gdDate, setGdDate] = useState<Date | undefined>();
 
@@ -69,6 +70,7 @@ const Page = () => {
         setUnderSection('');
         setSearchResults([]);
         setSelectedResultId('');
+        setOtherStatus('');
     };
 
     const handleSave = async () => {
@@ -110,8 +112,13 @@ const Page = () => {
 
         try {
             setIsLoading(true);
+
+            // --- UPDATED LOGIC ---
+            const finalStatus = formData.status === 'other' ? otherStatus : formData.status;
+
             const fullVehicleData = {
                 ...formData,
+                status: finalStatus, // Use the finalStatus here
                 gdDate: gdDate?.toISOString() || '',
                 caseProperty,
                 seizedBy,
@@ -153,8 +160,8 @@ const Page = () => {
         setSearchResults([]);
         setSelectedResultId('');
         try {
-            const { success, data } = await getData(user?.id, formData.firNo, formData.srNo);
-            if (success && data?.length) {
+            const data = await getData(user?.id, formData.firNo, formData.srNo);
+            if (data?.length) {
                 if (data.length > 1) {
                     setSearchResults(data);
                     toast.success(t('toasts.recordsFound', { count: data.length }));
@@ -265,13 +272,11 @@ const Page = () => {
                             return <DatePicker key={field.name} label={field.label} date={gdDate} setDate={handleDateChange} />;
                         }
 
-                        // The below logic for a flex container is what was causing the width issues.
-                        // I've moved the InputComponent outside the flex container unless a button is needed.
                         if (field.name === 'srNo' && (caseProperty === "mvAct" || caseProperty === "unclaimed")) {
                             return (
                                 <div key={field.name} className='flex items-end gap-2'>
                                     <InputComponent
-                                        className="flex-grow" // This class makes the input take up remaining space
+                                        className="flex-grow"
                                         label={field.label}
                                         value={formData[field.name as keyof typeof formData]}
                                         setInput={e => handleInputChange(field.name, e.target.value)}
@@ -305,6 +310,15 @@ const Page = () => {
                         );
                     })}
                 </div>
+                {formData.status === 'other' && (
+                    <div className='mt-4 w-1/2'>
+                        <InputComponent
+                            label={t('options.status.otherStatus')}
+                            value={otherStatus}
+                            setInput={(e) => setOtherStatus(e.target.value)}
+                        />
+                    </div>
+                )}
                 <div className='flex justify-center w-full mt-4'>
                     <Button
                         onClick={handleSave}

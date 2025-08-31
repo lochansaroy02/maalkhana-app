@@ -136,8 +136,9 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
     getData: async (userId: string | undefined, firNo?: string, srNo?: string) => {
         try {
             const response = await axios(`api/siezed/get-data?userId=${userId}&firNo=${firNo}&srNo=${srNo}`)
-            const data = response.data
+            const data = await response.data
             if (data.success) {
+                console.log(data)
                 return {
                     success: data.success,
                     data: data.data
@@ -146,7 +147,11 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
 
         } catch (error) {
             console.error("Error fatching data:", error);
-
+            // This needs to return a consistent object
+            return {
+                success: false,
+                data: null
+            };
         }
     },
     getIdBySR: async (srNo: string) => {

@@ -42,8 +42,8 @@ const Page = () => {
                 <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Users</h1>
             </div>
             <div className='flex gap-4  justify-end px-12 items-center py-1    glass-noRound  rounded-b-xl'>
-                {selectedUserIds.length > 0 && <Button onClick={handleDeleteSelected} className='bg-red-800'>Delete Selected</Button>}
                 <Button onClick={() => setIsModalOpen(true)} className='bg-blue cursor-pointer'>Add User</Button>
+                {selectedUserIds.length > 0 && <Button onClick={handleDeleteSelected} className='bg-red-800'>Delete Selected</Button>}
             </div>
             <div className="overflow-x-auto mt-4 glass-effect shadow-md rounded-md">
                 <table className="min-w-full divide-y  divide-blue-900/50 text-sm text-left">

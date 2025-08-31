@@ -42,7 +42,7 @@ export const GET = async (req: NextRequest) => {
             return NextResponse.json({ success: true, data }, { status: 200 });
         }
 
-        if (type === "seized vehicle") {
+        if (type === "seizedVehicle") {
             if (!firNo && !srNo) {
                 return NextResponse.json({ success: true, message: "please enter FirNo." }, { status: 200 });
             }

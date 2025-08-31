@@ -93,7 +93,6 @@ const Page: React.FC = () => {
         }
     }, [entry]);
 
-    // ✅ FIX: This function's logic now mirrors the working reference component.
     const getByFir = async () => {
         if (!type) return toast.error(t('toasts.selectType'));
         if (!searchFirNo && !searchSrNo) return toast.error(t('toasts.enterFirOrSr'));
@@ -161,7 +160,9 @@ const Page: React.FC = () => {
             console.error("Save error:", error);
             toast.error(t('toasts.saveFailed'));
         } finally {
+
             setIsLoading(false);
+
         }
     };
 
@@ -248,7 +249,7 @@ const Page: React.FC = () => {
                                     if (!isReturned && fieldsToHideWhenNotReturned.includes(field.name)) return null;
                                     if (isReturned && fieldsToHideWhenReturned.includes(field.name)) return null;
 
-                                    if (['underSection', 'name'].includes(field.name)) {
+                                    if (['underSection',].includes(field.name)) {
                                         return <InputComponent key={field.name} label={field.label} value={formData[field.name as keyof typeof formData] ?? ""} disabled />;
                                     }
                                     if (field.type === "date") {
