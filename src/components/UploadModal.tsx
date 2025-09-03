@@ -13,7 +13,8 @@ interface UploadModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: (message: string) => void;
-    addEntry: (data: any, districtId: string | undefined) => Promise<void>
+    // Fix: Removed `districtId` as it's not being passed.
+    addEntry: (data: any) => Promise<void>;
 }
 
 const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: UploadModalProps) => {
@@ -21,7 +22,6 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -43,10 +43,9 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
 
             setLoading(true);
             try {
-                //@ts-ignore
-                addEntry(data)
+                // The `@ts-ignore` is no longer needed after fixing the type definition.
+                await addEntry(data);
                 onSuccess("✅ Data imported successfully");
-
                 onClose();
             } catch (err: any) {
                 setError("❌ Failed to import data.");
@@ -62,10 +61,10 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
 
     return (
         <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
-            <div className="bg-blue   p-6 rounded w-[200%] max-w-md">
+            <div className="bg-blue p-6 rounded w-[200%] max-w-md">
                 <h2 className="text-lg text-blue-100 font-bold mb-4">Import Excel - {schemaType}</h2>
 
-                <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4 text-blue-100/70  border border-dotted border-blue-100 px-4 py-2 rounded-xl  " />
+                <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4 text-blue-100/70 border border-dotted border-blue-100 px-4 py-2 rounded-xl" />
 
                 {loading && <p className="text-blue-500">Importing...</p>}
                 {error && <p className="text-red-500 whitespace-pre-wrap">{error}</p>}

@@ -5,10 +5,10 @@ import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useOpenStore } from '@/store/store';
+import React, { useEffect } from 'react'; // Import useEffect
 
 import Modal from '@/components/Modal';
 import { X } from 'lucide-react';
-import React, { useEffect } from 'react'; // Import useEffect
 const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
 
     const { isOpen, setIsOpen } = useOpenStore();

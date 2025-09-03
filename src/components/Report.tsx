@@ -6,6 +6,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { reportKeys } from "@/utils/headerMappings";
 import { Button } from "./ui/button";
 
 interface ReportProps {
@@ -28,32 +29,47 @@ const Report = ({
 
     // Updated orderedKeys to match your new schema
     const orderedKeys = [
-        "क्र0सं0",
-        "fir No",
-        "wine",
-        "cash",
-        "wine type",
-        "photo url",
-        "Sr No",
-        "Gd no",
-        "Gd Date",
-        "under section",
-        "descrition",
-        "year",
-        "policestation",
-        "विवेचक का नाम",
-        "वादी का नाम",
-        "एचएम दाखिल कर्ता का नाम",
-        "accused",
-        "status",
-        "entry type",
-        "place",
-        "box no",
-        "court no",
-        "court name",
-        "case property",
+        'firNo',
+        'srNo',
+        'gdNo',
+        'gdDate',
+        'underSection',
+        'caseProperty',
+        'policeStation',
+        'I O Name',
+        'vadiName',
+        'accused',
+        'status',
+        'entryType',
+        'place',
+        'boxNo',
+        'courtNo',
+        'courtName',
+        'address',
+        'fathersName',
+        'mobile',
+        'name',
+        'releaseItemName',
+        'returnDate',
+        'description',
+        'wine',
+        'wineType',
+        'Year',
+        'HM',
+        'moveDate',
+        'movePurpose',
+        'moveTrackingNo',
+        'returnBackFrom',
+        'takenOutBy',
+        'receivedBy',
+        'receiverName',
+        'documentUrl',
+        'cash',
+        'isMovement',
+        'isRelease',
+        'yellowItemPrice',
+        'dbName'
     ];
-
     const formatValue = (key: string, value: any) => {
         if (key === 'Gd Date') {
             return value ? new Date(value).toLocaleDateString('en-IN') : "-";
@@ -63,9 +79,11 @@ const Report = ({
 
     const handleExport = () => {
         if (data && data.length > 0) {
-            exportToExcel(data, "report_data", orderedKeys);
+            // Pass the reportKeys from your headerMappings file
+            exportToExcel(data, "report_data", reportKeys);
         }
     };
+
 
     const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "isReturned", "isRelease", "photoUrl", "userId", "districtId", "_id", "__v", ""];
 
@@ -127,7 +145,10 @@ const Report = ({
                 <h1 className="text-2xl font-bold text-white">{heading}</h1>
                 <div className="flex gap-4">
                     {onImportClick && <Button onClick={onImportClick}>Import</Button>}
+
                     <Button onClick={handleExport}>Export</Button>
+
+
                     <Button onClick={handleDeleteSelected} variant="destructive">
                         Delete Selected
                     </Button>

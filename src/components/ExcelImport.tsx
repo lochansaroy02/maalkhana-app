@@ -1,40 +1,49 @@
+// components/ExcelImport.tsx
+
 "use client";
 
 import { useState } from "react";
 import * as XLSX from "xlsx";
 
-const expectedFields = [
-    "क्र0सं0",
-    "fir No",
+// Define the exact fields you want to import from the Excel sheet.
+// These are the fields from your prompt:
+const excelHeaders = [
+    "Sr. No.",
+    "srlNO",
+    "firNo",
     "wine",
     "cash",
-    "wine type",
-    "photo url",
-    "Sr No",
-    "Gd no",
-    "Gd Date",
-    "under section",
-    "descrition",
-    "year",
-    "policestation",
-    "विवेचक का नाम",
-    "वादी का नाम",
-    "एचएम दाखिल कर्ता का नाम",
+    "wineType",
+    "photoUrl",
+    "srNo",
+    "gdNo",
+    "gdDate",
+    "underSection",
+    "description",
+    "Year",
+    "policeStation",
+    "receiverName",
+    "vadiName",
+    "HM",
     "accused",
     "status",
-    "entry type",
+    "entryType",
     "place",
-    "box no",
-    "court no",
-    "court name",
-    "case property",
+    "boxNo",
+    "courtNo",
+    "caseProperty",
 ];
+
+// Define a type for a single row from the Excel sheet with an index signature
+interface ExcelRow {
+    [key: string]: any;
+}
 
 const ExcelImport = () => {
     const [error, setError] = useState("");
-    const [parsedData, setParsedData] = useState([]);
+    const [parsedData, setParsedData] = useState<ExcelRow[]>([]); // Use the correct type
 
-    const handleFileUpload = (e: any) => {
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -45,7 +54,9 @@ const ExcelImport = () => {
 
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
-            const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+            // Explicitly type the jsonData to avoid the 'any' error
+            const jsonData: ExcelRow[] = XLSX.utils.sheet_to_json(sheet) as ExcelRow[];
 
             if (jsonData.length === 0) {
                 setError("❌ The Excel file is empty.");
@@ -53,31 +64,10 @@ const ExcelImport = () => {
                 return;
             }
 
-            const sheetFields = Object.keys(jsonData[0] as any);
-
-            // Check for missing fields
-            const missingFields = expectedFields.filter(
-                (field) => !sheetFields.includes(field)
-            );
-
-            // Check for extra fields
-            const extraFields = sheetFields.filter(
-                (field) => !expectedFields.includes(field)
-            );
-
-            if (missingFields.length > 0 || extraFields.length > 0) {
-                setError(
-                    `❌ Schema mismatch:\nMissing Fields: ${missingFields.join(
-                        ", "
-                    )}\nExtra Fields: ${extraFields.join(", ")}`
-                );
-                setParsedData([]);
-                return;
-            }
 
             setError("");
-            setParsedData(jsonData as any);
-            console.log("✅ Valid data:", jsonData);
+            setParsedData(jsonData); // Directly set the parsed data without mapping
+            console.log("✅ Data Imported:", jsonData);
         };
 
         reader.readAsBinaryString(file);
