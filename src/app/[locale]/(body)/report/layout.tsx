@@ -1,9 +1,13 @@
 "use client";
 
+import ReportHeader from '@/components/ReportHeader';
 import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useOpenStore } from '@/store/store';
+
+import Modal from '@/components/Modal';
+import { X } from 'lucide-react';
 import React, { useEffect } from 'react'; // Import useEffect
 const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
 
@@ -25,38 +29,38 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
         }
     }, [user?.id, fetchMaalkhanaEntry, fetchMovementData, fetchVehicles]);
     return (
-        <div className='h-screen '>
-            <div className='glass-effect h-3/4 flex-col flex items-center justify-center'>
-                <h1 className='text-blue-100 text-2xl'>This section is under maintenance.</h1>
-                <h1 className='text-blue-100/80 text-xl'>यह भाग रखरखाव के अधीन है।</h1>
-            </div>
-        </div>
-
-        // <div className='relative  glass-effect'>
-        //     {/* Header */}
-        //     <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
-        //         <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Reports</h1>
+        // <div className='h-screen '>
+        //     <div className='glass-effect h-3/4 flex-col flex items-center justify-center'>
+        //         <h1 className='text-blue-100 text-2xl'>This section is under maintenance.</h1>
+        //         <h1 className='text-blue-100/80 text-xl'>यह भाग रखरखाव के अधीन है।</h1>
         //     </div>
-
-        //     {/* Sub Header */}
-        //     <ReportHeader />
-
-
-        //     {children}
-
-
-        //     {isOpen && (
-        //         <Modal>
-        //             <div
-        //                 onClick={() => setIsOpen(false)}
-        //                 className="absolute cursor-pointer bg-red-800 right-4 top-2 rounded-full p-1"
-        //             >
-        //                 <span className="text-blue-100"><X size={24} /></span>
-        //             </div>
-
-        //         </Modal>
-        //     )}
         // </div>
+
+        <div className='relative  glass-effect'>
+            {/* Header */}
+            <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
+                <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Reports</h1>
+            </div>
+
+            {/* Sub Header */}
+            <ReportHeader />
+
+
+            {children}
+
+
+            {isOpen && (
+                <Modal>
+                    <div
+                        onClick={() => setIsOpen(false)}
+                        className="absolute cursor-pointer bg-red-800 right-4 top-2 rounded-full p-1"
+                    >
+                        <span className="text-blue-100"><X size={24} /></span>
+                    </div>
+
+                </Modal>
+            )}
+        </div>
     )
 }
 export default layout
