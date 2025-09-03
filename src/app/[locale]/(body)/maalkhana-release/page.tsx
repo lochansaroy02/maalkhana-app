@@ -34,6 +34,7 @@ const Page = () => {
     };
 
     const fillForm = (data: any) => {
+
         if (!data) return;
         const recordId = data.id || data._id;
         setExistingId(recordId);
@@ -55,23 +56,31 @@ const Page = () => {
         if (!formData.firNo && !formData.srNo) return toast.error(t('toasts.enterFirOrSr'));
 
         setIsFetching(true);
-        setSearchResults([]); setExistingId(''); setSelectedResultId('');
+        setSearchResults([]);
+        setExistingId('');
+        setSelectedResultId('');
 
         try {
-            const data = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
-            if (data && data.length) {
-                if (data.length > 1) {
-                    setSearchResults(data);
-                    console.log(data.caseProperty);
-                    toast.success(t('toasts.recordsFound', { count: data.length }));
-                } else {
+            const response = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
+
+            if (response && response.success && Array.isArray(response.data)) {
+                const results = response.data;
+
+                if (results.length > 1) {
+                    setSearchResults(results);
+                    toast.success(t('toasts.recordsFound', { count: results.length }));
+                } else if (results.length === 1) {
+                    // Single record found, likely from an SR number. Auto-fill the form.
+                    fillForm(results[0]);
+                    setSelectedResultId(results[0].id || results[0]._id);
                     toast.success(t('toasts.fetchSuccess'));
-                    fillForm(data[0]);
-                    console.log(data[0].caseProperty);
-                    setSelectedResultId(data[0].id || data[0]._id);
+                } else {
+                    // No records found.
+                    toast.error(t('toasts.noRecord'));
                 }
             } else {
-                toast.error(t('toasts.noRecord'));
+                fillForm(response.data)
+                toast.success(t('toasts.fetchSuccess'));
             }
         } catch (error) {
             console.error("Error fetching by FIR:", error);
@@ -155,7 +164,7 @@ const Page = () => {
                     </div>
                 </div>
 
-                {/* --- NEW ---: This block renders radio buttons when multiple results are found */}
+
                 {searchResults.length > 1 && (
                     <div className="my-4 col-span-2 flex flex-col gap-1">
                         <label className='text-blue-100'>{t('labels.multipleRecords')}</label>

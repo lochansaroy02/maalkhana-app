@@ -19,9 +19,13 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
         try {
 
             const response = await axios.get(`/api/release/fir?userId=${userId}&type=${type}&firNo=${firNo}&srNo=${srNo}`);
+            const data = response.data
 
             if (response.data.success) {
-                return response.data.data;
+                return {
+                    data: data.data,
+                    success: data.success
+                }
             }
             return null;
 

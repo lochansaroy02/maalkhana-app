@@ -16,9 +16,9 @@
         "malkhana": "Malkhana Entry",
         "vehicles": "Seized vehicles",
         "movement": "Malkhana movement",
-        "release": "malkhana release",
-        "barcode": "barcode",
-        "report": "report"
+        "release": "Malkhana release",
+        "barcode": "Barcode",
+        "report": "Report"
     },
     "Dashboard": {
         "totalEntries": "Total Entries",

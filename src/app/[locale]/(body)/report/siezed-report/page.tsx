@@ -31,7 +31,7 @@ const Page = () => {
         }
     }, [user?.id, fetchVehicles]);
 
-
+    console.log(displayData);
     useEffect(() => {
         selectFields(displayData, fieldsToShow)
     }, [])

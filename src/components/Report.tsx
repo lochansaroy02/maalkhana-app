@@ -26,55 +26,37 @@ const Report = ({
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+    // Updated orderedKeys to match your new schema
     const orderedKeys = [
-        'firNo',
-        'srNo',
-        'gdNo',
-        'gdDate',
-        'underSection',
-        'caseProperty',
-        'policeStation',
-        'I O Name',
-        'vadiName',
-        'accused',
-        'status',
-        'entryType',
-        'place',
-        'boxNo',
-        'courtNo',
-        'courtName',
-        'address',
-        'fathersName',
-        'mobile',
-        'name',
-        'releaseItemName',
-        'returnDate',
-        'description',
-        'wine',
-        'wineType',
-        'Year',
-        'HM',
-        'moveDate',
-        'movePurpose',
-        'moveTrackingNo',
-        'returnBackFrom',
-        'takenOutBy',
-        'receivedBy',
-        'receiverName',
-        'documentUrl',
-        'cash',
-        'isMovement',
-        'isRelease',
-        'yellowItemPrice',
-        'dbName'
+        "क्र0सं0",
+        "fir No",
+        "wine",
+        "cash",
+        "wine type",
+        "photo url",
+        "Sr No",
+        "Gd no",
+        "Gd Date",
+        "under section",
+        "descrition",
+        "year",
+        "policestation",
+        "विवेचक का नाम",
+        "वादी का नाम",
+        "एचएम दाखिल कर्ता का नाम",
+        "accused",
+        "status",
+        "entry type",
+        "place",
+        "box no",
+        "court no",
+        "court name",
+        "case property",
     ];
 
     const formatValue = (key: string, value: any) => {
-        if (key === "createdAt" || key === "updatedAt" || key === 'gdDate' || key === 'moveDate' || key == 'returnDate') {
+        if (key === 'Gd Date') {
             return value ? new Date(value).toLocaleDateString('en-IN') : "-";
-        }
-        if (key === "isReturned") {
-            return value ? "Yes" : "No";
         }
         return value || "-";
     };

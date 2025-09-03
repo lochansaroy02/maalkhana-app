@@ -31,7 +31,7 @@ const Sidebar = () => {
             return [...baseRoutes, { name: "Users", link: "/users" }];
         }
         return baseRoutes;
-    }, [user, t]); 
+    }, [user, t]);
 
     return (
         <div className={` ${isOpen ? "flex" : "hidden"} h-screen lg:flex transition-all ease-in-out duration-300 z-40 lg:w-[20%] lg:pt-0 pt-18 fixed lg:glass-effect border border-white/50 rounded-xl bg-blue `}>

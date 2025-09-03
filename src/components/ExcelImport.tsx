@@ -4,30 +4,37 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 
 const expectedFields = [
-    "id",
-    "srNo",
-    "gdNo",
-    "gdDate",
-    "underSection",
-    "vehicleType",
-    "colour",
-    "registrationNo",
-    "engineNo",
-    "description",
+    "क्र0सं0",
+    "fir No",
+    "wine",
+    "cash",
+    "wine type",
+    "photo url",
+    "Sr No",
+    "Gd no",
+    "Gd Date",
+    "under section",
+    "descrition",
+    "year",
+    "policestation",
+    "विवेचक का नाम",
+    "वादी का नाम",
+    "एचएम दाखिल कर्ता का नाम",
+    "accused",
     "status",
-    "policeStation",
-    "ownerName",
-    "seizedBy",
-    "caseProperty",
-    "updatedAt",
-    "createdAt",
+    "entry type",
+    "place",
+    "box no",
+    "court no",
+    "court name",
+    "case property",
 ];
 
 const ExcelImport = () => {
     const [error, setError] = useState("");
-    const [parsedData, setParsedData] = useState<any[]>([]);
+    const [parsedData, setParsedData] = useState([]);
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileUpload = (e: any) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -36,29 +43,40 @@ const ExcelImport = () => {
             const bstr = evt.target?.result;
             const workbook = XLSX.read(bstr, { type: "binary" });
 
-            // assuming first sheet
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
-            const jsonData: any[] = XLSX.utils.sheet_to_json(sheet);
+            const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-            // Validate schema
-            const sheetFields = Object.keys(jsonData[0]);
+            if (jsonData.length === 0) {
+                setError("❌ The Excel file is empty.");
+                setParsedData([]);
+                return;
+            }
 
-            const missingFields = expectedFields.filter((f) => !sheetFields.includes(f));
-            const extraFields = sheetFields.filter((f) => !expectedFields.includes(f));
+            const sheetFields = Object.keys(jsonData[0] as any);
+
+            // Check for missing fields
+            const missingFields = expectedFields.filter(
+                (field) => !sheetFields.includes(field)
+            );
+
+            // Check for extra fields
+            const extraFields = sheetFields.filter(
+                (field) => !expectedFields.includes(field)
+            );
 
             if (missingFields.length > 0 || extraFields.length > 0) {
                 setError(
-                    `❌ Schema mismatch:\nMissing: ${missingFields.join(
+                    `❌ Schema mismatch:\nMissing Fields: ${missingFields.join(
                         ", "
-                    )}\nExtra: ${extraFields.join(", ")}`
+                    )}\nExtra Fields: ${extraFields.join(", ")}`
                 );
                 setParsedData([]);
                 return;
             }
 
             setError("");
-            setParsedData(jsonData);
+            setParsedData(jsonData as any);
             console.log("✅ Valid data:", jsonData);
         };
 

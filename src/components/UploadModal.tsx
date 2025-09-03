@@ -40,7 +40,7 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                 return;
             }
 
-            // Post to backend
+
             setLoading(true);
             try {
                 //@ts-ignore
@@ -61,11 +61,11 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/30 flex justify-center items-center">
-            <div className="glass-effect bg-black/50  p-6 rounded w-[90%] max-w-md">
+        <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
+            <div className="bg-blue   p-6 rounded w-[200%] max-w-md">
                 <h2 className="text-lg text-blue-100 font-bold mb-4">Import Excel - {schemaType}</h2>
 
-                <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4 text-blue-100/70 " />
+                <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4 text-blue-100/70  border border-dotted border-blue-100 px-4 py-2 rounded-xl  " />
 
                 {loading && <p className="text-blue-500">Importing...</p>}
                 {error && <p className="text-red-500 whitespace-pre-wrap">{error}</p>}
