@@ -92,7 +92,7 @@ const Header = () => {
 
     return (
         <div className="fixed w-full lg:w-[80%] glass-effect z-40  flex">
-            <div className="flex items-center p-4 justify-between w-full">
+            <div className="flex items-center p-4 justify-between  w-full">
                 <button className="lg:hidden" onClick={toggleOpen}>
                     <Menu className="text-blue-100" />
                 </button>
@@ -103,27 +103,29 @@ const Header = () => {
                     </h1>
                 </div>
 
-                <div className="flex  gap-4 px-2 items-center">
+                <div className="flex w-1/2 gap-4 px-2 items-center">
                     {user?.role === 'district' && (
                         <DropDown
+                            selectValueLabel="Select Police station"
                             options={userData.map((item: any) => ({
-                                value: item.id,     // unique identifier
-                                label: item.policeStation,   // what the user sees
+                                value: item.id,
+                                label: item.policeStation,
                             }))}
                             selectedValue={selectedUser}
                             handleSelect={setselectedUser}
                         />
                     )}
+                    <div className="w-1/2">
+                        <select
+                            className="rounded-lg w-full glass-effect text-blue-100  px-2 py-1"
+                            onChange={(e) => handleLocaleChange(e.target.value)}
+                            defaultValue={pathname.split("/")[1] || "en"}
+                        >
 
-                    <select
-                        className="rounded-lg w-full glass-effect text-blue-100  px-2 py-1"
-                        onChange={(e) => handleLocaleChange(e.target.value)}
-                        defaultValue={pathname.split("/")[1] || "en"}
-                    >
-
-                        <option className=" bg-blue " value="en">English</option>
-                        <option className=" bg-blue " value="hi">हिंदी</option>
-                    </select>
+                            <option className=" bg-blue " value="en">English</option>
+                            <option className=" bg-blue " value="hi">हिंदी</option>
+                        </select>
+                    </div>
                     <Button
                         onClick={handleLogout}
                         className="bg-blue-500 hover:bg-blue-600 cursor-pointer"

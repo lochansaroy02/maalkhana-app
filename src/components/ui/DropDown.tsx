@@ -3,10 +3,11 @@ interface DropDownProps {
     handleSelect: (value: string) => void,
     // It's good practice to type this more specifically
     options: { value: string, label: string }[],
+    selectValueLabel?: string,
     label?: string
 }
 
-const DropDown = ({ selectedValue, options, handleSelect, label }: DropDownProps) => {
+const DropDown = ({ selectedValue, options, handleSelect, selectValueLabel = "select value", label }: DropDownProps) => {
     return (
         <div className='flex flex-col gap-2 w-full'>
             <label className="text-blue-100 text-nowrap" htmlFor={label}>{label}</label>
@@ -16,7 +17,7 @@ const DropDown = ({ selectedValue, options, handleSelect, label }: DropDownProps
                 value={selectedValue}
                 onChange={(e) => { handleSelect(e.target.value) }}
             >
-                <option className='bg-blue' disabled value="">select value</option>
+                <option className='bg-blue' disabled value="">{selectValueLabel}</option>
                 {
                     // FIX: Map over the options and use `item.value` and `item.label`
                     options.map((item) => (
