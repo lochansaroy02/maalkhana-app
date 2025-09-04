@@ -20,6 +20,7 @@ export const GET = async (req: NextRequest) => {
                 id: true,
                 name: true,
                 email: true,
+                policeStation: true,
             },
         });
 

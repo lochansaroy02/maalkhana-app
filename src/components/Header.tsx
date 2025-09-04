@@ -108,7 +108,7 @@ const Header = () => {
                         <DropDown
                             options={userData.map((item: any) => ({
                                 value: item.id,     // unique identifier
-                                label: item.name,   // what the user sees
+                                label: item.policeStation,   // what the user sees
                             }))}
                             selectedValue={selectedUser}
                             handleSelect={setselectedUser}
