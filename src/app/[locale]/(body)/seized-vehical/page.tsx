@@ -219,7 +219,7 @@ const Page = () => {
                 <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>{t('title')}</h1>
             </div>
             <div className='px-8 py-4 min-h-screen rounded-b-md'>
-                <div className='flex items-center gap-4'>
+                <div className='flex w-1/2 items-center gap-4'>
                     <DropDown label={t('labels.caseProperty')} selectedValue={caseProperty} options={caseOptions} handleSelect={setCaseProperty} />
                     {(caseProperty === "mvAct" || caseProperty === "artoSeized") && (
                         <InputComponent

@@ -15,11 +15,25 @@ interface DistrictStore {
     error: string | null;
     fetchDistricts: () => Promise<void>;
     addDistrict: (data: DistrictProps) => Promise<void>;
+    getAllUsers: (districtId: string | undefined) => Promise<any>
 }
 export const useDistrictStore = create<DistrictStore>((set, get) => ({
     data: [],
     loading: false,
     error: null,
+
+    getAllUsers: async (districtId: string | undefined) => {
+        try {
+
+            const response = await axios.get(`/api/district/get-all-users?districtId=${districtId}`)
+            const data = response.data
+            if (data.success) {
+                return data.data
+            }
+        } catch (error) {
+            console.error("GET /api/siezed error:", error);
+        }
+    },
 
     fetchDistricts: async () => {
         set({ loading: true, error: null });

@@ -200,7 +200,7 @@ const Page: React.FC = () => {
                     <h1 className="text-2xl uppercase text-cream font-semibold">{t('title')}</h1>
                 </div>
                 <div className="px-8 py-4 rounded-b-md">
-                    <div className='w-full items-center gap-4 flex justify-center mb-4'>
+                    <div className='w-1/2  items-center gap-4 flex justify-center mb-4'>
                         <label className="text-blue-100 font-semibold text-nowrap">{t('labels.selectType')}</label>
                         <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
                     </div>

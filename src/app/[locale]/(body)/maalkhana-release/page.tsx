@@ -149,7 +149,7 @@ const Page = () => {
                 <h1 className='text-2xl uppercase text-cream font-semibold'>{t('title')}</h1>
             </div>
             <div className='px-8 py-4 rounded-b-md'>
-                <div className='flex justify-center my-4 items-center gap-4'>
+                <div className='flex   w-1/2 justify-center my-4 items-center gap-4'>
                     <label className="text-blue-100 font-semibold">{t('labels.selectType')}</label>
                     <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
                 </div>

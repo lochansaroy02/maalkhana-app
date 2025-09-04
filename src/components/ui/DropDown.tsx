@@ -8,7 +8,7 @@ interface DropDownProps {
 
 const DropDown = ({ selectedValue, options, handleSelect, label }: DropDownProps) => {
     return (
-        <div className='flex flex-col gap-2'>
+        <div className='flex flex-col gap-2 w-full'>
             <label className="text-blue-100 text-nowrap" htmlFor={label}>{label}</label>
             <select
                 id={label} // Good for accessibility
