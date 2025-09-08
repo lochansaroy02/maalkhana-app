@@ -1,15 +1,18 @@
 "use client";
 
+import { useSearchStore } from "@/store/searchStore";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
+import { reportKeys } from "@/utils/headerMappings";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { reportKeys } from "@/utils/headerMappings";
+import InputComponent from "./InputComponent";
 import { Button } from "./ui/button";
 
 interface ReportProps {
+
     data: any[];
     heading: string;
     detailsPathPrefix: string;
@@ -26,6 +29,11 @@ const Report = ({
 }: ReportProps) => {
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+
+    const { dbName, getSearchResult } = useSearchStore()
+
+
 
     // Updated orderedKeys to match your new schema
     const orderedKeys = [
@@ -135,14 +143,16 @@ const Report = ({
         });
 
         sessionStorage.setItem('visibleReportFields', JSON.stringify(sortedVisibleKeys));
-        console.log(sortedVisibleKeys)
-
         router.push(`/report/entry-report/${item.id}`);
     }
+
+
     return (
         <div className="p-4 relative ">
             <div className="flex justify-between  items-center mb-4">
                 <h1 className="text-2xl font-bold text-white">{heading}</h1>
+
+
                 <div className="flex gap-4">
                     {onImportClick && <Button onClick={onImportClick}>Import</Button>}
 

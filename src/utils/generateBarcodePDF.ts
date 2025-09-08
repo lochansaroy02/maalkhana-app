@@ -29,11 +29,11 @@ export const generateBarcodePDF = async (entries: any) => {
         // Add srNo at the top of the barcode
         doc.text(String(entry.srNo || ''), x + barcodeWidth / 2, y - 1, { align: 'center' });
 
-        // --- Generate Barcode ---
+    // --- Generate Barcode ---
         const canvas = document.createElement("canvas");
 
         // Format the barcode value as "dbName-firNo-srNo"
-        const barcodeValue = `${entry.dbName || ''}-${entry.firNo || ''}-${entry.srNo || ''}`;
+        const barcodeValue = `${entry.id || ''}-${entry.dbName || ''}-${entry.firNo || ''}-${entry.srNo || ''}`;
 
         JsBarcode(canvas, barcodeValue, {
             format: "CODE128",

@@ -60,7 +60,6 @@ export const POST = async (req: NextRequest) => {
                 isMovement,
                 isRelease,
                 yellowItemPrice,
-
                 wineType,
                 photoUrl,
                 policeStation,

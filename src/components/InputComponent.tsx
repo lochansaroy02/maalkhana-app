@@ -5,7 +5,8 @@ import { cn } from "@/lib/utils";
 import React from "react";
 
 interface InputProps {
-    label: string;
+    id?: string
+    label?: string;
     value: string | number | boolean | undefined;
     className?: string;
     setInput?: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -20,6 +21,7 @@ const InputComponent = ({
     className,
     setInput,
     type,
+    id,
     // 2. Destructure the new 'disabled' prop
     disabled,
 }: InputProps) => {
@@ -29,6 +31,7 @@ const InputComponent = ({
                 {label}
             </Label>
             <Input
+                id={id}
                 type={type}
                 placeholder={setInput ? `Enter ${label}` : ""}
                 className="text-blue-100 placeholder:text-blue-200/50"

@@ -4,6 +4,7 @@ import Report from '@/components/Report';
 import { Checkbox } from '@/components/ui/checkbox';
 import UploadModal from '@/components/UploadModal';
 import { useAuthStore } from '@/store/authStore';
+import { useSearchStore } from '@/store/searchStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useOpenStore } from '@/store/store';
 import { useEffect, useState } from 'react';
@@ -19,6 +20,8 @@ const Page = () => {
     const { user } = useAuthStore();
     const { vehicles, addVehicle, fetchVehicles } = useSeizedVehicleStore();
 
+
+    const { searchData } = useSearchStore()
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
     const [displayData, setDisplayData] = useState<any[]>([]);
@@ -124,6 +127,9 @@ const Page = () => {
         return value || "-";
     };
 
+    useEffect(() => {
+        setDisplayData(searchData)
+    }, [searchData])
     return (
         <>
             <div className="glass-effect my-4 p-4">

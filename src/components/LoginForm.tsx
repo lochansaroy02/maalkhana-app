@@ -32,7 +32,6 @@ const LoginForm = () => {
             const data = response.data;
 
             if (data.success) {
-                // The user object from the API now includes the role
                 login(data.token, data.user);
                 toast.success("Successfully Logged In");
                 router.push("/dashboard");

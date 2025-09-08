@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import UploadModal from "@/components/UploadModal";
 import { useAuthStore } from "@/store/authStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
+import { useSearchStore } from "@/store/searchStore";
 import { useOpenStore } from "@/store/store";
 import { useEffect, useState } from "react";
 
@@ -76,9 +77,15 @@ const Page = () => {
     };
 
 
+    const { searchData } = useSearchStore()
+
+    useEffect(() => {
+        setDisplayData(searchData)
+    }, [searchData])
 
 
-    // Reworked filtering logic to handle all report types
+
+
     useEffect(() => {
         let filteredData = [...entries];
 
