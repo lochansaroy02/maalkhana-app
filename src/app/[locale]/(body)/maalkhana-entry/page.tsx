@@ -44,6 +44,23 @@ const Page = () => {
         firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '',
     });
 
+    const entryOptionKeys = ["malkhana", "fsl", "kurki", "cash", "wine", "unclaimed", "other", "yellowItem"];
+    const entryOptions = entryOptionKeys.map(key => ({
+        value: key,
+        label: t(`${baseKey}.entryType.options.${key}`)
+    }));
+
+    const statusOptionKeys = ["destroy", "nilami", "pending", "other", "onCourt"];
+    const statusOptions = statusOptionKeys.map(key => ({
+        value: key,
+        label: t(`${baseKey}.statusOptions.${key}`)
+    }));
+
+    const wineTypeOptions = [
+        { value: 'desi', label: t(`${baseKey}.wineSection.options.desi`) },
+        { value: 'angrezi', label: t(`${baseKey}.wineSection.options.angrezi`) }
+    ];
+
     const populateForm = (data: any) => {
         if (!data) return;
         setExistingId(data.id || "");
@@ -61,7 +78,7 @@ const Page = () => {
         if (entryTypeKey === 'other') {
             setEntryType(data.entryType);
         } else {
-            setEntryType(t(`${baseKey}.entryType.options.${entryTypeKey}`));
+            setEntryType('');
         }
 
         setDescription(data.description || '');
@@ -70,33 +87,17 @@ const Page = () => {
     };
 
     const clearForm = () => {
-        setFormData(prev => ({
-            firNo: prev.firNo,
-            srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '',
-        }));
+        setFormData({
+            firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: ''
+        });
         setExistingId("");
         setStatus(''); setWine(0); setCash(0); setWineType(''); setYellowItemPrice(0); setDropdownSelection(''); setEntryType(''); setDescription('');
         setDateFields({ gdDate: new Date() });
         SetPhotoUrl("");
+        setFirData([]);
+        setSelectedSrNo('');
         if (photoRef.current) photoRef.current.value = '';
     };
-
-    const entryOptionKeys = ["malkhana", "fsl", "kurki", "cash", "wine", "unclaimed", "other", "yellowItem"];
-    const entryOptions = entryOptionKeys.map(key => ({
-        value: key,
-        label: t(`${baseKey}.entryType.options.${key}`)
-    }));
-
-    const statusOptionKeys = ["destroy", "nilami", "pending", "other", "onCourt"];
-    const statusOptions = statusOptionKeys.map(key => ({
-        value: key,
-        label: t(`${baseKey}.statusOptions.${key}`)
-    }));
-
-    const wineTypeOptions = [
-        { value: 'desi', label: t(`${baseKey}.wineSection.options.desi`) },
-        { value: 'angrezi', label: t(`${baseKey}.wineSection.options.angrezi`) }
-    ];
 
     const fieldKeyMap: { [key: string]: string } = {
         firNo: 'firNo', srNo: 'srNo', caseProperty: 'caseProperty', gdNo: 'gdNo', gdDate: 'gdDate', Year: 'year', policeStation: 'policeStation', IOName: 'ioName', vadiName: 'vadiName', status: 'status', HM: 'hm', accused: 'accused', underSection: 'underSection', description: 'description', place: 'place', boxNo: 'boxNo', courtNo: 'courtNo', courtName: 'courtName'
@@ -121,8 +122,6 @@ const Page = () => {
         setDropdownSelection(value);
         if (value === 'other') {
             setEntryType('');
-        } else {
-            setEntryType(t(`${baseKey}.entryType.options.${value}`));
         }
     };
 
@@ -134,93 +133,31 @@ const Page = () => {
         if (selectedData) populateForm(selectedData);
     };
 
-    const handleSave = async () => {
-        if (loading) return;
 
-        const requiredFields: { key: string, value: any }[] = [
-            { key: 'caseProperty', value: formData.caseProperty },
-            { key: 'gdNo', value: formData.gdNo },
-            { key: 'gdDate', value: dateFields.gdDate },
-            { key: 'Year', value: formData.Year },
-            { key: 'policeStation', value: formData.policeStation },
-        ];
-
-        if (dropdownSelection !== 'unclaimed') {
-            requiredFields.push({ key: 'firNo', value: formData.firNo });
-        }
-
-        const emptyFields = requiredFields
-            .filter(field => !field.value)
-            .map(field => t(`${baseKey}.fields.${fieldKeyMap[field.key]}`));
-
-        if (emptyFields.length > 0) {
-            toast.error('Please fill all required fields');
-            return;
-        }
-
-        if (dropdownSelection === 'other' && !entryType) {
-            toast.error(t(`${baseKey}.toasts.specifyOtherError`));
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            const finalStatus = status === 'other' ? otherStatus : status;
-
-            const fullData = {
-                ...formData,
-                status: finalStatus,
-                wine,
-                cash,
-                wineType,
-                entryType,
-                entryTypeKey: dropdownSelection,
-                userId: user?.id,
-                photoUrl,
-                description,
-                yellowItemPrice,
-                gdDate: dateFields.gdDate?.toISOString() ?? '',
-            };
-
-            let success = false;
-            if (existingId) {
-                success = await updateMalkhanaEntry(existingId, fullData);
-                toast.success(t(`${baseKey}.toasts.updateSuccess`));
-            } else {
-                success = await addMaalkhanaEntry(fullData);
-                toast.success(t(`${baseKey}.toasts.addSuccess`));
-            }
-
-            if (success) {
-                clearForm();
-                setFormData({ firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '' });
-                setFirData([]);
-                setSelectedSrNo('');
-            }
-        } catch (error) {
-            console.error("Save error:", error);
-            toast.error(t(`${baseKey}.toasts.saveError`));
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleGetByFir = async () => {
         setSelectedSrNo('');
-        const response = await getByFIR(formData.firNo, user?.id);
-        if (response?.success) {
-            const dataArray = Array.isArray(response.data) ? response.data : [response.data];
-            setFirData(dataArray);
-            if (dataArray.length === 1) {
-                populateForm(dataArray[0]);
-                setSelectedSrNo(dataArray[0].srNo);
+        clearForm(); // Clear all fields before fetching new data
+        try {
+            const response = await getByFIR(formData.firNo, user?.id);
+            if (response?.success) {
+                const dataArray = Array.isArray(response.data) ? response.data : [response.data];
+                setFirData(dataArray);
+                if (dataArray.length === 1) {
+                    populateForm(dataArray[0]);
+                    setSelectedSrNo(dataArray[0].srNo);
+                } else if (dataArray.length > 1) {
+                    toast.success(t(`${baseKey}.toasts.multipleEntriesFound`));
+                } else {
+                    toast.error(t(`${baseKey}.toasts.firNotFound`));
+                }
             } else {
-                clearForm();
+                setFirData([]);
+                toast.error(t(`${baseKey}.toasts.firNotFound`));
             }
-        } else {
-            setFirData([]);
-            toast.error(t(`${baseKey}.toasts.firNotFound`));
+        } catch (error) {
+            console.error("Fetch error:", error);
+            toast.error(t(`${baseKey}.toasts.fetchError`));
         }
     };
 
@@ -251,6 +188,82 @@ const Page = () => {
         sessionStorage.setItem('printableEntryData', JSON.stringify(fullData));
         window.open('/details', '_blank');
     };
+
+
+    const handleSave = async () => {
+        if (loading) return;
+        setLoading(true);
+
+        const requiredFields: { key: string, value: any }[] = [
+            { key: 'caseProperty', value: formData.caseProperty },
+            { key: 'gdNo', value: formData.gdNo },
+            { key: 'gdDate', value: dateFields.gdDate },
+            { key: 'Year', value: formData.Year },
+            { key: 'policeStation', value: formData.policeStation },
+        ];
+
+        if (dropdownSelection !== 'unclaimed') {
+            requiredFields.push({ key: 'firNo', value: formData.firNo });
+        }
+
+        const emptyFields = requiredFields
+            .filter(field => !field.value)
+            .map(field => t(`${baseKey}.fields.${fieldKeyMap[field.key]}`));
+
+        if (emptyFields.length > 0) {
+            toast.error('Please fill all required fields');
+            setLoading(false);
+            return;
+        }
+
+        if (dropdownSelection === 'other' && !entryType) {
+            toast.error(t(`${baseKey}.toasts.specifyOtherError`));
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const finalStatus = status === 'other' ? otherStatus : status;
+
+            const fullData = {
+                ...formData,
+                status: finalStatus,
+                wine,
+                cash,
+                wineType,
+                entryType: dropdownSelection === 'other' ? entryType : t(`${baseKey}.entryType.options.${dropdownSelection}`),
+                entryTypeKey: dropdownSelection,
+                userId: user?.id,
+                photoUrl,
+                description,
+                yellowItemPrice,
+                gdDate: dateFields.gdDate?.toISOString() ?? '',
+            };
+
+            let success = false;
+            if (existingId) {
+                success = await updateMalkhanaEntry(existingId, fullData);
+                if (success) {
+                    toast.success(t(`${baseKey}.toasts.updateSuccess`));
+                }
+            } else {
+                success = await addMaalkhanaEntry(fullData);
+                if (success) {
+                    toast.success(t(`${baseKey}.toasts.saveSuccess`));
+                }
+            }
+            if (success) {
+                clearForm();
+            }
+        } catch (error) {
+            console.error("Save error:", error);
+            toast.error(t(`${baseKey}.toasts.saveError`));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    
 
     return (
         <div className='glass-effect'>
@@ -354,15 +367,27 @@ const Page = () => {
                         </div>
                     </div>
                 </div>
-                <div className='flex w-full px-12 justify-between mt-4'>
-                    {[{ key: 'save', action: handleSave }, { key: 'print', action: handlePrint }].map((item) => (
-                        <Button key={item.key} onClick={item.action} className='cursor-pointer'>
-                            {loading && item.key === "save" ? <LoaderIcon className='animate-spin' /> : t(`${baseKey}.buttons.${item.key}`)}
+                <div className='flex w-full justify-center'>
+
+                    <div className='flex w-1/2 px-12 justify-between mt-4'>
+                        <Button onClick={handleSave} className='cursor-pointer'>
+                            {loading ? <LoaderIcon className='animate-spin' /> :
+                                t(`${baseKey}.buttons.save`)}
                         </Button>
-                    ))}
+                        <Button onClick={handleSave} className='cursor-pointer'>
+                            {loading ? <LoaderIcon className='animate-spin' /> :
+                                t(`${baseKey}.buttons.modify`)}
+                        </Button>
+                        <Button onClick={handlePrint} className='cursor-pointer'>
+                            {t(`${baseKey}.buttons.print`)}
+                        </Button>
+                        <Button onClick={clearForm} className='cursor-pointer'>
+                            {t(`${baseKey}.buttons.clear`)}
+                        </Button>
+                    </div>
                 </div>
             </div>
-    </div >
+        </div >
     );
 };
 

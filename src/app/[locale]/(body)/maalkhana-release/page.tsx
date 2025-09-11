@@ -23,7 +23,7 @@ const Page = () => {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
     const [formData, setFormData] = useState({
-        firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "",
+        firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: ""
     });
     const [caseProperty, setCaseProperty] = useState('');
     const photoRef = useRef<HTMLInputElement>(null);
@@ -40,12 +40,13 @@ const Page = () => {
         setExistingId(recordId);
         setCaseProperty(data.caseProperty || '');
         setFormData({
-            firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', releaseItemName: data.releaseItemName || '', receiverName: data.receiverName || "", fathersName: data.fathersName || "", address: data.address || "", mobile: data.mobile || "",
+            firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', releaseItemName: data.releaseItemName || '', receiverName: data.receiverName || "", fathersName: data.fathersName || "", address: data.address || "", mobile: data.mobile || "", policeStation: data.policeStation || "",
+
         });
     };
 
     const resetAll = () => {
-        setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "" });
+        setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "" });
         setCaseProperty(''); setExistingId(''); setType(''); setSearchResults([]); setSelectedResultId('');
         if (photoRef.current) photoRef.current.value = '';
         if (documentRef.current) documentRef.current.value = '';
@@ -95,10 +96,10 @@ const Page = () => {
         setIsLoading(true);
         try {
             const photoUrl = photoRef.current?.files?.[0] ? await uploadToCloudinary(photoRef.current.files[0]) : "";
-            const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudinary(documentRef.current.files[0]) : "";
+            // const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudnary(documentRef.current.files[0]) : "";
 
             const updateData = {
-                receiverName: formData.receiverName, fathersName: formData.fathersName, address: formData.address, mobile: formData.mobile, releaseItemName: formData.releaseItemName, photoUrl, documentUrl, status: "Released", isReturned: true, isRelease: true,
+                receiverName: formData.receiverName, fathersName: formData.fathersName, address: formData.address, mobile: formData.mobile, releaseItemName: formData.releaseItemName, photoUrl, documentUrl: "", status: "Released", isReturned: true, isRelease: true, policeStation: formData.policeStation
             };
 
             let response;
@@ -200,7 +201,7 @@ const Page = () => {
                                 <InputComponent label={t('labels.caseProperty')} value={caseProperty} disabled />
                                 <InputComponent label={t('labels.underSection')} value={formData.underSection} disabled />
                                 {fields.map((field) => (
-                                    <div key={field.name}>
+                                    <div key={field.name} className='flex flex-col gap-2'>
                                         <InputComponent
                                             label={field.label}
                                             value={formData[field.name as keyof typeof formData]}
@@ -208,6 +209,12 @@ const Page = () => {
                                         />
                                     </div>
                                 ))}
+                                <InputComponent
+                                    label={"Police Station"}
+                                    value={formData.policeStation}
+                                    setInput={(e) => handleInputChange('policeStation', e.target.value)}
+                                />
+
                                 {inputFields.map((item, index) => (
                                     <div key={index} className='flex flex-col gap-2'>
                                         <label className='text-nowrap text-blue-100' htmlFor={item.id}>{item.label}</label>

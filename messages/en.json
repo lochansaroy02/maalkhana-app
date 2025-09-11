@@ -103,11 +103,14 @@
             "buttons": {
                 "fetchData": "Fetch Data",
                 "save": "Save",
-                "print": "Print"
+                "print": "Print",
+                "modify": "Modify",
+                "clear": "Clear"
             },
             "toasts": {
                 "specifyOtherError": "Please specify the 'Other' entry type.",
                 "updateSuccess": "Data Updated",
+                "updateError": "Data not updated",
                 "addSuccess": "Data Added",
                 "firNotFound": "FIR not found",
                 "photoUploadSuccess": "Photo uploaded successfully",

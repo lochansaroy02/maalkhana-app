@@ -20,7 +20,6 @@ export const POST = async (req: NextRequest) => {
 
         const {
             userId,
-
             cash,
             caseProperty,
             srNo,

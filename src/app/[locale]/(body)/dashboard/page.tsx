@@ -25,6 +25,12 @@ const Page = () => {
 
     const t = useTranslations("Dashboard");
     const reportItems = [
+        {
+            title: t("totalPoliceStation"),
+            icon: <Shield size={40} />,
+            bgColour: `bg-neutral-500 `,
+            value: data?.breakdown?.totalPoliceStation || 0,
+        },
 
         {
             title: t("totalEntries"),
@@ -105,12 +111,7 @@ const Page = () => {
             value: ` ₹${(data?.breakdown?.totalYellowItems._sum.yellowItemPrice || 0).toLocaleString('en-IN')}`,
 
         },
-        {
-            title: t("totalPoliceStation"),
-            icon: <Shield size={40} />,
-            bgColour: `bg-neutral-500 ${user?.role === 'policeStation' && "hidden"}`,
-            value: data?.breakdown?.totalPoliceStation || 0,
-        },
+
     ];
 
 
@@ -120,17 +121,23 @@ const Page = () => {
             <div className="flex justify-center py-4 border-b border-white/50 rounded-t-xl bg-maroon">
                 <h1 className="text-textColor text-2xl text-blue-100 font-bold">Dashboard</h1>
             </div>
-            <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 p-6  gap-4">
-                {reportItems.map((item, index) => (
-                    <ReportCard
-                        key={index}
-                        title={item.title}
-                        icon={item.icon}
-                        bgColour={item.bgColour}
-                        data={item.value}
-                    />
-                ))}
+            <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 p-6 gap-4">
+                {reportItems.map((item, index) => {
+                    if (user?.role === "policeStation" && item.title === t("totalPoliceStation")) {
+                        return null; // skip rendering
+                    }
+                    return (
+                        <ReportCard
+                            key={index}
+                            title={item.title}
+                            icon={item.icon}
+                            bgColour={item.bgColour}
+                            data={item.value}
+                        />
+                    );
+                })}
             </div>
+
         </div>
     );
 };

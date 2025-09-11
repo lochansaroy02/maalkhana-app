@@ -88,6 +88,8 @@ const UserProfilePage = () => {
         }
     };
 
+    console.log(user);
+
     return (
         <div className="h-screen mx-auto mt-8 ">
             <div className="flex justify-center py-4 border  border-white/50 rounded-xl bg-maroon">
@@ -98,6 +100,7 @@ const UserProfilePage = () => {
                 <div className='p-6 flex-1'>
                     <p className="text-gray-400 mb-6">Manage your account details here.</p>
                     <div className="glass-effect text-blue-100 p-4 rounded-lg mb-8">
+                        <p><strong>Name:</strong> {user?.name}</p>
                         <p><strong>Email:</strong> {user?.email}</p>
                         <p><strong>Mobile No.:</strong> {user?.mobile || 'N/A'}</p>
                         <p><strong>Rank:</strong> {user?.rank || 'N/A'}</p>
