@@ -1,5 +1,6 @@
 "use client";
 
+import { useDistrictStore } from "@/store/districtStore";
 import { useSearchStore } from "@/store/searchStore";
 import { exportToExcel } from "@/utils/exportToExcel";
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
@@ -8,11 +9,10 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import InputComponent from "./InputComponent";
 import { Button } from "./ui/button";
+import DropDown from "./ui/DropDown";
 
 interface ReportProps {
-
     data: any[];
     heading: string;
     detailsPathPrefix: string;
@@ -25,79 +25,102 @@ const Report = ({
     heading,
     detailsPathPrefix,
     onImportClick,
-    fetchData
+    fetchData,
 }: ReportProps) => {
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+    const { userId } = useDistrictStore();
+    const { setYear, year } = useSearchStore();
 
-    const { dbName, getSearchResult } = useSearchStore()
+    // Generate year options dynamically (2020 → current year + 5)
+    const currentYear = new Date().getFullYear();
+    const yearOptions = Array.from({ length: (currentYear + 5) - 1990 + 1 }, (_, i) => {
+        const year = 1990 + i;
+        return { value: String(year), label: String(year) };
+    });
 
-
-
-    // Updated orderedKeys to match your new schema
     const orderedKeys = [
-        'firNo',
-        'srNo',
-        'gdNo',
-        'gdDate',
-        'underSection',
-        'caseProperty',
-        'policeStation',
-        'I O Name',
-        'vadiName',
-        'accused',
-        'status',
-        'entryType',
-        'place',
-        'boxNo',
-        'courtNo',
-        'courtName',
-        'address',
-        'fathersName',
-        'mobile',
-        'name',
-        'releaseItemName',
-        'returnDate',
-        'description',
-        'wine',
-        'wineType',
-        'Year',
-        'HM',
-        'moveDate',
-        'movePurpose',
-        'moveTrackingNo',
-        'returnBackFrom',
-        'takenOutBy',
-        'receivedBy',
-        'receiverName',
-        'documentUrl',
-        'cash',
-        'isMovement',
-        'isRelease',
-        'yellowItemPrice',
-        'dbName'
+        "firNo",
+        "srNo",
+        "gdNo",
+        "gdDate",
+        "underSection",
+        "caseProperty",
+        "policeStation",
+        "I O Name",
+        "vadiName",
+        "accused",
+        "status",
+        "entryType",
+        "place",
+        "boxNo",
+        "courtNo",
+        "courtName",
+        "address",
+        "fathersName",
+        "mobile",
+        "name",
+        "releaseItemName",
+        "returnDate",
+        "description",
+        "wine",
+        "wineType",
+        "Year",
+        "HM",
+        "moveDate",
+        "movePurpose",
+        "moveTrackingNo",
+        "returnBackFrom",
+        "takenOutBy",
+        "receivedBy",
+        "receiverName",
+        "documentUrl",
+        "cash",
+        "isMovement",
+        "isRelease",
+        "yellowItemPrice",
+        "dbName",
     ];
+
     const formatValue = (key: string, value: any) => {
-        if (key === 'Gd Date') {
-            return value ? new Date(value).toLocaleDateString('en-IN') : "-";
+        if (key === "gdDate") {
+            if (!value) return "-";
+            const date = new Date(value);
+            const day = String(date.getDate()).padStart(2, "0");
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const year = date.getFullYear();
+            return `${day}-${month}-${year}`;
         }
         return value || "-";
     };
 
     const handleExport = () => {
         if (data && data.length > 0) {
-            // Pass the reportKeys from your headerMappings file
             exportToExcel(data, "report_data", reportKeys);
         }
     };
 
-
-    const excluded = ["Id", "id", "createdAt", "updatedAt", "photo", "document", "isReturned", "isRelease", "photoUrl", "userId", "districtId", "_id", "__v", ""];
+    const excluded = [
+        "Id",
+        "id",
+        "createdAt",
+        "updatedAt",
+        "photo",
+        "document",
+        "isReturned",
+        "isRelease",
+        "photoUrl",
+        "userId",
+        "districtId",
+        "_id",
+        "__v",
+        "",
+    ];
 
     const toggleSelect = (id: string) => {
-        setSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
         );
     };
 
@@ -118,7 +141,7 @@ const Report = ({
     };
 
     const handleGenerateBarcodePDF = async () => {
-        const selectedData = data.filter(item => selectedIds.includes(item.id));
+        const selectedData = data.filter((item) => selectedIds.includes(item.id));
         if (selectedData.length === 0) {
             toast.error("No entries selected");
             return;
@@ -127,43 +150,64 @@ const Report = ({
     };
 
     const handleDoubleClick = (item: any) => {
-        const allKeys = Object.keys(item).filter(key => !excluded.includes(key));
+        const allKeys = Object.keys(item).filter((key) => !excluded.includes(key));
         const sortedVisibleKeys: string[] = [];
 
-        orderedKeys.forEach(key => {
+        orderedKeys.forEach((key) => {
             if (allKeys.includes(key)) {
                 sortedVisibleKeys.push(key);
             }
         });
 
-        allKeys.forEach(key => {
+        allKeys.forEach((key) => {
             if (!sortedVisibleKeys.includes(key)) {
                 sortedVisibleKeys.push(key);
             }
         });
 
-        sessionStorage.setItem('visibleReportFields', JSON.stringify(sortedVisibleKeys));
+        sessionStorage.setItem(
+            "visibleReportFields",
+            JSON.stringify(sortedVisibleKeys)
+        );
         router.push(`/report/entry-report/${item.id}`);
-    }
+    };
 
+    console.log(year)
 
     return (
         <div className="p-4 relative ">
-            <div className="flex justify-between  items-center mb-4">
+            <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold text-white">{heading}</h1>
 
+                {heading === "Maalkhana Data" && <div className="flex gap-4">
+                    <DropDown
+                        label="From"
+                        selectedValue={year.from}
+                        handleSelect={(val) => setYear({ from: val })}
+                        options={yearOptions}
+                    />
+                    <DropDown
+                        label="to"
+                        selectedValue={year.to}
+                        handleSelect={(val) => setYear({ to: val })}
+                        options={yearOptions}
+                    />
+
+                </div>}
 
                 <div className="flex gap-4">
                     {onImportClick && <Button onClick={onImportClick}>Import</Button>}
 
                     <Button onClick={handleExport}>Export</Button>
 
-
                     <Button onClick={handleDeleteSelected} variant="destructive">
                         Delete Selected
                     </Button>
                     {selectedIds.length > 0 && (
-                        <Button onClick={handleGenerateBarcodePDF} className="bg-green-600 text-white hover:bg-green-700">
+                        <Button
+                            onClick={handleGenerateBarcodePDF}
+                            className="bg-green-600 text-white hover:bg-green-700"
+                        >
                             Generate Barcode
                         </Button>
                     )}

@@ -14,8 +14,8 @@ const Header = () => {
 
 
 
-    
-    const { getAllUsers } = useDistrictStore()
+
+    const { getAllUsers, setUserId, userId } = useDistrictStore()
     const { isLoggedIn, logout, user } = useAuthStore();
     const router = useRouter();
     const pathname = usePathname();
@@ -73,7 +73,6 @@ const Header = () => {
 
 
 
-
     const handleClick = () => {
         toggleOpen();
     };
@@ -114,8 +113,8 @@ const Header = () => {
                                 value: item.id,
                                 label: item.policeStation,
                             }))}
-                            selectedValue={selectedUser}
-                            handleSelect={setselectedUser}
+                            selectedValue={userId}
+                            handleSelect={setUserId}
                         />
                     )}
                     <div className="w-1/2">

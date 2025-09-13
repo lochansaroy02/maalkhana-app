@@ -4,6 +4,7 @@ import Report from "@/components/Report";
 import { Checkbox } from "@/components/ui/checkbox";
 import UploadModal from "@/components/UploadModal";
 import { useAuthStore } from "@/store/authStore";
+import { useDistrictStore } from "@/store/districtStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
 import { useSearchStore } from "@/store/searchStore";
 import { useOpenStore } from "@/store/store";
@@ -16,19 +17,25 @@ const casePropertyOptions = [
 
 const Page = () => {
     const { reportType } = useOpenStore();
-    const { user } = useAuthStore();
+    const { user, } = useAuthStore();
+    const { userId } = useDistrictStore()
     const { entries, fetchMaalkhanaEntry, addMaalkhanaEntry } = useMaalkhanaStore();
-
+    const { year } = useSearchStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
     const [displayData, setDisplayData] = useState<any[]>([]);
 
 
     useEffect(() => {
-        if (user?.id) {
-            fetchMaalkhanaEntry(user.id);
+
+        if (user?.role === "policeStation") {
+            if (user?.id) {
+                fetchMaalkhanaEntry(user.id);
+            }
+        } else {
+            fetchMaalkhanaEntry(userId)
         }
-    }, [user?.id, fetchMaalkhanaEntry]);
+    }, [user?.id, fetchMaalkhanaEntry, userId]);
 
     // Helper function to create a new object with only specified fields
     const selectFields = (entries: any[], fields: string[]) => {
@@ -110,16 +117,41 @@ const Page = () => {
                 (item) => item.entryType?.toLowerCase() === selectedCaseProperty.toLowerCase()
             );
         }
+        if (year?.from || year?.to) {
+            const fromYear = year.from ? parseInt(year.from, 10) : null;
+            const toYear = year.to ? parseInt(year.to, 10) : null;
+
+            filteredData = filteredData.filter((item) => {
+                if (!item.Year) return false;
+
+                const entryYear = parseInt(item.Year)
+                if (fromYear && !toYear) {
+                    return entryYear === fromYear;
+                }
+                if (fromYear && toYear) {
+                    return entryYear >= fromYear && entryYear <= toYear;
+                }
+                if (!fromYear && toYear) {
+                    return entryYear <= toYear;
+                }
+
+                return true;
+            });
+        }
+
+
 
         setDisplayData(filteredData);
 
-    }, [reportType, selectedCaseProperty, entries]); // Re-run this logic whenever a filter changes.
 
+    }, [reportType, selectedCaseProperty, entries, year]);
     const handleImportSuccess = () => {
         if (user?.id) {
             fetchMaalkhanaEntry(user.id);
         }
     };
+
+
 
     return (
         <>

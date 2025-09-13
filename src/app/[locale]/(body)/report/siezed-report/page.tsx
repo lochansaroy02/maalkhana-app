@@ -4,6 +4,7 @@ import Report from '@/components/Report';
 import { Checkbox } from '@/components/ui/checkbox';
 import UploadModal from '@/components/UploadModal';
 import { useAuthStore } from '@/store/authStore';
+import { useDistrictStore } from '@/store/districtStore';
 import { useSearchStore } from '@/store/searchStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useOpenStore } from '@/store/store';
@@ -18,6 +19,7 @@ const fieldsToShow = ['id', 'firNo', 'srNo', 'caseProperty', 'courtName', 'court
 const Page = () => {
     const { reportType } = useOpenStore();
     const { user } = useAuthStore();
+    const { userId } = useDistrictStore()
     const { vehicles, addVehicle, fetchVehicles } = useSeizedVehicleStore();
 
 
@@ -28,17 +30,21 @@ const Page = () => {
 
     // 1. Fetch all vehicle data when the component loads
     useEffect(() => {
-        if (user?.id) {
-            fetchVehicles(user.id);
 
+        if (user?.role === "policeStation") {
+            if (user?.id) {
+                fetchVehicles(user.id);
+            }
+        } else {
+            fetchVehicles(userId)
         }
-    }, [user?.id, fetchVehicles]);
+    }, [user?.id, fetchVehicles, userId]);
 
-    console.log(displayData);
     useEffect(() => {
         selectFields(displayData, fieldsToShow)
     }, [])
-    // Helper function to create a new object with only specified fields
+
+
     const selectFields = (entries: any[], fields: string[]) => {
         return entries.map((entry) => {
             const newEntryObject: { [key: string]: any } = {};
@@ -158,7 +164,6 @@ const Page = () => {
                 heading="Seized Vehicles Report"
                 detailsPathPrefix="/report/siezed-report"
             />
-
             <UploadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

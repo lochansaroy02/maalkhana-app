@@ -8,8 +8,9 @@ import { useEffect, useState } from "react";
 import InputComponent from "./InputComponent";
 import DropDown from "./ui/DropDown";
 import { Button } from "./ui/button";
+import DatePicker from "./ui/datePicker";
 const ReportHeader = () => {
-    const { setDbName, dbName, getSearchResult } = useSearchStore()
+    const { setDbName, dbName, getSearchResult, } = useSearchStore()
     const { reportType, setReportType } = useOpenStore();
 
     const { user } = useAuthStore()
@@ -86,6 +87,8 @@ const ReportHeader = () => {
                         setInput={(e) => setKeyword(e.target.value)} />
                     <Button onClick={handleSearch}>Search</Button>
                 </div>
+
+
             </div>
         </div>
     );

@@ -11,6 +11,8 @@ interface DistrictProps {
 }
 interface DistrictStore {
     data: DistrictProps[];
+    userId: string,
+    setUserId: (userId: string) => void,
     loading: boolean;
     error: string | null;
     fetchDistricts: () => Promise<void>;
@@ -21,7 +23,12 @@ export const useDistrictStore = create<DistrictStore>((set, get) => ({
     data: [],
     loading: false,
     error: null,
-
+    userId: "",
+    setUserId: (userId: string) => {
+        set({
+            userId: userId
+        })
+    },
     getAllUsers: async (districtId: string | undefined) => {
         try {
 

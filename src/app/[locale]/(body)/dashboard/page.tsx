@@ -3,6 +3,7 @@
 import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
+import { useDistrictStore } from "@/store/districtStore";
 import { ArrowDownNarrowWide, Banknote, Car, Megaphone, Menu, Settings, Shield, Shredder, User, Wine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
@@ -10,17 +11,23 @@ import { useEffect } from "react";
 const Page = () => {
     const { fetchTotalEntries, data, fetchAdminEntries } = useTotalEntriesStore();
     const { user, } = useAuthStore();
-
+    const { userId } = useDistrictStore()
 
 
     useEffect(() => {
 
         if (user?.role === "policeStation") {
-            fetchTotalEntries(user.id)
+            if (user?.id) {
+                fetchTotalEntries(user?.id)
+            }
         } else {
-            fetchAdminEntries()
+            if (!userId) {
+                fetchAdminEntries()
+            } else {
+                fetchTotalEntries(userId)
+            }
         }
-    }, [user?.id, fetchTotalEntries]);
+    }, [user?.id, fetchTotalEntries, userId]);
 
 
     const t = useTranslations("Dashboard");
@@ -123,7 +130,7 @@ const Page = () => {
             </div>
             <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 p-6 gap-4">
                 {reportItems.map((item, index) => {
-                    if (user?.role === "policeStation" && item.title === t("totalPoliceStation")) {
+                    if (user?.role === "policeStation" && item.title === t("totalPoliceStation") && userId === "") {
                         return null; // skip rendering
                     }
                     return (
