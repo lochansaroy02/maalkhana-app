@@ -178,7 +178,6 @@ const Report = ({
         <div className="p-4 relative ">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold text-white">{heading}</h1>
-
                 {heading === "Maalkhana Data" && <div className="flex gap-4">
                     <DropDown
                         label="From"

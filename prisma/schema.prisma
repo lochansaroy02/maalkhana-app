@@ -81,54 +81,55 @@ model SeizedVehicle {
 }
 
 model MalkhanaEntry {
-  id              String    @id @default(uuid())
-  wine            Int?
-  wineType        String
-  srNo            String?
-  gdNo            String
-  gdDate          String
-  underSection    String
-  Year            String
-  policeStation   String
-  IOName          String
-  vadiName        String
-  HM              String
-  accused         String
-  firNo           String?
-  status          String
-  entryType       String
-  place           String
-  boxNo           String
-  courtNo         String
-  courtName       String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  districtId      String?
-  photoUrl        String    @default("")
-  userId          String?
-  address         String?
-  document        String?
-  fathersName     String?
-  isReturned      Boolean?  @default(false)
-  mobile          String?
-  moveDate        String?
-  movePurpose     String?
-  moveTrackingNo  String?
-  name            String?
-  photo           String?
-  releaseItemName String?
-  returnBackFrom  String?
-  returnDate      DateTime?
-  takenOutBy      String?
-  caseProperty    String?
-  receivedBy      String?
-  receiverName    String?
-  documentUrl     String?
-  cash            Int?
-  description     String?
-  isMovement      Boolean?  @default(false)
-  isRelease       Boolean?  @default(false)
-  yellowItemPrice Int?
-  dbName          String?
-  User            User?     @relation(fields: [userId], references: [id])
+  id               String    @id @default(uuid())
+  wine             Int?
+  wineType         String
+  srNo             String?
+  gdNo             String
+  gdDate           String
+  underSection     String
+  Year             String
+  policeStation    String
+  IOName           String
+  vadiName         String
+  HM               String
+  accused          String
+  firNo            String?
+  status           String
+  entryType        String
+  place            String
+  boxNo            String
+  courtNo          String
+  courtName        String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  districtId       String?
+  photoUrl         String    @default("")
+  userId           String?
+  address          String?
+  document         String?
+  fathersName      String?
+  isReturned       Boolean?  @default(false)
+  mobile           String?
+  moveDate         String?
+  movePurpose      String?
+  moveTrackingNo   String?
+  name             String?
+  photo            String?
+  releaseItemName  String?
+  returnBackFrom   String?
+  returnDate       DateTime?
+  takenOutBy       String?
+  caseProperty     String?
+  receivedBy       String?
+  receiverName     String?
+  documentUrl      String?
+  cash             Int?
+  description      String?
+  isMovement       Boolean?  @default(false)
+  isRelease        Boolean?  @default(false)
+  yellowItemPrice  Int?
+  dbName           String?
+  releaseOrderedBy String?
+  User             User?     @relation(fields: [userId], references: [id])
 }

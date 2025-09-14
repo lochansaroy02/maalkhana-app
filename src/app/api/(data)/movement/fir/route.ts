@@ -28,12 +28,24 @@ export const GET = async (req: NextRequest) => {
             userId: true
         };
         if (type === 'malkhana') {
-            const data = await prisma.malkhanaEntry.findMany({
-                where: {
-                    firNo, userId
-                },
-                select: selection
-            });
+            let data;
+            if (firNo) {
+                data = await prisma.malkhanaEntry.findMany({
+                    where: {
+                        firNo, userId
+                    },
+                    select: selection
+                });
+            }
+            if (srNo) {
+                data = await prisma.malkhanaEntry.findMany({
+                    where: {
+                        srNo, userId
+                    },
+                    select: selection
+                });
+            }
+
             return NextResponse.json({ success: true, data }, { status: 200 });
         }
 

@@ -45,7 +45,8 @@ export const POST = async (req: NextRequest) => {
             boxNo,
             courtNo,
             courtName,
-            yellowItemPrice
+            yellowItemPrice,
+            releaseOrderedBy
         } = body;
 
         const newEntry = await prisma.malkhanaEntry.create({
@@ -77,6 +78,7 @@ export const POST = async (req: NextRequest) => {
                 boxNo,
                 courtNo,
                 courtName,
+                releaseOrderedBy,
                 dbName: "m"
             }
         });

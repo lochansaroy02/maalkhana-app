@@ -249,6 +249,7 @@
             "receiverName": "Receiver Name",
             "fathersName": "Father's Name",
             "address": "Address",
+            "releaseOrderedBy": "Release Ordered By",
             "mobileNo": "Mobile No.",
             "uploadPhoto": "Upload Photo",
             "uploadDocument": "Upload Document"

@@ -248,6 +248,7 @@
             "receiverName": "प्राप्तकर्ता का नाम",
             "fathersName": "पिता का नाम",
             "address": "पता",
+            "releaseOrderedBy": "रिहाई आदेश ",
             "mobileNo": "मोबाइल नंबर",
             "uploadPhoto": "फोटो अपलोड करें",
             "uploadDocument": "दस्तावेज़ अपलोड करें"

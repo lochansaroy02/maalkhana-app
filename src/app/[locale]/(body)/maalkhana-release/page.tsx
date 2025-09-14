@@ -23,7 +23,7 @@ const Page = () => {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
     const [formData, setFormData] = useState({
-        firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: ""
+        firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: ""
     });
     const [caseProperty, setCaseProperty] = useState('');
     const photoRef = useRef<HTMLInputElement>(null);
@@ -40,13 +40,13 @@ const Page = () => {
         setExistingId(recordId);
         setCaseProperty(data.caseProperty || '');
         setFormData({
-            firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', releaseItemName: data.releaseItemName || '', receiverName: data.receiverName || "", fathersName: data.fathersName || "", address: data.address || "", mobile: data.mobile || "", policeStation: data.policeStation || "",
+            firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', releaseItemName: data.releaseItemName || '', receiverName: data.receiverName || "", fathersName: data.fathersName || "", address: data.address || "", mobile: data.mobile || "", policeStation: data.policeStation || "", releaseOrderedBy: data.releaseOrderedBy || ""
 
         });
     };
 
     const resetAll = () => {
-        setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "" });
+        setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "" });
         setCaseProperty(''); setExistingId(''); setType(''); setSearchResults([]); setSelectedResultId('');
         if (photoRef.current) photoRef.current.value = '';
         if (documentRef.current) documentRef.current.value = '';
@@ -138,6 +138,9 @@ const Page = () => {
         { name: "fathersName", label: t('labels.fathersName') },
         { name: "address", label: t('labels.address') },
         { name: "mobile", label: t('labels.mobileNo') },
+
+        { name: "releaseOrderedBy", label: t('labels.releaseOrderedBy') },
+
     ];
     const inputFields = [
         { label: t('labels.uploadPhoto'), id: "photo", ref: photoRef },
