@@ -159,6 +159,7 @@ const Page = () => {
 
             const success = existingId
                 ? await updateMalkhanaEntry(existingId, fullData)
+                //@ts-ignore
                 : await addMaalkhanaEntry(fullData);
 
             if (success) {
