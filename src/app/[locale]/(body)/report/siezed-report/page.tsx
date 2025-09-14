@@ -8,113 +8,132 @@ import { useDistrictStore } from '@/store/districtStore';
 import { useSearchStore } from '@/store/searchStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useOpenStore } from '@/store/store';
-import { useEffect, useState } from 'react';
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from 'react';
+
+// Define a type for the data entries to improve type safety
+interface SeizedVehicleEntry {
+    id?: string;
+    firNo: string;
+    srNo: string;
+    caseProperty: string;
+    underSection: string;
+    policeStation: string;
+    gdNo?: string;
+    gdDate?: string;
+    Year?: string;
+    vadiName?: string;
+    isMovement?: boolean;
+    moveDate?: string;
+    takenOutBy?: string;
+    movePurpose?: string;
+    moveTrackingNo?: string;
+    isRelease?: boolean;
+    courtName?: string;
+    courtNo?: string;
+    receiverName?: string;
+    status?: string;
+    description?: string;
+    isReturned?: boolean;
+    returnDate?: string;
+    receivedBy?: string;
+    returnBackFrom?: string;
+    // Add other fields as necessary from your data structure
+}
 
 const casePropertyOptions = [
     'mv act', 'arto seized', 'BNS/IPC', 'EXCISE', 'SEIZED', 'UNCLAMMED VEHICLE'
 ];
-const fieldsToShow = ['id', 'firNo', 'srNo', 'caseProperty', 'courtName', 'courtNo', 'receiverName'];
 
+// Define a type for the report data and headers
+type ReportData = {
+    data: any[];
+    headers: string[];
+};
 
 const Page = () => {
-    const { reportType } = useOpenStore();
+    const { reportType, setReportType } = useOpenStore();
     const { user } = useAuthStore();
     const { userId } = useDistrictStore()
     const { vehicles, addVehicle, fetchVehicles } = useSeizedVehicleStore();
-
-
     const { searchData } = useSearchStore()
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
-    const [displayData, setDisplayData] = useState<any[]>([]);
 
-    // 1. Fetch all vehicle data when the component loads
+    const searchParams = useSearchParams();
+
+    // Set initial report type from URL on component mount
     useEffect(() => {
+        const urlReportType = searchParams.get('reportType');
+        if (urlReportType && urlReportType !== reportType) {
+            setReportType(urlReportType);
+        }
+    }, [searchParams, reportType, setReportType]);
 
-        if (user?.role === "policeStation") {
-            if (user?.id) {
-                fetchVehicles(user.id);
+
+    // Fetch all vehicle data when the component loads
+    useEffect(() => {
+        if (user?.role === "policeStation" && user?.id) {
+            fetchVehicles(user.id);
+        } else if (userId) {
+            fetchVehicles(userId);
+        }
+    }, [user?.id, fetchVehicles, userId, user?.role]);
+
+    // Use useMemo to handle all filtering logic and return both data and headers
+    const reportContent: ReportData = useMemo(() => {
+        let headers: string[] = [];
+
+        // Apply filters based on the report type
+        const applyFilters = () => {
+            let dataToShow: SeizedVehicleEntry[] = [...vehicles];
+
+            switch (reportType) {
+                case "movement":
+                    dataToShow = vehicles.filter(vehicle => vehicle.isMovement === true);
+                    headers = ["ID", "FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"];
+                    break;
+                case "release":
+                    dataToShow = vehicles.filter(vehicle => vehicle.isRelease === true);
+                    headers = ["ID", "FIR No", "Sr No", "Case Property", "Court Name", "Court No", "Receiver Name"];
+                    break;
+                case "destroy":
+                    dataToShow = vehicles.filter(vehicle => vehicle.status?.toLowerCase() === 'destroy');
+                    headers = ["ID", "FIR No", "Sr No", "Status", "Case Property", "Description"];
+                    break;
+                case "destroy":
+                    dataToShow = vehicles.filter(vehicle => vehicle.status?.toLowerCase() === 'nilami');
+                    headers = ["ID", "FIR No", "Sr No", "Status", "Case Property", "Description"];
+                    break;
+                case "return":
+                    dataToShow = vehicles.filter(vehicle => vehicle.isReturned === true);
+                    headers = ["ID", "FIR No", "Sr No", "Return Date", "Received By", "Return Back From", "Is Returned"];
+                    break;
+                default: // 'all' or default view
+                    dataToShow = vehicles;
+                    headers = ["FIR No", "Sr No", "Case Property", "GD No", "GD Date", "Year", "Police Station", "I O Name", "vadiName"];
+                    break;
             }
-        } else {
-            fetchVehicles(userId)
-        }
-    }, [user?.id, fetchVehicles, userId]);
 
-    useEffect(() => {
-        selectFields(displayData, fieldsToShow)
-    }, [])
+            // Further filter the result by the selected case property checkbox
+            if (selectedCaseProperty) {
+                dataToShow = dataToShow.filter(
+                    (item) => item.caseProperty?.toLowerCase() === selectedCaseProperty.toLowerCase()
+                );
+            }
 
+            // Apply search filter if searchData is available
+            if (searchData.length > 0) {
+                // Assuming searchData is already filtered and formatted correctly
+                return { data: searchData, headers: headers };
+            }
 
-    const selectFields = (entries: any[], fields: string[]) => {
-        return entries.map((entry) => {
-            const newEntryObject: { [key: string]: any } = {};
-            fields.forEach(field => {
-                if (entry[field] !== undefined) {
-                    newEntryObject[field] = entry[field];
-                }
-            });
-            return newEntryObject;
-        });
-    };
+            return { data: dataToShow, headers: headers };
+        };
 
-    // Filters for movement entries
-    const filterByMovement = (allEntries: any[]) => {
-        const fieldsToShow = ["id", 'firNo', 'srNo', 'caseProperty', 'underSection', 'policeStation', 'moveDate', 'takenOutBy', 'movePurpose', 'moveTrackingNo'];
-        const movementEntries = allEntries.filter(entry => entry.isMovement === true);
-        return selectFields(movementEntries, fieldsToShow);
-    };
+        return applyFilters();
+    }, [reportType, selectedCaseProperty, vehicles, searchData]); // Re-run when a filter or the data changes
 
-    // Filters for release entries
-    const filterByRelease = (allEntries: any[]) => {
-        const fieldsToShow = ['id', 'firNo', 'srNo', 'caseProperty', 'courtName', 'courtNo', 'receiverName'];
-        const releaseEntries = allEntries.filter(entry => entry.isRelease === true);
-        return selectFields(releaseEntries, fieldsToShow);
-    };
-
-    // Filters for destroyed entries
-    const filterByDestroy = (allEntries: any[]) => {
-        const fieldsToShow = ['id', 'firNo', 'srNo', 'status', 'caseProperty', 'description'];
-        const destroyEntries = allEntries.filter(entry => entry.status?.toLowerCase() === 'destroy');
-        return selectFields(destroyEntries, fieldsToShow);
-    };
-
-    // Filters for returned entries
-    const filterByReturn = (allEntries: any[]) => {
-        const fieldsToShow = ['id', 'firNo', 'srNo', 'returnDate', 'receivedBy', 'returnBackFrom', 'isReturned'];
-        const returnEntries = allEntries.filter(entry => entry.isReturned === true);
-        return selectFields(returnEntries, fieldsToShow);
-    };
-
-
-    // 2. Reworked filtering logic to handle all report types
-    useEffect(() => {
-        let filteredData = [...vehicles]; // Start with all available vehicle entries
-
-        // Step 1: Filter based on the global report type from the dropdown
-        if (reportType === "movement") {
-            //@ts-ignore
-            filteredData = filterByMovement(vehicles);
-        } else if (reportType === "release") {
-            //@ts-ignore
-            filteredData = filterByRelease(vehicles);
-        } else if (reportType === "destroy") {
-            //@ts-ignore
-            filteredData = filterByDestroy(vehicles);
-        } else if (reportType === "return") {
-            //@ts-ignore
-            filteredData = filterByReturn(vehicles);
-        }
-
-        // Step 2: Further filter the result by the selected case property checkbox
-        if (selectedCaseProperty) {
-            filteredData = filteredData.filter(
-                (item) => item.caseProperty?.toLowerCase() === selectedCaseProperty.toLowerCase()
-            );
-        }
-
-        setDisplayData(filteredData);
-
-    }, [reportType, selectedCaseProperty, vehicles]); // Re-run when a filter or the data changes
 
     const handleImportSuccess = () => {
         if (user?.id) {
@@ -123,19 +142,7 @@ const Page = () => {
         }
     };
 
-    const formatValue = (key: string, value: any) => {
-        if (key === "createdAt" || key === "updatedAt" || key === 'gdDate' || key === 'moveDate' || key == 'returnDate') {
-            return value ? new Date(value).toLocaleDateString('en-IN') : "-";
-        }
-        if (key === "isReturned") {
-            return value ? "Yes" : "No";
-        }
-        return value || "-";
-    };
 
-    useEffect(() => {
-        setDisplayData(searchData)
-    }, [searchData])
     return (
         <>
             <div className="glass-effect my-4 p-4">
@@ -160,7 +167,9 @@ const Page = () => {
 
             <Report
                 onImportClick={() => setIsModalOpen(true)}
-                data={displayData}
+                data={reportContent.data}
+                // Pass headers dynamically from the useMemo hook
+                headers={reportContent.headers}
                 heading="Seized Vehicles Report"
                 detailsPathPrefix="/report/siezed-report"
             />
@@ -169,8 +178,7 @@ const Page = () => {
                 onClose={() => setIsModalOpen(false)}
                 schemaType="seizedVehicle"
                 onSuccess={handleImportSuccess}
-                //@ts-ignore
-                addEntry={addVehicle}
+                addEntry={addVehicle as any}
             />
         </>
     );

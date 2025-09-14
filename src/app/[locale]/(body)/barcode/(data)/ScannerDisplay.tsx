@@ -53,7 +53,7 @@ const ScannerDisplay = ({ result }: { result: BarcodeResult | null }) => {
                 );
 
                 const responseData = response.data;
-                console.log(responseData.data);
+            
 
                 if (responseData.success && responseData.data) {
                     const record = Array.isArray(responseData.data) ? responseData.data[0] : responseData.data;

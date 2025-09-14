@@ -36,6 +36,7 @@ interface SeizedVehicleStore {
     fetchVehicles: (userId: string | undefined) => Promise<void>;
     addVehicle: (vehicle: any) => Promise<boolean>;
     getByFIR: (userId: string | undefined, firNo: string) => Promise<any>
+    getById: (id: any) => Promise<any>
     updateVehicalEntry: (id: string, data: any) => Promise<boolean>
     getData: (userId: string | undefined, firNo: string, srNo: string) => Promise<any>
     getBySR: (userId: string | undefined, srNo: string) => Promise<any>
@@ -72,6 +73,14 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
     loading: false,
     error: null,
 
+    getById: async (id: string) => {
+        try {
+            const response = await axios.get(`/api/siezed/${id}`)
+            return response
+        } catch (error) {
+            return null
+        }
+    },
     fetchVehicles: async (userId: string | undefined) => {
         set({ loading: true, error: null });
         try {
@@ -86,6 +95,8 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
             set({ error: error.message || "Server error", loading: false });
         }
     },
+
+
 
     addVehicle: async (vehicle: any | any[]) => {
         try {

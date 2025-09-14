@@ -6,6 +6,8 @@ import { exportToExcel } from "@/utils/exportToExcel";
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
 import { reportKeys } from "@/utils/headerMappings";
 import axios from "axios";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -18,6 +20,8 @@ interface ReportProps {
     detailsPathPrefix: string;
     onImportClick?: () => void;
     fetchData?: () => void;
+    // Add the headers property to the interface
+    headers?: string[];
 }
 
 const Report = ({
@@ -26,6 +30,7 @@ const Report = ({
     detailsPathPrefix,
     onImportClick,
     fetchData,
+    headers, // Destructure the new headers prop
 }: ReportProps) => {
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -75,6 +80,7 @@ const Report = ({
         "takenOutBy",
         "receivedBy",
         "receiverName",
+        "photoUrl",
         "documentUrl",
         "cash",
         "isMovement",
@@ -84,9 +90,14 @@ const Report = ({
     ];
 
     const formatValue = (key: string, value: any) => {
-        if (key === "gdDate") {
+        // Correct date formatting for multiple date fields
+        if (key.toLowerCase().includes("date") || key.toLowerCase().includes("returndate") || key.toLowerCase().includes("movedate")) {
             if (!value) return "-";
             const date = new Date(value);
+            // Check if the date is valid
+            if (isNaN(date.getTime())) {
+                return value; // Return original value if it's not a valid date
+            }
             const day = String(date.getDate()).padStart(2, "0");
             const month = String(date.getMonth() + 1).padStart(2, "0");
             const year = date.getFullYear();
@@ -109,8 +120,9 @@ const Report = ({
         "photo",
         "document",
         "isReturned",
+        "dbName",
+        "isMovement",
         "isRelease",
-        "photoUrl",
         "userId",
         "districtId",
         "_id",
@@ -169,36 +181,60 @@ const Report = ({
             "visibleReportFields",
             JSON.stringify(sortedVisibleKeys)
         );
-        router.push(`/report/entry-report/${item.id}`);
+        if (heading === "Maalkhana Data") {
+            router.push(`/report/entry-report/${item.id}`);
+        } else if (heading === "Seized Vehicles Report") {
+            router.push(`/report/siezed-report/${item.id}`);
+        }
     };
 
-    console.log(year)
+    const renderCellContent = (key: string, value: any) => {
+        if (key === "photoUrl" && value) {
+            return (
+                <div className="flex justify-center items-center h-full w-24 relative">
+                    <Image
+                        src={value}
+                        alt="Case Property Photo"
+                        layout="fill"
+                        objectFit="contain"
+                    />
+                </div>
+            );
+        }
+        if (key === "documentUrl" && value) {
+            return (
+                <Link href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    Download
+                </Link>
+            );
+        }
+        return formatValue(key, value);
+    };
 
     return (
         <div className="p-4 relative ">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold text-white">{heading}</h1>
-                {heading === "Maalkhana Data" && <div className="flex gap-4">
-                    <DropDown
-                        label="From"
-                        selectedValue={year.from}
-                        handleSelect={(val) => setYear({ from: val })}
-                        options={yearOptions}
-                    />
-                    <DropDown
-                        label="to"
-                        selectedValue={year.to}
-                        handleSelect={(val) => setYear({ to: val })}
-                        options={yearOptions}
-                    />
-
-                </div>}
+                {heading === "Maalkhana Data" && (
+                    <div className="flex gap-4">
+                        <DropDown
+                            label="From"
+                            selectedValue={year.from}
+                            handleSelect={(val) => setYear({ from: val })}
+                            options={yearOptions}
+                        />
+                        <DropDown
+                            label="to"
+                            selectedValue={year.to}
+                            handleSelect={(val) => setYear({ to: val })}
+                            options={yearOptions}
+                        />
+                    </div>
+                )}
 
                 <div className="flex gap-4">
                     {onImportClick && <Button onClick={onImportClick}>Import</Button>}
-
                     <Button onClick={handleExport}>Export</Button>
-
                     <Button onClick={handleDeleteSelected} variant="destructive">
                         Delete Selected
                     </Button>
@@ -215,16 +251,23 @@ const Report = ({
 
             {data && data.length > 0 ? (
                 <div className="overflow-x-auto h-fit ">
-                    <table className="min-w-full table-auto border border-white/50  border-collapse">
-                        <thead className="bg-gray-700/50   text-sm font-semibold text-white">
+                    <table className="min-w-full table-auto border border-white/50 border-collapse">
+                        <thead className="bg-gray-700/50 text-sm font-semibold text-white">
                             <tr>
                                 <th className="px-4 py-2 text-center">Select</th>
                                 <th className="px-4 py-2 text-left capitalize">Sr. No.</th>
-                                {orderedKeys
+                                {/* Use the new headers prop for the table headers */}
+                                {headers && headers.map((header) => (
+                                    <th key={header} className="px-4 py-2 text-left capitalize">
+                                        {header}
+                                    </th>
+                                ))}
+                                {/* Fallback to orderedKeys if headers are not provided */}
+                                {!headers && orderedKeys
                                     .filter((key) => !excluded.includes(key))
                                     .map((key) => (
                                         <th key={key} className="px-4 py-2 text-left capitalize">
-                                            {key}
+                                            {key === "photoUrl" ? "Photo" : key === "documentUrl" ? "Document" : key}
                                         </th>
                                     ))}
                             </tr>
@@ -246,11 +289,26 @@ const Report = ({
                                         />
                                     </td>
                                     <td className="px-4 border border-black py-2">{index + 1}</td>
-                                    {orderedKeys
+                                    {/* Use headers to dynamically render table cells */}
+                                    {headers && headers.map((header) => {
+                                        // Find the corresponding key from the item based on the header
+                                        const itemKey = orderedKeys.find(key => key.toLowerCase() === header.replace(" ", "").toLowerCase() || header.toLowerCase().includes(key.toLowerCase()));
+
+                                        // Fallback if key is not found (e.g., "ID" header corresponds to "id" key)
+                                        const finalKey = itemKey || (header === "ID" ? "id" : header);
+
+                                        return (
+                                            <td key={finalKey} className="px-4 border border-black py-2">
+                                                {renderCellContent(finalKey, item[finalKey])}
+                                            </td>
+                                        );
+                                    })}
+                                    {/* Fallback to orderedKeys if headers are not provided */}
+                                    {!headers && orderedKeys
                                         .filter((key) => !excluded.includes(key))
                                         .map((key) => (
                                             <td key={key} className="px-4 border border-black py-2">
-                                                {formatValue(key, item[key])}
+                                                {renderCellContent(key, item[key])}
                                             </td>
                                         ))}
                                 </tr>

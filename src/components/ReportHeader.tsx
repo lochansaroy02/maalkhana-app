@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import InputComponent from "./InputComponent";
 import DropDown from "./ui/DropDown";
 import { Button } from "./ui/button";
-import DatePicker from "./ui/datePicker";
 const ReportHeader = () => {
     const { setDbName, dbName, getSearchResult, } = useSearchStore()
     const { reportType, setReportType } = useOpenStore();
@@ -39,7 +38,7 @@ const ReportHeader = () => {
 
 
 
-    const reportTypeOptions = ["All", "movement", "release", "destroy", "return"].map(item => ({
+    const reportTypeOptions = ["All", "movement", "release", "destroy", "return", "nilami"].map(item => ({
         value: item,
         label: item.charAt(0).toUpperCase() + item.slice(1) // Capitalize first letter for better display
     }));
@@ -48,7 +47,7 @@ const ReportHeader = () => {
     const handleSearch = async () => {
         try {
             const data = await getSearchResult(keyword, user?.id)
-            console.log(data)
+
         } catch (error) {
 
         }

@@ -133,7 +133,7 @@ export const useMovementStore = create<MovementStore>((set, get) => ({
                 // if (current && ((current.firNo === firNo) || (current as any).firNo === firNo)) {
                 //     set({ entry: { ...current, ...updatedData } });
                 // }
-                console.log(res.data.data)
+                
             }
             return res.data?.success ?? false;
         } catch (err) {

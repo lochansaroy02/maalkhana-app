@@ -3,6 +3,8 @@ import axios from 'axios';
 import { create } from 'zustand';
 
 type MaalkhanaEntry = {
+    isReturned: unknown;
+    isRelease: unknown;
     srNo: string;
     gdNo: string;
     photoUrl: string,

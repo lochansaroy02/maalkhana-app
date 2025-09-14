@@ -1,3 +1,4 @@
+// pages/Page.tsx (The Report Page component)
 "use client";
 
 import Report from "@/components/Report";
@@ -8,156 +9,183 @@ import { useDistrictStore } from "@/store/districtStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
 import { useSearchStore } from "@/store/searchStore";
 import { useOpenStore } from "@/store/store";
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+
+// Define a type for the data entries to improve type safety
+interface MaalkhanaEntry {
+    id?: string;
+    firNo: string;
+    srNo: string;
+    caseProperty: string;
+    underSection: string;
+    policeStation: string;
+    entryType?: string;
+    gdNo?: string;
+    gdDate?: string;
+    Year?: string;
+    vadiName?: string;
+    isMovement?: boolean;
+    moveDate?: string;
+    takenOutBy?: string;
+    movePurpose?: string;
+    moveTrackingNo?: string;
+    isRelease?: boolean;
+    courtName?: string;
+    courtNo?: string;
+    boxNo?: string;
+    releaseItemName?: string;
+    fathersName?: string;
+    address?: string;
+    receiverName?: string;
+    status?: string;
+    description?: string;
+    isReturned?: boolean;
+    returnDate?: string;
+    receivedBy?: string;
+    returnBackFrom?: string;
+}
 
 const casePropertyOptions = [
     "malkhana Entry", "FSL", "Kurki", "Other Entry", "Cash Entry", "Wine/Daru", "Unclaimed Entry",
     "Yellow Item"
 ];
 
+// Define a type for the report data and headers
+type ReportData = {
+    data: any[];
+    headers: string[];
+};
+
 const Page = () => {
-    const { reportType } = useOpenStore();
-    const { user, } = useAuthStore();
-    const { userId } = useDistrictStore()
+    const { reportType, setReportType } = useOpenStore();
+    const { user } = useAuthStore();
+    const { userId } = useDistrictStore();
     const { entries, fetchMaalkhanaEntry, addMaalkhanaEntry } = useMaalkhanaStore();
-    const { year } = useSearchStore();
+    const { year, searchData } = useSearchStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
-    const [displayData, setDisplayData] = useState<any[]>([]);
 
 
+    const searchParams = useSearchParams();
+
+    // Set initial report type from URL on component mount
     useEffect(() => {
-
-        if (user?.role === "policeStation") {
-            if (user?.id) {
-                fetchMaalkhanaEntry(user.id);
-            }
-        } else {
-            fetchMaalkhanaEntry(userId)
+        const urlReportType = searchParams.get('reportType');
+        if (urlReportType && urlReportType !== reportType) {
+            setReportType(urlReportType);
         }
-    }, [user?.id, fetchMaalkhanaEntry, userId]);
+    }, [searchParams, reportType, setReportType]);
+
+
+    // Fetch data on component mount and user/userId changes
+    useEffect(() => {
+        if (user?.role === "policeStation" && user?.id) {
+            fetchMaalkhanaEntry(user.id);
+        } else if (userId) {
+            fetchMaalkhanaEntry(userId);
+        }
+    }, [user?.id, fetchMaalkhanaEntry, userId, user?.role]);
 
     // Helper function to create a new object with only specified fields
-    const selectFields = (entries: any[], fields: string[]) => {
+    const selectFields = (entries: MaalkhanaEntry[], fields: string[]) => {
         return entries.map((entry) => {
             const newEntryObject: { [key: string]: any } = {};
             fields.forEach(field => {
-                if (entry[field] !== undefined) {
-                    newEntryObject[field] = entry[field];
+                if (entry[field as keyof MaalkhanaEntry] !== undefined) {
+                    newEntryObject[field] = entry[field as keyof MaalkhanaEntry];
                 }
             });
             return newEntryObject;
         });
     };
 
-    // Filters for movement entries
-    const filterByMovement = (allEntries: any[]) => {
-        const fieldsToShow = ["id", 'firNo', 'srNo', 'caseProperty', 'underSection', 'policeStation', '', 'moveDate', 'takenOutBy', 'movePurpose', 'moveTrackingNo'];
-        const movementEntries = allEntries.filter(entry => entry.isMovement === true);
-        return selectFields(movementEntries, fieldsToShow);
-    };
+    // Define all report-related logic within a useMemo hook for performance
+    const reportContent: ReportData = useMemo(() => {
+        //@ts-ignore
+        let filteredData: MaalkhanaEntry[] = [...entries];
+        let headers: string[] = [];
 
-    // Filters for release entries
-    const filterByRelease = (allEntries: any[]) => {
-        const fieldsToShow = ['firNo', 'srNo', 'caseProperty', 'underSection', 'courtName', 'courtNo', 'boxNo', 'releaseItemName', 'fathersName', 'address', 'receiverName'];
-        const releaseEntries = allEntries.filter(entry => entry.isRelease === true);
-        return selectFields(releaseEntries, fieldsToShow);
-    };
+        // Apply filters based on the report type and selected case property
+        const applyFilters = () => {
+            let dataToShow = [...entries];
 
-    // Filters for destroyed entries
-    const filterByDestroy = (allEntries: any[]) => {
-        const fieldsToShow = ['id', 'firNo', 'srNo', 'status', 'caseProperty', 'description'];
-        const destroyEntries = allEntries.filter(entry => entry.status?.toLowerCase() === 'destroy');
-        return selectFields(destroyEntries, fieldsToShow);
-    };
+            // Filter based on reportType
+            switch (reportType) {
+                case "movement":
+                    dataToShow = entries.filter(entry => entry.isMovement);
+                    headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"];
+                    break;
+                case "release":
+                    dataToShow = entries.filter(entry => entry.isRelease);
+                    headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Court Name", "Court No", "Box No", "Release Item Name", "Father's Name", "Address", "Receiver Name"];
+                    break;
+                case "destroy":
+                    dataToShow = entries.filter(entry => entry.status?.toLowerCase() === 'destroy');
+                    headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
+                    break;
+                case "return":
+                    dataToShow = entries.filter(entry => entry?.isReturned);
+                    headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
+                    break;
+                case "nilami":
+                    dataToShow = entries.filter(entry => entry.status?.toLowerCase() === 'nilami');
+                    headers = ["FIR No", "Sr No", "status", "Return Date", "Received By", "Return Back From", "Is Returned"];
+                    break;
+                default:
+                    dataToShow = entries;
+                    headers = ["FIR No", "Sr No", "Entry Type", "Case Property", "GD No", "GD Date", "Year", "Police Station", "Vadi Name"];
+                    break;
+            }
 
-    // Filters for returned entries
-    const filterByReturn = (allEntries: any[]) => {
-        const fieldsToShow = ['id', 'firNo', 'srNo', 'returnDate', 'receivedBy', 'returnBackFrom', 'isReturned'];
-        const returnEntries = allEntries.filter(entry => entry.isReturned === true);
-        return selectFields(returnEntries, fieldsToShow);
-    };
-    const filterbyMalkhana = (allEntries: any[]) => {
-        const fieldsToShow = ['firNo', 'srNo', 'entryType', 'caseProperty', 'gdNo', 'gdDate', 'Year', 'policeStation', 'vadiName'];
-        const returnEntries = allEntries.filter(entry => entry.isReturned === true);
-        return selectFields(returnEntries, fieldsToShow);
-    };
+            // Further filter by selected case property
+            if (selectedCaseProperty) {
+                dataToShow = dataToShow.filter(item => item.entryType?.toLowerCase() === selectedCaseProperty.toLowerCase());
+            }
 
+            // Apply year filter
+            if (year?.from || year?.to) {
+                const fromYear = year.from ? parseInt(year.from, 10) : null;
+                const toYear = year.to ? parseInt(year.to, 10) : null;
+                dataToShow = dataToShow.filter(item => {
+                    const entryYear = item.Year ? parseInt(item.Year) : null;
+                    if (!entryYear) return false;
+                    if (fromYear && !toYear) {
+                        return entryYear === fromYear;
+                    }
+                    if (fromYear && toYear) {
+                        return entryYear >= fromYear && entryYear <= toYear;
+                    }
+                    if (!fromYear && toYear) {
+                        return entryYear <= toYear;
+                    }
+                    return true;
+                });
+            }
 
-    const { searchData } = useSearchStore()
+            // Apply search filter if searchData is available
+            if (searchData.length > 0) {
+                // Assuming searchData is already filtered and formatted correctly
+                return { data: searchData, headers: headers };
+            }
 
-    useEffect(() => {
-        setDisplayData(searchData)
-    }, [searchData])
+            return { data: dataToShow, headers: headers };
+        };
 
+        return applyFilters();
+    }, [reportType, selectedCaseProperty, entries, year, searchData]);
 
-
-
-    useEffect(() => {
-        let filteredData = [...entries];
-
-        if (reportType === "movement") {
-            //@ts-ignore
-            filteredData = filterByMovement(entries);
-        } else if (reportType === "release") {
-
-            //@ts-ignore
-            filteredData = filterByRelease(entries);
-        } else if (reportType === "destroy") {
-            //@ts-ignore
-            filteredData = filterByDestroy(entries);
-        } else if (reportType === "return") {
-            //@ts-ignore
-            filteredData = filterByReturn(entries);
-        }
-
-        // Step 2: Further filter the result by the selected case property checkbox.
-        if (selectedCaseProperty) {
-            filteredData = filteredData.filter(
-                (item) => item.entryType?.toLowerCase() === selectedCaseProperty.toLowerCase()
-            );
-        }
-        if (year?.from || year?.to) {
-            const fromYear = year.from ? parseInt(year.from, 10) : null;
-            const toYear = year.to ? parseInt(year.to, 10) : null;
-
-            filteredData = filteredData.filter((item) => {
-                if (!item.Year) return false;
-
-                const entryYear = parseInt(item.Year)
-                if (fromYear && !toYear) {
-                    return entryYear === fromYear;
-                }
-                if (fromYear && toYear) {
-                    return entryYear >= fromYear && entryYear <= toYear;
-                }
-                if (!fromYear && toYear) {
-                    return entryYear <= toYear;
-                }
-
-                return true;
-            });
-        }
-
-
-
-        setDisplayData(filteredData);
-
-
-    }, [reportType, selectedCaseProperty, entries, year]);
     const handleImportSuccess = () => {
         if (user?.id) {
             fetchMaalkhanaEntry(user.id);
         }
     };
 
-
-
     return (
         <>
             {/* Filter Section */}
-            <div className="p-4  mx-2  glass-effect">
-                <div className="flex  flex-wrap gap-4 items-center">
+            <div className="p-4 mx-2 glass-effect">
+                <div className="flex flex-wrap gap-4 items-center">
                     <h1 className="text-lg font-semibold text-white">Filter by Entry Type:</h1>
                     {casePropertyOptions.map((property) => (
                         <div key={property} className="flex items-center space-x-2">
@@ -175,7 +203,9 @@ const Page = () => {
             </div>
 
             <Report
-                data={displayData}
+                data={reportContent.data}
+                //@ts-ignore
+                headers={reportContent.headers}
                 onImportClick={() => setIsModalOpen(true)}
                 heading="Maalkhana Data"
                 detailsPathPrefix="/report/entry-report"
@@ -187,8 +217,7 @@ const Page = () => {
                 onClose={() => setIsModalOpen(false)}
                 schemaType="entry"
                 onSuccess={handleImportSuccess}
-                //@ts-ignore
-                addEntry={addMaalkhanaEntry}
+                addEntry={addMaalkhanaEntry as any}
             />
         </>
     );

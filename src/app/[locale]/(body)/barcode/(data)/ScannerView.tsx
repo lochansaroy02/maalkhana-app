@@ -25,7 +25,7 @@ const ScannerView = () => {
 
       
 
-            console.log("Scan successful:", finalResult);
+            
 
         } catch (error) {
             // This will catch errors if the barcode contains something other than valid JSON.

@@ -8,7 +8,7 @@ export default function EntryReportDetail() {
     const { id } = useParams();
     const [entry, setEntry] = useState<any>(null);
 
-    console.log(entry)
+    
 
     const fieldOrder = [
         { key: "firNo", label: "FIR No" },

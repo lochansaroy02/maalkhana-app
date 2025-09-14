@@ -34,7 +34,7 @@ const Header = () => {
     const getUserData = async () => {
         if (user?.role === "district") {
             const data = await getAllUsers(user?.id);
-            console.log("Fetched users:", data); // 👀 check shape
+             // 👀 check shape
             setUserData(Array.isArray(data) ? data : data.data || []);
         }
     };

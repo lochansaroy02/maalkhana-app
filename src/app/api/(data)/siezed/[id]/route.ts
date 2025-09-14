@@ -7,5 +7,8 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
     const entry = await prisma.seizedVehicle.findUnique({
         where: { id }
     });
-    return NextResponse.json(entry);
+    return NextResponse.json({
+        success: true,
+        data: entry
+    });
 }

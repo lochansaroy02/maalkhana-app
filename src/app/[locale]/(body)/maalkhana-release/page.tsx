@@ -99,8 +99,10 @@ const Page = () => {
             // const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudnary(documentRef.current.files[0]) : "";
 
             const updateData = {
-                receiverName: formData.receiverName, fathersName: formData.fathersName, address: formData.address, mobile: formData.mobile, releaseItemName: formData.releaseItemName, photoUrl, documentUrl: "", status: "Released", isReturned: true, isRelease: true, policeStation: formData.policeStation
+                receiverName: formData.receiverName, fathersName: formData.fathersName, address: formData.address, mobile: formData.mobile, releaseItemName: formData.releaseItemName, photoUrl, documentUrl: "", status: "Released", isReturned: true, isRelease: true, policeStation: formData.policeStation, releaseOrderedBy: formData.releaseOrderedBy
             };
+
+            
 
             let response;
             if (type === "malkhana") {

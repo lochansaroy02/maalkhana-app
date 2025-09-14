@@ -1,14 +1,28 @@
-import { ReactNode } from "react"
+"use client";
+
+import { useRouter } from "next/navigation";
+import { ReactNode } from "react";
 
 interface CardProps {
     title: string
     data: number | undefined
     bgColour: string
-    icon: ReactNode
+    icon: ReactNode,
+    url?: string | undefined
 }
-const ReportCard = ({ data, bgColour, icon, title }: CardProps) => {
+const ReportCard = ({ data, bgColour, icon, title, url }: CardProps) => {
+
+    const router = useRouter()
+
+    const handleClick = () => {
+        if (!url) {
+            alert("url not found")
+            return
+        }
+        router.push(url)
+    }
     return (
-        <div className="">
+        <div onClick={handleClick} className="cursor-pointer">
             <div className={`${bgColour} px-4 py-4 gap-2  lg:h-32 lg:w-64   rounded-lg   flex flex-col `}>
                 <div className=" flex  gap-2  items-center ">
                     <h1 className="text-lg w-3/4  text-balance    text-neutral-100  ">{title}</h1>

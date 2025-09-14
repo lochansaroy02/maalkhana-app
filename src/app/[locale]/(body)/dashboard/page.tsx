@@ -1,3 +1,4 @@
+// pages/index.tsx (The Dashboard component)
 "use client";
 
 import ReportCard from "@/components/ReportCard";
@@ -13,9 +14,7 @@ const Page = () => {
     const { user, } = useAuthStore();
     const { userId } = useDistrictStore()
 
-
     useEffect(() => {
-
         if (user?.role === "policeStation") {
             if (user?.id) {
                 fetchTotalEntries(user?.id)
@@ -29,7 +28,6 @@ const Page = () => {
         }
     }, [user?.id, fetchTotalEntries, userId]);
 
-
     const t = useTranslations("Dashboard");
     const reportItems = [
         {
@@ -37,8 +35,8 @@ const Page = () => {
             icon: <Shield size={40} />,
             bgColour: `bg-neutral-500 `,
             value: data?.breakdown?.totalPoliceStation || 0,
+            url: "/users"
         },
-
         {
             title: t("totalEntries"),
             icon: <Menu size={40} />,
@@ -50,24 +48,29 @@ const Page = () => {
             icon: <User size={40} />,
             bgColour: "bg-red-500",
             value: data?.breakdown?.entry || 0,
+            url: "/report/entry-report"
         },
         {
             title: t("malkhanaMovement"),
             icon: <User size={40} />,
             bgColour: "bg-orange-500",
             value: data?.breakdown?.movement || 0,
+            url: "/report/entry-report?reportType=movement"
         },
         {
             title: t("malkhanaRelease"),
             icon: <Settings size={40} />,
             bgColour: "bg-green-500",
             value: data?.breakdown?.release || 0,
+            // Added URL with query parameter for filtering
+            url: "/report/entry-report?reportType=release"
         },
         {
             title: t("seizedVehicles"),
             icon: <Car size={40} />,
             bgColour: "bg-blue-500",
             value: data?.breakdown?.siezed || 0,
+            url: "/report/siezed-report"
         },
         {
             title: t("totalNilami"),
@@ -80,12 +83,14 @@ const Page = () => {
             icon: <Shredder size={40} />,
             bgColour: "bg-pink-500",
             value: data?.breakdown?.destroy || 0,
+            url: "/report/entry-report?reportType=destroy"
         },
         {
             title: t("returnedEntries"),
             icon: <ArrowDownNarrowWide size={40} />,
             bgColour: "bg-green-700",
             value: data?.breakdown?.totalReturn || 0,
+            url: "/report/entry-report?reportType=return"
         },
         {
             title: t("totalEnglishWine"),
@@ -116,12 +121,8 @@ const Page = () => {
             icon: <Banknote size={40} />,
             bgColour: "bg-yellow-500",
             value: ` ₹${(data?.breakdown?.totalYellowItems._sum.yellowItemPrice || 0).toLocaleString('en-IN')}`,
-
         },
-
     ];
-
-
 
     return (
         <div className="flex lg:h-screen  flex-col glass-effect">
@@ -135,6 +136,7 @@ const Page = () => {
                     }
                     return (
                         <ReportCard
+                            url={item.url}
                             key={index}
                             title={item.title}
                             icon={item.icon}
@@ -144,7 +146,6 @@ const Page = () => {
                     );
                 })}
             </div>
-
         </div>
     );
 };

@@ -5,6 +5,9 @@ import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+
+
+
 export default function EntryReportDetail() {
     const { id } = useParams();
     const router = useRouter()
@@ -16,11 +19,7 @@ export default function EntryReportDetail() {
 
     const divRef = useRef(null)
 
-    // const handlePrint = useReactToPrint({
-    //     content: () => divRef.current,
-    //     documentTitle: `Malkhana-Entry-${entry?.firNo || ''}`,
-    //     onAfterPrint: () => console.log('Printed successfully!'),
-    // });
+
 
 
 
@@ -87,7 +86,7 @@ export default function EntryReportDetail() {
 
 
 
-    if (!entry) return <div className="p-4 text-center text-white">Loading...</div>;
+    if (!entry) return <div className="p-4 text-center text-white">this is ...</div>;
 
 
     return (
