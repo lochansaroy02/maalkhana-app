@@ -91,23 +91,23 @@ const Page = () => {
             switch (reportType) {
                 case "movement":
                     dataToShow = vehicles.filter(vehicle => vehicle.isMovement === true);
-                    headers = ["ID", "FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"];
+                    headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"];
                     break;
                 case "release":
                     dataToShow = vehicles.filter(vehicle => vehicle.isRelease === true);
-                    headers = ["ID", "FIR No", "Sr No", "Case Property", "Court Name", "Court No", "Receiver Name"];
+                    headers = ["FIR No", "Sr No", "Case Property", "Court Name", "Court No", "Receiver Name"];
                     break;
                 case "destroy":
                     dataToShow = vehicles.filter(vehicle => vehicle.status?.toLowerCase() === 'destroy');
-                    headers = ["ID", "FIR No", "Sr No", "Status", "Case Property", "Description"];
+                    headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
                     break;
                 case "destroy":
                     dataToShow = vehicles.filter(vehicle => vehicle.status?.toLowerCase() === 'nilami');
-                    headers = ["ID", "FIR No", "Sr No", "Status", "Case Property", "Description"];
+                    headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
                     break;
                 case "return":
                     dataToShow = vehicles.filter(vehicle => vehicle.isReturned === true);
-                    headers = ["ID", "FIR No", "Sr No", "Return Date", "Received By", "Return Back From", "Is Returned"];
+                    headers = ["FIR No", "Sr No", "Return Date", "Received By", "Return Back From", "Is Returned"];
                     break;
                 default: // 'all' or default view
                     dataToShow = vehicles;

@@ -31,6 +31,8 @@ const Page = () => {
     const [status, setStatus] = useState<string>('');
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isReturned, setIsReturned] = useState(false);
+    const [isRelease, setIsRelease] = useState(false);
     const [existingId, setExistingId] = useState<string>("");
     const [yellowItemPrice, setYellowItemPrice] = useState<number>(0);
 
@@ -226,18 +228,19 @@ const Page = () => {
             const finalStatus = status === 'other' ? otherStatus : status;
 
             const fullData = {
+
                 ...formData,
                 status: finalStatus,
                 wine,
                 cash,
                 wineType,
                 entryType: dropdownSelection === 'other' ? entryType : t(`${baseKey}.entryType.options.${dropdownSelection}`),
-                entryTypeKey: dropdownSelection,
                 userId: user?.id,
                 photoUrl,
                 description,
                 yellowItemPrice,
                 gdDate: dateFields.gdDate?.toISOString() ?? '',
+                isRelease, isReturned
             };
 
             let success = false;
@@ -249,7 +252,7 @@ const Page = () => {
             } else {
                 success = await addMaalkhanaEntry(fullData);
                 if (success) {
-                    toast.success(t(`${baseKey}.toasts.saveSuccess`));
+                    toast.success('data saved');
                 }
             }
             if (success) {
@@ -263,7 +266,7 @@ const Page = () => {
         }
     };
 
-    
+
 
     return (
         <div className='glass-effect'>

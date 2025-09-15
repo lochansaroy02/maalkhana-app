@@ -3,8 +3,8 @@ import axios from 'axios';
 import { create } from 'zustand';
 
 type MaalkhanaEntry = {
-    isReturned: unknown;
-    isRelease: unknown;
+    isReturned: boolean;
+    isRelease: boolean;
     srNo: string;
     gdNo: string;
     photoUrl: string,
@@ -47,6 +47,8 @@ type MaalkhanaStore = {
 };
 
 const initialState: MaalkhanaEntry = {
+    isRelease: false,
+    isReturned: false,
     srNo: '',
     gdNo: '',
     description: '',

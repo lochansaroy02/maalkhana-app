@@ -5,7 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useOpenStore } from '@/store/store';
-import React, { useEffect } from 'react'; // Import useEffect
+import React, { Suspense, useEffect } from 'react'; // Import useEffect
 
 import Modal from '@/components/Modal';
 import { X } from 'lucide-react';
@@ -45,8 +45,9 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
             {/* Sub Header */}
             <ReportHeader />
 
-
-            {children}
+            <Suspense fallback={<div>Loading...</div>}>
+                {children}
+            </Suspense>
 
 
             {isOpen && (

@@ -103,8 +103,20 @@ const Report = ({
             const year = date.getFullYear();
             return `${day}-${month}-${year}`;
         }
+
         return value || "-";
+
+
+
+
     };
+
+
+
+
+    const fixEntryType = () => {
+
+    }
 
     const handleExport = () => {
         if (data && data.length > 0) {
