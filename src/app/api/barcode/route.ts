@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
             case "m":
                 if (srNo) {
                     data = await prisma.malkhanaEntry.findFirst({
-                        where: { firNo: String(firNo), srNo: String(srNo) },
+                        where: { firNo: String(firNo), srNo: Number(srNo) },
                     });
                 } else {
                     data = await prisma.malkhanaEntry.findMany({

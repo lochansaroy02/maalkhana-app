@@ -18,20 +18,21 @@ export async function GET(req: NextRequest) {
             whereConditions.push({ firNo: firNo });
         }
         if (srNo) {
-            whereConditions.push({ srNo: srNo });
+            whereConditions.push({ srNo: parseInt(srNo) });
         }
 
         const whereClause = {
             AND: whereConditions,
         };
-        // --- END OF CORRECTION ---
+
 
         if (type === 'malkhana') {
             record = await prisma.malkhanaEntry.findFirst({
                 where: whereClause,
             });
-        } else if (type === 'siezed vehical') { // Note: 'siezed vehical' matches your frontend dropdown
+        } else if (type === 'siezed vehical') {
             record = await prisma.seizedVehicle.findFirst({
+                //@ts-ignore
                 where: whereClause,
             });
         } else {
