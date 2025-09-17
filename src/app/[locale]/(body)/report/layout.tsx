@@ -38,9 +38,9 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
 
         <div className='relative  glass-effect'>
             {/* Header */}
-            <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
+            {/* <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
                 <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Reports</h1>
-            </div>
+            </div> */}
 
             {/* Sub Header */}
             <ReportHeader />

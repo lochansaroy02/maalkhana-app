@@ -1,84 +1,120 @@
-import { expectedSchemas } from "@/constants/schemas";
-
-// Corrected header map based on the provided image and schema
-export const headerMap = {
-    "क्र0सं0": "srlNO", // "srlNO" isn't in your model, consider if you need it. I'll include it for the purpose of the mapping.
-    "fir No": "firNo",
-    "wine": "wine",
-    "cash": "cash",
-    "wine type": "wineType",
-    "photo url": "photoUrl",
-    "Sr No": "srNo",
-    "Gd no": "gdNo",
-    "Gd Date": "gdDate",
-    "under section": "underSection",
-    "description": "description",
-    "year": "Year",
-    "policestatiion": "policeStation",
-    "विवेचक का नाम": "IOName", // Mapped to 'IOName' as per your model
-    "वादी का नाम": "vadiName",
-    "एचएम दाखिल कर्ता का नाम": "HM",
-    "accused": "accused",
-    "status": "status",
-    "entry type": "entryType",
-    "place": "place",
-    "box no": "boxNo",
-    "court no": "courtNo",
-    "court name": "courtName", // Added based on your model
-    "case protery": "caseProperty", // Corrected typo
-};
-
-export const validateAndMapExcelSchema = (
-    sheetData: Record<string, any>[],
-    schemaType: keyof typeof expectedSchemas
-) => {
-    if (!sheetData || sheetData.length === 0) {
-        return { error: "❌ Empty sheet or no rows found." };
-    }
-
-    const excelHeaders = Object.keys(sheetData[0]);
-    const expectedDbFields = expectedSchemas[schemaType];
-
-    const mappedData: Record<string, any>[] = [];
-
-    const reverseHeaderMap: Record<string, string> = {};
-    for (const key in headerMap) {
-        if (Object.prototype.hasOwnProperty.call(headerMap, key)) {
-            reverseHeaderMap[headerMap[key as keyof typeof headerMap]] = key;
+// A utility function to create a reverse map. 
+// You can place this in a utils file or at the top of your component file.
+const createReverseMap = (map: Record<string, string>): Record<string, string> => {
+    const reverseMap: Record<string, string> = {};
+    for (const key in map) {
+        if (Object.prototype.hasOwnProperty.call(map, key)) {
+            reverseMap[map[key as keyof typeof map]] = key;
         }
     }
+    return reverseMap;
+};
 
-    const missingExcelFields = expectedDbFields.filter(
-        (dbField) => !excelHeaders.includes(reverseHeaderMap[dbField])
-    );
-    const extraExcelFields = excelHeaders.filter(
-        (excelHeader) => !Object.keys(headerMap).includes(excelHeader)
-    );
+// Create the reverse map of your exportMap. 
+// It should be created once outside of any function that runs repeatedly,
+// like outside of the component or within a useEffect hook.
+export const exportMap = {
+    "SR. No.": "srNo",
+    "FIR No.": "firNo",
+    "GD No.": "gdNo",
+    "GD Date": "gdDate",
+    "Under Section": "underSection",
+    "Description": "description",
+    "Case Property": "caseProperty",
+    "Police Station": "policeStation",
+    "Year": "Year",
+    "IO Name": "IOName",
+    "Vadi Name": "vadiName",
+    "Accused": "accused",
+    "Status": "status",
+    "Entry Type": "entryType",
+    "Place": "place",
+    "Box No.": "boxNo",
+    "Court No.": "courtNo",
+    "Court Name": "courtName",
+    "Cash": "cash",
+    "Wine": "wine",
+    "Wine Type": "wineType",
+    "HM": "HM",
+};
+const reverseExportMap = createReverseMap(exportMap);
 
-    if (missingExcelFields.length > 0 || extraExcelFields.length > 0) {
-        return {
-            error: `❌ Schema mismatch:\nMissing Excel Headers for DB fields: ${missingExcelFields
-                .map((f) => reverseHeaderMap[f] || f)
-                .join(", ")}\nExtra Excel Headers: ${extraExcelFields.join(", ")}`,
-        };
+// Your expected schema structure, as provided.
+export const expectedSchemas = {
+    MalkhanaEntry: [
+        "id", "wine", "wineType", "srNo", "gdNo", "gdDate", "underSection", "Year",
+        "policeStation", "IOName", "vadiName", "HM", "accused", "firNo", "status",
+        "entryType", "place", "boxNo", "courtNo", "courtName", "createdAt", "updatedAt",
+        "districtId", "photoUrl", "userId", "address", "document", "fathersName",
+        "isReturned", "mobile", "moveDate", "movePurpose", "moveTrackingNo", "name",
+        "photo", "releaseItemName", "returnBackFrom", "returnDate", "takenOutBy",
+        "caseProperty", "receivedBy", "receiverName", "documentUrl", "cash",
+        "description", "isMovement", "isRelease", "yellowItemPrice", "dbName",
+        "releaseOrderedBy",
+    ],
+};
+
+/**
+ * Validates and maps raw Excel data to the database schema.
+ * * @param {any[]} data - The raw JSON data from the Excel sheet.
+ * @param {keyof typeof expectedSchemas} schemaType - The type of schema to validate against (e.g., "MalkhanaEntry").
+ * @param {string | undefined} userId - The current user's ID to be added to the data.
+ * @returns {{error: string | null, data: any[]}} An object containing a potential error and the validated data.
+ */
+export function validateAndMapExcelSchema(data: any[], schemaType: keyof typeof expectedSchemas, userId: string | undefined) {
+    const expectedFields = expectedSchemas[schemaType];
+
+    if (!expectedFields) {
+        return { error: `❌ Unknown schema type: ${schemaType}`, data: [] };
     }
 
-    // Transform and map the data
-    for (const row of sheetData) {
-        const newRow: Record<string, any> = {};
-        for (const excelHeader of excelHeaders) {
-            const dbField = headerMap[excelHeader as keyof typeof headerMap];
-            if (dbField) {
-                // Convert string values for 'cash' and 'wine' to numbers
-                if (dbField === "cash" || dbField === "wine") {
-                    newRow[dbField] = parseInt(row[excelHeader], 10) || 0;
+    const validatedData = data.map((row) => {
+        const completeRow: Record<string, any> = {};
+
+        expectedFields.forEach((dbField) => {
+            // Find the corresponding Excel header from the reverse map
+            const excelHeader = reverseExportMap[dbField];
+
+            // Get the value from the raw row, using the mapped Excel header
+            const importedValue = excelHeader ? row[excelHeader] : undefined;
+            const importedValueTrimmed = importedValue ? String(importedValue).trim() : undefined;
+
+            if (importedValueTrimmed !== undefined && importedValueTrimmed !== '' && importedValueTrimmed !== '-') {
+                // If a non-empty value exists in the Excel file, assign it
+                completeRow[dbField] = importedValue;
+            } else if (dbField === "userId" && userId) {
+                // Special case: Add the userId if it's available
+                completeRow[dbField] = userId;
+            } else {
+                // Assign a default value for missing fields based on data type
+                if (["wine", "cash", "yellowItemPrice", "boxNo"].includes(dbField)) {
+                    completeRow[dbField] = 0; // Numbers
+                } else if (["isReturned", "isMovement", "isRelease"].includes(dbField)) {
+                    completeRow[dbField] = false; // Booleans
+                } else if (["createdAt", "updatedAt", "returnDate"].includes(dbField)) {
+                    completeRow[dbField] = null; // Dates
                 } else {
-                    newRow[dbField] = row[excelHeader];
+                    completeRow[dbField] = ""; // Fallback for strings
                 }
             }
-        }
-        mappedData.push(newRow);
-    }
+        });
 
-    return { error: null, data: mappedData };
-};
+        // --- Post-processing for data types that need explicit conversion ---
+        // This is crucial for "Cash" and "Wine" fields which are sometimes represented as "-" or strings
+        if (completeRow.cash) {
+            const cashValue = parseInt(completeRow.cash, 10);
+            completeRow.cash = isNaN(cashValue) ? null : cashValue;
+        }
+
+        if (completeRow.wine) {
+            const wineValue = parseInt(completeRow.wine, 10);
+            completeRow.wine = isNaN(wineValue) ? null : wineValue;
+        }
+
+
+        
+        return completeRow;
+    });
+
+    return { error: null, data: validatedData };
+}

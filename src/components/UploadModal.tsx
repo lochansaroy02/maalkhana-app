@@ -1,7 +1,9 @@
 "use client";
 
-import { expectedSchemas, } from "@/constants/schemas";
-import { headerMap } from "@/utils/headerMappings";
+import { expectedSchemas } from "@/constants/schemas";
+import { useAuthStore } from "@/store/authStore";
+import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
+import { validateAndMapExcelSchema } from "@/utils/validateSchemas";
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
 import * as XLSX from "xlsx";
@@ -15,91 +17,43 @@ interface UploadModalProps {
     addEntry: (data: any) => Promise<void>;
 }
 
-// Helper function for validation and mapping
-const validateAndMapExcelSchema = (
-    sheetData: Record<string, any>[],
-    schemaType: keyof typeof expectedSchemas
-) => {
-    if (!sheetData || sheetData.length === 0) {
-        return { error: "❌ Empty sheet or no rows found.", data: null };
-    }
-
-    const excelHeaders = Object.keys(sheetData[0]);
-    const expectedDbFields = expectedSchemas[schemaType];
-
-    const mappedData: Record<string, any>[] = [];
-
-    const reverseHeaderMap: Record<string, string> = {};
-    for (const key in headerMap) {
-        if (Object.prototype.hasOwnProperty.call(headerMap, key)) {
-            reverseHeaderMap[headerMap[key as keyof typeof headerMap]] = key;
-        }
-    }
-
-    const missingExcelFields = expectedDbFields.filter(
-        (dbField) => !excelHeaders.includes(reverseHeaderMap[dbField])
-    );
-    const extraExcelFields = excelHeaders.filter(
-        (excelHeader) => !Object.keys(headerMap).includes(excelHeader)
-    );
-
-    if (missingExcelFields.length > 0) {
-        const missingHeaders = missingExcelFields
-            .map((f) => reverseHeaderMap[f] || f)
-            .join(", ");
-        return {
-            error: `❌ Schema mismatch: The following required headers are missing: ${missingHeaders}.`,
-            data: null,
-        };
-    }
-
-    if (extraExcelFields.length > 0) {
-        console.warn(`⚠️ Warning: Extra Excel headers found and will be ignored: ${extraExcelFields.join(", ")}`);
-    }
-
-    for (const row of sheetData) {
-        const newRow: Record<string, any> = {};
-        for (const excelHeader of excelHeaders) {
-            const dbField = headerMap[excelHeader as keyof typeof headerMap];
-            if (dbField && expectedDbFields.includes(dbField)) {
-                const rawValue = row[excelHeader];
-                let processedValue;
-
-                switch (dbField) {
-                    case "firNo":
-                    case "srNo":
-                        processedValue = String(rawValue || "");
-                        break;
-                    case "gdNo":
-                    case "gdDate":
-                    case "underSection":
-                    case "Year":
-                    case "cash":
-                    case "wine":
-                    case "srlNO":
-                        processedValue = parseInt(rawValue, 10);
-                        if (isNaN(processedValue)) {
-                            processedValue = null;
-                        }
-                        break;
-                    default:
-                        processedValue = String(rawValue || "");
-                        break;
-                }
-                newRow[dbField] = processedValue;
-            }
-        }
-        mappedData.push(newRow);
-    }
-
-    return { error: null, data: mappedData };
+// Your provided map for mapping Excel headers to database keys
+const exportMap = {
+    "SR. No.": "srNo",
+    "FIR No.": "firNo",
+    "GD No.": "gdNo",
+    "GD Date": "gdDate",
+    "Under Section": "underSection",
+    "Description": "description",
+    "Case Property": "caseProperty",
+    "Police Station": "policeStation",
+    "Year": "Year",
+    "IO Name": "IOName",
+    "Vadi Name": "vadiName",
+    "Accused": "accused",
+    "Status": "status",
+    "Entry Type": "entryType",
+    "Place": "place",
+    "Box No.": "boxNo",
+    "Court No.": "courtNo",
+    "Court Name": "courtName",
+    "Cash": "cash",
+    "Wine": "wine",
+    "Wine Type": "wineType",
+    "HM": "HM",
 };
 
-
 const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: UploadModalProps) => {
+
+    const { user } = useAuthStore()
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { addMaalkhanaEntry } = useMaalkhanaStore()
+
+
+
+
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -116,21 +70,17 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                 const sheetName = workbook.SheetNames[0];
                 const sheet = workbook.Sheets[sheetName];
 
-                const data = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                // Get the raw JSON data from the Excel sheet
+                const jsonData: any[] = XLSX.utils.sheet_to_json(sheet);
 
-                const headers: any = data[1];
-                const jsonData = data.slice(2).map((row: any) => {
-                    const obj: Record<string, any> = {};
-                    row.forEach((value: any, index: any) => {
-                        const header = headers[index]?.toString().trim();
-                        if (header) {
-                            obj[header] = value;
-                        }
-                    });
-                    return obj;
-                }).filter(obj => Object.keys(obj).length > 0 && Object.values(obj).some(v => v !== ''));
+                if (jsonData.length === 0) {
+                    setError("❌ The uploaded file is empty.");
+                    setLoading(false);
+                    return;
+                }
 
-                const { error, data: mappedData } = validateAndMapExcelSchema(jsonData, schemaType);
+                // Validate, map, and fill missing fields using our custom function
+                const { error, data: validatedData } = validateAndMapExcelSchema(jsonData, "MalkhanaEntry", user?.id);
 
                 if (error) {
                     setError(error);
@@ -138,9 +88,16 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                     return;
                 }
 
-                await addEntry(mappedData);
-                onSuccess("✅ Data imported successfully");
-                onClose();
+                // Now, send     the validated data (which is an array) to the API
+                console.log(validatedData);
+                const isSuccess = await addMaalkhanaEntry(validatedData);
+
+                if (isSuccess) {
+                    onSuccess("✅ Data imported successfully");
+                    onClose();
+                } else {
+                    setError("❌ Failed to import data. Check server logs.");
+                }
 
             } catch (err: any) {
                 console.error("Error processing file:", err);

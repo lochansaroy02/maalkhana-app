@@ -34,6 +34,7 @@ const Page = () => {
     const [isReturned, setIsReturned] = useState(false);
     const [isRelease, setIsRelease] = useState(false);
     const [existingId, setExistingId] = useState<string>("");
+    const [originalSrNo, setOriginalSrNo] = useState<string>(""); // New state for tracking original srNo
     const [yellowItemPrice, setYellowItemPrice] = useState<number>(0);
 
     const [dateFields, setDateFields] = useState<{ gdDate?: Date }>({
@@ -66,6 +67,7 @@ const Page = () => {
     const populateForm = (data: any) => {
         if (!data) return;
         setExistingId(data.id || "");
+        setOriginalSrNo(data.srNo || ""); // Set the original SrNo here
         setFormData({
             firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', caseProperty: data.caseProperty || '', gdNo: data.gdNo || '', Year: data.Year || '', policeStation: data.policeStation || '', IOName: data.IOName || '', vadiName: data.vadiName || '', HM: data.HM || '', accused: data.accused || '', place: data.place || '', boxNo: data.boxNo || '', courtNo: data.courtNo || '', courtName: data.courtName || '',
         });
@@ -93,6 +95,7 @@ const Page = () => {
             firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: ''
         });
         setExistingId("");
+        setOriginalSrNo(""); // Clear original SrNo
         setStatus(''); setWine(0); setCash(0); setWineType(''); setYellowItemPrice(0); setDropdownSelection(''); setEntryType(''); setDescription('');
         setDateFields({ gdDate: new Date() });
         SetPhotoUrl("");
@@ -244,17 +247,28 @@ const Page = () => {
             };
 
             let success = false;
-            if (existingId) {
+            // Updated Logic for Save/Modify/Add
+            if (existingId && formData.srNo === originalSrNo) {
+                // Case 1: Existing entry, no change in srNo -> MODIFY
                 success = await updateMalkhanaEntry(existingId, fullData);
                 if (success) {
                     toast.success(t(`${baseKey}.toasts.updateSuccess`));
                 }
+            } else if (existingId && formData.srNo !== originalSrNo) {
+                // Case 2: Existing entry, but srNo is changed -> ADD NEW
+                // Clear the existingId to ensure a new entry is created.
+                success = await addMaalkhanaEntry(fullData);
+                if (success) {
+                    toast.success('New entry created with new SR No.');
+                }
             } else {
+                // Case 3: No existingId -> ADD NEW
                 success = await addMaalkhanaEntry(fullData);
                 if (success) {
                     toast.success('data saved');
                 }
             }
+
             if (success) {
                 clearForm();
             }
@@ -265,7 +279,6 @@ const Page = () => {
             setLoading(false);
         }
     };
-
 
 
     return (

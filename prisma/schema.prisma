@@ -81,14 +81,25 @@ model SeizedVehicle {
 }
 
 model MalkhanaEntry {
-  id               String    @id @default(uuid())
-  wine             Int?
+  id   String @id @default(uuid())
+  wine Int? // old
+
+  srNo Int? // old
+
+  gdNo Int? // old
+
+  Year Int // old
+
+  boxNo Int @default(0)
+
+  cash Int?
+
+  yellowItemPrice Int?
+
+  // ... other fields unchanged
   wineType         String
-  srNo             String?
-  gdNo             String
   gdDate           String
   underSection     String
-  Year             String
   policeStation    String
   IOName           String
   vadiName         String
@@ -98,11 +109,10 @@ model MalkhanaEntry {
   status           String
   entryType        String
   place            String
-  boxNo            String
   courtNo          String
   courtName        String
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime? @default(now())
+  updatedAt        DateTime? @updatedAt
   districtId       String?
   photoUrl         String    @default("")
   userId           String?
@@ -124,11 +134,9 @@ model MalkhanaEntry {
   receivedBy       String?
   receiverName     String?
   documentUrl      String?
-  cash             Int?
   description      String?
   isMovement       Boolean?  @default(false)
   isRelease        Boolean?  @default(false)
-  yellowItemPrice  Int?
   dbName           String?
   releaseOrderedBy String?
   User             User?     @relation(fields: [userId], references: [id])

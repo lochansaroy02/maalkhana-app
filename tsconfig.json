@@ -23,6 +23,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/[locale]/(body)/barcode/(data)/parseBarcodeData.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/[locale]/(body)/barcode/(data)/parseBarcodeData.ts", "migrate.ts"],
   "exclude": ["node_modules"]
 }
