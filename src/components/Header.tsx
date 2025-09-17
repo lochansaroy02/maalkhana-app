@@ -34,7 +34,7 @@ const Header = () => {
     const getUserData = async () => {
         if (user?.role === "district") {
             const data = await getAllUsers(user?.id);
-             // 👀 check shape
+            // 👀 check shape
             setUserData(Array.isArray(data) ? data : data.data || []);
         }
     };
@@ -138,7 +138,7 @@ const Header = () => {
                     {isLoggedIn && user?.id && (
                         <Link href={`/${user.id}`} passHref>
                             <Button asChild className="rounded-full bg-blue hover:bg-blue/50 cursor-pointer">
-                                <a>{user.name.charAt(0).toUpperCase()}</a>
+                                <h1>{user.name.charAt(0).toUpperCase()}</h1>
                             </Button>
                         </Link>
                     )}

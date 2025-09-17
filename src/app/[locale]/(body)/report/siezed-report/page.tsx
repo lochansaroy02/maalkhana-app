@@ -95,7 +95,7 @@ const Page = () => {
                     break;
                 case "release":
                     dataToShow = vehicles.filter(vehicle => vehicle.isRelease === true);
-                    headers = ["FIR No", "Sr No", "Case Property", "Court Name", "Court No", "Receiver Name"];
+                    headers = ["FIR No", "Sr No", "Case Property", "releaseItemName", "Court Name", "Court No", "Receiver Name"];
                     break;
                 case "destroy":
                     dataToShow = vehicles.filter(vehicle => vehicle.status?.toLowerCase() === 'destroy');

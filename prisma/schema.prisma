@@ -82,13 +82,10 @@ model SeizedVehicle {
 
 model MalkhanaEntry {
   id   String @id @default(uuid())
-  wine Int? // old
-
-  srNo Int? // old
-
-  gdNo Int? // old
-
-  Year Int // old
+  wine Int?
+  srNo Int?
+  gdNo Int?
+  Year Int
 
   boxNo Int @default(0)
 

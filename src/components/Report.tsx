@@ -250,11 +250,11 @@ const Report = ({
                                         />
                                     </td>
                                     <td className="px-4 border border-black py-2">{index + 1}</td>
-                                    {headers && headers.map((header) => {
+                                    {headers && headers.map((header, index) => {
                                         const itemKey = orderedKeys.find(key => key.toLowerCase() === header.replace(" ", "").toLowerCase() || header.toLowerCase().includes(key.toLowerCase()));
                                         const finalKey = itemKey || (header === "ID" ? "id" : header);
                                         return (
-                                            <td key={finalKey} className="px-4 border border-black py-2">
+                                            <td key={index} className="px-4 border border-black py-2">
                                                 {renderCellContent(finalKey, item[finalKey])}
                                             </td>
                                         );

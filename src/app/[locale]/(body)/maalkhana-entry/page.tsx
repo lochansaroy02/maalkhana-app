@@ -44,7 +44,21 @@ const Page = () => {
     const [selectedSrNo, setSelectedSrNo] = useState<string>('');
 
     const [formData, setFormData] = useState({
-        firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: '',
+        firNo: '',
+        srNo: '',
+        gdNo: '',
+        caseProperty: '',
+        underSection: '',
+        Year: 2025,
+        policeStation: '',
+        IOName: '',
+        vadiName: '',
+        HM: '',
+        accused: '',
+        place: '',
+        boxNo: 0,
+        courtNo: '',
+        courtName: '',
     });
 
     const entryOptionKeys = ["malkhana", "fsl", "kurki", "cash", "wine", "unclaimed", "other", "yellowItem"];
@@ -67,12 +81,26 @@ const Page = () => {
     const populateForm = (data: any) => {
         if (!data) return;
         setExistingId(data.id || "");
-        setOriginalSrNo(data.srNo || ""); // Set the original SrNo here
+        setOriginalSrNo(data.srNo || "");
         setFormData({
-            firNo: data.firNo || '', srNo: data.srNo || '', underSection: data.underSection || '', caseProperty: data.caseProperty || '', gdNo: data.gdNo || '', Year: data.Year || '', policeStation: data.policeStation || '', IOName: data.IOName || '', vadiName: data.vadiName || '', HM: data.HM || '', accused: data.accused || '', place: data.place || '', boxNo: data.boxNo || '', courtNo: data.courtNo || '', courtName: data.courtName || '',
+            firNo: data.firNo || '',
+            srNo: data.srNo ? String(data.srNo) : '',
+            underSection: data.underSection || '',
+            caseProperty: data.caseProperty || '',
+            gdNo: data.gdNo ? String(data.gdNo) : '',
+            Year: data.Year || 2025,
+            policeStation: data.policeStation || '',
+            IOName: data.IOName || '',
+            vadiName: data.vadiName || '',
+            HM: data.HM || '',
+            accused: data.accused || '',
+            place: data.place || '',
+            boxNo: data.boxNo || 0,
+            courtNo: data.courtNo || '',
+            courtName: data.courtName || '',
         });
         setStatus(data.status || '');
-        setYellowItemPrice(data.yellowItemPrice || 0)
+        setYellowItemPrice(data.yellowItemPrice || 0);
         setWine(data.wine || 0);
         setCash(data.cash || 0);
         setWineType(data.wineType || '');
@@ -92,10 +120,10 @@ const Page = () => {
 
     const clearForm = () => {
         setFormData({
-            firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: '', policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: '', courtNo: '', courtName: ''
+            firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: 2025, policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: 0, courtNo: '', courtName: ''
         });
         setExistingId("");
-        setOriginalSrNo(""); // Clear original SrNo
+        setOriginalSrNo("");
         setStatus(''); setWine(0); setCash(0); setWineType(''); setYellowItemPrice(0); setDropdownSelection(''); setEntryType(''); setDescription('');
         setDateFields({ gdDate: new Date() });
         SetPhotoUrl("");
@@ -104,19 +132,12 @@ const Page = () => {
         if (photoRef.current) photoRef.current.value = '';
     };
 
-    const fieldKeyMap: { [key: string]: string } = {
-        firNo: 'firNo', srNo: 'srNo', caseProperty: 'caseProperty', gdNo: 'gdNo', gdDate: 'gdDate', Year: 'year', policeStation: 'policeStation', IOName: 'ioName', vadiName: 'vadiName', status: 'status', HM: 'hm', accused: 'accused', underSection: 'underSection', description: 'description', place: 'place', boxNo: 'boxNo', courtNo: 'courtNo', courtName: 'courtName'
-    };
-
-    const fields = Object.keys(fieldKeyMap).map(fieldName => ({
-        name: fieldName,
-        label: t(`${baseKey}.fields.${fieldKeyMap[fieldName]}`),
-        type: (fieldName === 'gdDate') ? 'date' : (fieldName === 'status') ? 'dropdown' : (fieldName === 'description') ? 'textarea' : 'text',
-        options: (fieldName === 'status') ? statusOptions : undefined
-    }));
-
-    const handleInputChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+    const handleInputChange = (field: keyof typeof formData, value: string) => {
+        if (['srNo', 'gdNo', 'Year', 'boxNo'].includes(field)) {
+            setFormData(prev => ({ ...prev, [field]: value === '' ? '' : Number(value) }));
+        } else {
+            setFormData(prev => ({ ...prev, [field]: value }));
+        }
     };
 
     const handleDateChange = (fieldName: string, date: Date | undefined) => {
@@ -134,15 +155,13 @@ const Page = () => {
 
     const handleSrNoSelectionChange = (srNo: string) => {
         setSelectedSrNo(srNo);
-        const selectedData = firData.find((item: any) => item.srNo === srNo);
+        const selectedData = firData.find((item: any) => String(item.srNo) === srNo);
         if (selectedData) populateForm(selectedData);
     };
 
-
-
     const handleGetByFir = async () => {
         setSelectedSrNo('');
-        clearForm(); // Clear all fields before fetching new data
+        clearForm();
         try {
             const response = await getByFIR(formData.firNo, user?.id);
             if (response?.success) {
@@ -150,7 +169,7 @@ const Page = () => {
                 setFirData(dataArray);
                 if (dataArray.length === 1) {
                     populateForm(dataArray[0]);
-                    setSelectedSrNo(dataArray[0].srNo);
+                    setSelectedSrNo(String(dataArray[0].srNo));
                 } else if (dataArray.length > 1) {
                     toast.success(t(`${baseKey}.toasts.multipleEntriesFound`));
                 } else {
@@ -184,7 +203,8 @@ const Page = () => {
 
     const handlePrint = () => {
         const fullData = {
-            ...formData, status, wine, cash, wineType, entryType, photoUrl, description, gdDate: dateFields.gdDate?.toISOString() ?? '',
+            ...formData,
+            status, wine, cash, wineType, entryType, photoUrl, description, gdDate: dateFields.gdDate?.toISOString() ?? '',
         };
         if (!fullData.firNo && !fullData.srNo) {
             toast.error(t(`${baseKey}.toasts.printError`));
@@ -193,7 +213,6 @@ const Page = () => {
         sessionStorage.setItem('printableEntryData', JSON.stringify(fullData));
         window.open('/details', '_blank');
     };
-
 
     const handleSave = async () => {
         if (loading) return;
@@ -213,7 +232,7 @@ const Page = () => {
 
         const emptyFields = requiredFields
             .filter(field => !field.value)
-            .map(field => t(`${baseKey}.fields.${fieldKeyMap[field.key]}`));
+            .map(field => field.key);
 
         if (emptyFields.length > 0) {
             toast.error('Please fill all required fields');
@@ -231,38 +250,33 @@ const Page = () => {
             const finalStatus = status === 'other' ? otherStatus : status;
 
             const fullData = {
-
                 ...formData,
                 status: finalStatus,
-                wine,
-                cash,
+                wine: Number(wine),
+                cash: Number(cash),
                 wineType,
                 entryType: dropdownSelection === 'other' ? entryType : t(`${baseKey}.entryType.options.${dropdownSelection}`),
                 userId: user?.id,
                 photoUrl,
                 description,
-                yellowItemPrice,
+                yellowItemPrice: Number(yellowItemPrice),
                 gdDate: dateFields.gdDate?.toISOString() ?? '',
                 isRelease, isReturned
             };
 
             let success = false;
-            // Updated Logic for Save/Modify/Add
+
             if (existingId && formData.srNo === originalSrNo) {
-                // Case 1: Existing entry, no change in srNo -> MODIFY
                 success = await updateMalkhanaEntry(existingId, fullData);
                 if (success) {
                     toast.success(t(`${baseKey}.toasts.updateSuccess`));
                 }
             } else if (existingId && formData.srNo !== originalSrNo) {
-                // Case 2: Existing entry, but srNo is changed -> ADD NEW
-                // Clear the existingId to ensure a new entry is created.
                 success = await addMaalkhanaEntry(fullData);
                 if (success) {
                     toast.success('New entry created with new SR No.');
                 }
             } else {
-                // Case 3: No existingId -> ADD NEW
                 success = await addMaalkhanaEntry(fullData);
                 if (success) {
                     toast.success('data saved');
@@ -280,6 +294,17 @@ const Page = () => {
         }
     };
 
+
+    const fieldKeyMap: { [key: string]: string } = {
+        firNo: 'firNo', srNo: 'srNo', caseProperty: 'caseProperty', gdNo: 'gdNo', gdDate: 'gdDate', Year: 'year', policeStation: 'policeStation', IOName: 'ioName', vadiName: 'vadiName', status: 'status', HM: 'hm', accused: 'accused', underSection: 'underSection', description: 'description', place: 'place', boxNo: 'boxNo', courtNo: 'courtNo', courtName: 'courtName'
+    };
+
+    const fields = Object.keys(fieldKeyMap).map(fieldName => ({
+        name: fieldName,
+        label: t(`${baseKey}.fields.${fieldKeyMap[fieldName]}`),
+        type: (fieldName === 'gdDate') ? 'date' : (fieldName === 'status') ? 'dropdown' : (fieldName === 'description') ? 'textarea' : ['srNo', 'gdNo', 'Year', 'boxNo'].includes(fieldName) ? 'number' : 'text',
+        options: (fieldName === 'status') ? statusOptions : undefined
+    }));
 
     return (
         <div className='glass-effect'>
@@ -327,7 +352,7 @@ const Page = () => {
                                         <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
                                             {firData.filter((item: any) => item && item.srNo).map((item: any) => (
                                                 <div key={item.id || item.srNo} className="flex items-center gap-2">
-                                                    <input type="radio" id={`srNo-${item.srNo}`} name="srNoSelection" className="form-radio h-4 w-4" checked={selectedSrNo === item.srNo} onChange={() => handleSrNoSelectionChange(item.srNo)} />
+                                                    <input type="radio" id={`srNo-${item.srNo}`} name="srNoSelection" className="form-radio h-4 w-4" checked={selectedSrNo === String(item.srNo)} onChange={() => handleSrNoSelectionChange(String(item.srNo))} />
                                                     <label htmlFor={`srNo-${item.srNo}`} className="text-blue-100 cursor-pointer">{item.srNo}</label>
                                                 </div>
                                             ))}
@@ -335,7 +360,7 @@ const Page = () => {
                                     </div>
                                 );
                             } else {
-                                return <InputComponent key={field.name} label={field.label} value={formData.srNo} setInput={(e) => handleInputChange(field.name, e.target.value)} />;
+                                return <InputComponent key={field.name} label={field.label} type={field.type} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)} />;
                             }
                         }
 
@@ -357,11 +382,11 @@ const Page = () => {
                             <div key={field.name}>
                                 {field.name === 'firNo' ? (
                                     <div className='flex items-end justify-between'>
-                                        <InputComponent className='w-3/4' label={field.label} value={formData.firNo} setInput={(e) => handleInputChange(field.name, e.target.value)} />
+                                        <InputComponent className='w-3/4' label={field.label} value={formData.firNo} setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)} />
                                         <Button type="button" className="h-10 lg:text-base bg-blue text-white" onClick={handleGetByFir}>{t(`${baseKey}.buttons.fetchData`)}</Button>
                                     </div>
                                 ) : (
-                                    <InputComponent label={field.label} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name, e.target.value)} />
+                                    <InputComponent label={field.label} type={field.type} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)} />
                                 )}
                             </div>
                         );
@@ -384,7 +409,6 @@ const Page = () => {
                     </div>
                 </div>
                 <div className='flex w-full justify-center'>
-
                     <div className='flex w-1/2 px-12 justify-between mt-4'>
                         <Button onClick={handleSave} className='cursor-pointer'>
                             {loading ? <LoaderIcon className='animate-spin' /> :
@@ -403,7 +427,7 @@ const Page = () => {
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 

@@ -10,7 +10,7 @@ interface InputProps {
     value: string | number | boolean | undefined;
     className?: string;
     setInput?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    type?: "text" | "password";
+    type?: "text" | "password" | string;
     // 1. Add the optional 'disabled' prop
     disabled?: boolean;
 }
