@@ -2,7 +2,12 @@
 import Logo from "@/assets/Logo";
 import LoginForm from "@/components/LoginForm";
 import { useTranslations } from "next-intl";
+
+
 export default function LoginPage() {
+
+
+
 
 
   const t = useTranslations("HomePage");

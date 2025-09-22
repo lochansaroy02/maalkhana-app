@@ -8,12 +8,25 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
-import { Trash } from 'lucide-react';
+// NEW: Import Mic icon
+import { Mic, Trash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useRef, useState } from 'react';
+// NEW: Import useEffect
+import { useEffect, useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
+// NEW: Import SpeechRecognition for more control
+import SpeechRecognition, {
+    useSpeechRecognition,
+} from "react-speech-recognition";
+import 'regenerator-runtime/runtime';
 
 const Page = () => {
+    // --- Speech Recognition Setup ---
+    const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+    // NEW: State to hold text that was in the textarea before listening started
+    const [textBeforeListening, setTextBeforeListening] = useState('');
+    // --- End Speech Recognition Setup ---
+
     const t = useTranslations('entry');
     const baseKey = 'malkhanaEntryForm';
 
@@ -34,7 +47,7 @@ const Page = () => {
     const [isReturned, setIsReturned] = useState(false);
     const [isRelease, setIsRelease] = useState(false);
     const [existingId, setExistingId] = useState<string>("");
-    const [originalSrNo, setOriginalSrNo] = useState<string>(""); // New state for tracking original srNo
+    const [originalSrNo, setOriginalSrNo] = useState<string>("");
     const [yellowItemPrice, setYellowItemPrice] = useState<number>(0);
 
     const [dateFields, setDateFields] = useState<{ gdDate?: Date }>({
@@ -60,6 +73,33 @@ const Page = () => {
         courtNo: '',
         courtName: '',
     });
+
+    // NEW: useEffect to update the description with the live transcript
+    useEffect(() => {
+        if (listening) {
+            // Combine the original text with the new transcript
+            const newDescription = textBeforeListening ? `${textBeforeListening} ${transcript}` : transcript;
+            setDescription(newDescription);
+        }
+    }, [transcript, listening]); // Reruns when the transcript changes
+
+    // NEW: Function to handle starting and stopping the microphone
+    const toggleListening = () => {
+        if (!browserSupportsSpeechRecognition) {
+            toast.error("Sorry, your browser doesn't support speech recognition.");
+            return;
+        }
+
+        if (listening) {
+            SpeechRecognition.stopListening();
+        } else {
+            // Save current text and reset transcript before starting
+            setTextBeforeListening(description);
+            resetTranscript();
+            SpeechRecognition.startListening({ continuous: true });
+        }
+    };
+
 
     const entryOptionKeys = ["malkhana", "fsl", "kurki", "cash", "wine", "unclaimed", "other", "yellowItem"];
     const entryOptions = entryOptionKeys.map(key => ({
@@ -368,12 +408,29 @@ const Page = () => {
                             return <DropDown key={field.name} label={field.label} selectedValue={status} options={field.options || []} handleSelect={setStatus} />;
                         }
                         if (field.type === 'textarea') {
+                            // --- MODIFIED DESCRIPTION FIELD ---
                             return (
                                 <div key={field.name} className='flex flex-col col-span-1 gap-1'>
                                     <label className='text-blue-100' htmlFor={field.name}>{field.label}</label>
-                                    <Textarea className='text-blue-100' id={field.name} value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t(`${baseKey}.placeholders.enterDescription`)} />
+                                    <div className='relative w-full'>
+                                        <Textarea
+                                            className='text-blue-100 pr-12' // Add padding to the right for the mic icon
+                                            id={field.name}
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder={t(`${baseKey}.placeholders.enterDescription`)}
+                                        />
+                                        <Button
+                                            type="button"
+                                            onClick={toggleListening}
+                                            className={`absolute top-1/2 right-2 -translate-y-1/2 p-2 h-auto rounded-full ${listening ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+                                        >
+                                            <Mic size={16} />
+                                        </Button>
+                                    </div>
                                 </div>
                             );
+                            // --- END MODIFIED DESCRIPTION FIELD ---
                         }
                         if (field.type === 'date') {
                             return <DatePicker key={field.name} label={field.label} date={dateFields[field.name as keyof typeof dateFields]} setDate={(date) => handleDateChange(field.name, date)} />;

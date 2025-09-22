@@ -6,7 +6,7 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Button } from "./ui/button";
 import DropDown from "./ui/DropDown";
@@ -34,6 +34,8 @@ const Report = ({
 }: ReportProps) => {
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [selectAll, setSelectAll] = useState(false);
+
     const { setYear, year } = useSearchStore();
     const currentYear = new Date().getFullYear();
 
@@ -172,6 +174,22 @@ const Report = ({
         toast.success("Data exported successfully to XLSX.");
     };
 
+    const handleSelectAll = () => {
+        if (selectAll) {
+            setSelectedIds([]);
+        } else {
+            const allIds = data.map((item) => item.id);
+            setSelectedIds(allIds);
+        }
+    };
+
+    useEffect(() => {
+        if (data.length > 0 && selectedIds.length === data.length) {
+            setSelectAll(true);
+        } else {
+            setSelectAll(false);
+        }
+    }, [selectedIds, data]);
 
 
     return (
@@ -212,7 +230,14 @@ const Report = ({
                     <table className="min-w-full table-auto border border-white/50 border-collapse">
                         <thead className="bg-gray-700/50 text-sm font-semibold text-white">
                             <tr>
-                                <th className="px-4 py-2 text-center">Select</th>
+                                <th className="px-4 py-2 text-center">
+                                    <input
+                                        type="checkbox"
+                                        className="form-checkbox h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                                        checked={selectAll}
+                                        onChange={handleSelectAll}
+                                    />
+                                </th>
                                 <th className="px-4 py-2 text-left capitalize">Sr. No.</th>
                                 {headers && headers.map((header) => (
                                     <th key={header} className="px-4 py-2 text-left capitalize">

@@ -86,11 +86,11 @@ export default function EntryReportDetail() {
 
 
 
-    if (!entry) return <div className="p-4 text-center text-white">this is ...</div>;
+    if (!entry) return <div className="p-4 text-center h-screen text-white">Loading..</div>;
 
 
     return (
-        <div className="p-8 bg-gray-100 min-h-screen flex flex-col items-center">
+        <div className="p-8 min-h-screen flex flex-col items-center">
             <div className="flex  mb-2  gap-4   ">
                 <Button onClick={() => {
                     router.back()
@@ -125,8 +125,7 @@ export default function EntryReportDetail() {
                             }
                             return (
                                 <div key={key} className="flex flex-col border-b pb-2">
-                                    <span className="text-sm font-semibold text-gray-600">{label}:</span>
-                                    <span className="text-gray-900 text-lg">{String(value)}</span>
+                                    <span className="text-sm font-semibold text-gray-600">{label}: {String(value)}</span>
                                 </div>
                             );
                         })}

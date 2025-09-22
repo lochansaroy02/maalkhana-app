@@ -39,6 +39,7 @@ export const POST = async (req: NextRequest) => {
             ownerName,
             seizedBy,
             caseProperty,
+            rtoName
         } = body;
 
         const newEntry = await prisma.seizedVehicle.create({
@@ -59,6 +60,7 @@ export const POST = async (req: NextRequest) => {
                 ownerName,
                 seizedBy,
                 caseProperty,
+                rtoName,
                 dbName: "v"
             },
         });

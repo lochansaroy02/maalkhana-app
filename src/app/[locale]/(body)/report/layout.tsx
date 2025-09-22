@@ -45,7 +45,8 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
             {/* Sub Header */}
             <ReportHeader />
 
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={
+                <div className='h-screen'>Loading...</div>}>
                 {children}
             </Suspense>
 

@@ -111,7 +111,7 @@ const Page = () => {
                     break;
                 default: // 'all' or default view
                     dataToShow = vehicles;
-                    headers = ["FIR No", "Sr No", "Case Property", "GD No", "GD Date", "Year", "Police Station", "I O Name", "vadiName"];
+                    headers = ["FIR No", "Sr No", "Case Property", "Place", "GD No", "GD Date", "Year", "Police Station", "I O Name", "vadiName"];
                     break;
             }
 

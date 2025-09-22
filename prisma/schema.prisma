@@ -41,6 +41,7 @@ model SeizedVehicle {
   gdNo            String
   gdDate          String
   underSection    String
+  rtoName         String?
   vehicleType     String
   colour          String
   registrationNo  String
@@ -85,7 +86,7 @@ model MalkhanaEntry {
   wine Int?
   srNo Int?
   gdNo Int?
-  Year Int
+  Year Int?
 
   boxNo Int @default(0)
 

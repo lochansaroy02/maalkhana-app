@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import BarcodeScanner from "./(data)/BarcodeScanner";
 import ScannerDisplay from "./(data)/ScannerDisplay";
@@ -12,11 +13,15 @@ export interface BarcodeResult {
 }
 
 export default function App() {
+
+
     const [isScanning, setIsScanning] = useState<boolean>(false);
     const [scanResult, setScanResult] = useState<BarcodeResult | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
 
     // This function handles a successful scan result
+
+    const router = useRouter()
     const handleScanSuccess = (decodedText: string) => {
         try {
             const parts = decodedText.split('-');
@@ -49,16 +54,13 @@ export default function App() {
     };
 
     return (
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen font-sans text-gray-800 p-4 sm:p-8 flex flex-col items-center">
-            <div className="max-w-4xl w-full bg-white rounded-xl shadow-2xl p-6 sm:p-8 transition-all duration-300 transform scale-95 hover:scale-100">
-
+        <div className="bg-blue glass-effect min-h-screen font-sans text-gray-800 p-4 sm:p-8 flex flex-col items-center">
+            <div className="max-w-4xl w-full bg-blue rounded-xl shadow-2xl p-6 sm:p-8 transition-all duration-300 transform scale-95 hover:scale-100">
                 <header className="text-center mb-8">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-indigo-700">Maalkhana Asset Manager</h1>
-                    <p className="text-md sm:text-lg text-gray-600 mt-2">Generate and Scan Asset Barcodes</p>
+                    <h1 className="text-3xl sm:text-4xl font-extrabold text-blue-200">Maalkhana Asset Manager</h1>
                 </header>
                 <main className="space-y-8">
-                    <section className="bg-white p-6 rounded-xl shadow-lg">
-                        <h2 className="text-2xl font-semibold text-gray-700 border-b pb-3 mb-4">Scan Asset</h2>
+                    <section className="  p-6 rounded-xl shadow-lg">
 
                         {isScanning ? (
                             <div>
@@ -79,12 +81,21 @@ export default function App() {
                                         <p>{scanError}</p>
                                     </div>
                                 )}
-                                <button
-                                    onClick={resetScanner}
-                                    className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out transform hover:scale-105"
-                                >
-                                    {scanResult ? 'Scan Another Item' : 'Start Camera Scan'}
-                                </button>
+                                <div className='flex items-center gap-4 '>
+
+                                    <button
+                                        onClick={() => { router.push("/barcode/generate/single") }}
+                                        className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out transform hover:scale-105"
+                                    >
+                                        Generate barcodes
+                                    </button>
+                                    <button
+                                        onClick={resetScanner}
+                                        className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out transform hover:scale-105"
+                                    >
+                                        {scanResult ? 'Scan Another Item' : 'Start Camera Scan'}
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </section>
