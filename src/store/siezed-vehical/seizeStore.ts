@@ -76,7 +76,7 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
     getById: async (id: string) => {
         try {
             const response = await axios.get(`/api/siezed/${id}`)
-            return response
+            return response.data
         } catch (error) {
             return null
         }

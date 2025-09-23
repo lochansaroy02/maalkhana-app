@@ -8,13 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
-// NEW: Import Mic icon
 import { Mic, Trash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-// NEW: Import useEffect
 import { useEffect, useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
-// NEW: Import SpeechRecognition for more control
 import SpeechRecognition, {
     useSpeechRecognition,
 } from "react-speech-recognition";
@@ -23,7 +20,6 @@ import 'regenerator-runtime/runtime';
 const Page = () => {
     // --- Speech Recognition Setup ---
     const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
-    // NEW: State to hold text that was in the textarea before listening started
     const [textBeforeListening, setTextBeforeListening] = useState('');
     // --- End Speech Recognition Setup ---
 
@@ -74,16 +70,13 @@ const Page = () => {
         courtName: '',
     });
 
-    // NEW: useEffect to update the description with the live transcript
     useEffect(() => {
         if (listening) {
-            // Combine the original text with the new transcript
             const newDescription = textBeforeListening ? `${textBeforeListening} ${transcript}` : transcript;
             setDescription(newDescription);
         }
-    }, [transcript, listening]); // Reruns when the transcript changes
+    }, [transcript, listening, textBeforeListening]);
 
-    // NEW: Function to handle starting and stopping the microphone
     const toggleListening = () => {
         if (!browserSupportsSpeechRecognition) {
             toast.error("Sorry, your browser doesn't support speech recognition.");
@@ -93,7 +86,6 @@ const Page = () => {
         if (listening) {
             SpeechRecognition.stopListening();
         } else {
-            // Save current text and reset transcript before starting
             setTextBeforeListening(description);
             resetTranscript();
             SpeechRecognition.startListening({ continuous: true });
@@ -158,6 +150,8 @@ const Page = () => {
         SetPhotoUrl(data.photoUrl || "");
     };
 
+    const photoRef = useRef<HTMLInputElement>(null);
+
     const clearForm = () => {
         setFormData({
             firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: 2025, policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: 0, courtNo: '', courtName: ''
@@ -186,12 +180,10 @@ const Page = () => {
 
     const handleEntryTypeSelect = (value: string) => {
         setDropdownSelection(value);
-        if (value === 'other') {
+        if (value !== 'other') {
             setEntryType('');
         }
     };
-
-    const photoRef = useRef<HTMLInputElement>(null);
 
     const handleSrNoSelectionChange = (srNo: string) => {
         setSelectedSrNo(srNo);
@@ -200,20 +192,24 @@ const Page = () => {
     };
 
     const handleGetByFir = async () => {
+        if (!formData.firNo) {
+            toast.error(t(`${baseKey}.toasts.enterFirNo`));
+            return;
+        }
         setSelectedSrNo('');
-        clearForm();
+        clearForm(); // Note: This will clear firNo, so we re-set it.
+        setFormData(prev => ({ ...prev, firNo: formData.firNo }));
+
         try {
             const response = await getByFIR(formData.firNo, user?.id);
-            if (response?.success) {
+            if (response?.success && response.data && response.data.length > 0) {
                 const dataArray = Array.isArray(response.data) ? response.data : [response.data];
                 setFirData(dataArray);
                 if (dataArray.length === 1) {
                     populateForm(dataArray[0]);
                     setSelectedSrNo(String(dataArray[0].srNo));
-                } else if (dataArray.length > 1) {
-                    toast.success(t(`${baseKey}.toasts.multipleEntriesFound`));
                 } else {
-                    toast.error(t(`${baseKey}.toasts.firNotFound`));
+                    toast.success(t(`${baseKey}.toasts.multipleEntriesFound`));
                 }
             } else {
                 setFirData([]);
@@ -228,8 +224,8 @@ const Page = () => {
     const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        setLoading(true);
         try {
-            setLoading(true);
             const uploadedUrl = await uploadToCloudinary(file);
             SetPhotoUrl(uploadedUrl);
             toast.success(t(`${baseKey}.toasts.photoUploadSuccess`));
@@ -244,7 +240,7 @@ const Page = () => {
     const handlePrint = () => {
         const fullData = {
             ...formData,
-            status, wine, cash, wineType, entryType, photoUrl, description, gdDate: dateFields.gdDate?.toISOString() ?? '',
+            status, wine, cash, wineType, entryType: dropdownSelection === 'other' ? entryType : dropdownSelection, photoUrl, description, gdDate: dateFields.gdDate?.toISOString() ?? '',
         };
         if (!fullData.firNo && !fullData.srNo) {
             toast.error(t(`${baseKey}.toasts.printError`));
@@ -271,11 +267,11 @@ const Page = () => {
         }
 
         const emptyFields = requiredFields
-            .filter(field => !field.value)
-            .map(field => field.key);
+            .filter(field => !field.value && field.value !== 0)
+            .map(field => t(`${baseKey}.fields.${fieldKeyMap[field.key]}` || field.key));
 
         if (emptyFields.length > 0) {
-            toast.error('Please fill all required fields');
+            toast.error(`${t('validation.fillRequiredFields')}: ${emptyFields.join(', ')}`);
             setLoading(false);
             return;
         }
@@ -289,13 +285,16 @@ const Page = () => {
         try {
             const finalStatus = status === 'other' ? otherStatus : status;
 
+            // --- FIX IS HERE ---
             const fullData = {
                 ...formData,
                 status: finalStatus,
                 wine: Number(wine),
                 cash: Number(cash),
                 wineType,
-                entryType: dropdownSelection === 'other' ? entryType : t(`${baseKey}.entryType.options.${dropdownSelection}`),
+                // If 'other' is selected, use the text from the 'entryType' state.
+                // Otherwise, use the value from the dropdown selection directly (e.g., "malkhana", "fsl").
+                entryType: dropdownSelection === 'other' ? entryType : dropdownSelection,
                 userId: user?.id,
                 photoUrl,
                 description,
@@ -304,27 +303,33 @@ const Page = () => {
                 isRelease, isReturned
             };
 
-            let success = false;
+            let response;
 
-            if (existingId && formData.srNo === originalSrNo) {
-                success = await updateMalkhanaEntry(existingId, fullData);
-                if (success) {
+            if (existingId && String(formData.srNo) === originalSrNo) {
+                response = await updateMalkhanaEntry(existingId, fullData);
+
+
+                if (response) {
                     toast.success(t(`${baseKey}.toasts.updateSuccess`));
                 }
-            } else if (existingId && formData.srNo !== originalSrNo) {
-                success = await addMaalkhanaEntry(fullData);
-                if (success) {
-                    toast.success('New entry created with new SR No.');
+            } else if (existingId && String(formData.srNo) !== originalSrNo) {
+                // This logic implies creating a new entry if SrNo changes for an existing record
+                response = await addMaalkhanaEntry(fullData);
+                if (response) {
+                    toast.success(t(`${baseKey}.toasts.newEntryWithNewSrNo`));
                 }
             } else {
-                success = await addMaalkhanaEntry(fullData);
-                if (success) {
-                    toast.success('data saved');
+                response = await addMaalkhanaEntry(fullData);
+                if (response) {
+                    toast.success("entry added with new SR No ");
                 }
             }
 
-            if (success) {
+            if (response) {
                 clearForm();
+            } else {
+                // Use a more specific error from the backend if available
+                toast.error("cant added entry");
             }
         } catch (error) {
             console.error("Save error:", error);
@@ -364,7 +369,7 @@ const Page = () => {
                         )}
                         {dropdownSelection === 'yellowItem' && (
                             <div className='w-1/2'>
-                                <InputComponent label={t(`${baseKey}.entryType.yellowItemPrice`)} value={yellowItemPrice} setInput={(e) => setYellowItemPrice(Number(e.target.value))} />
+                                <InputComponent label={t(`${baseKey}.entryType.yellowItemPrice`)} type='number' value={yellowItemPrice} setInput={(e) => setYellowItemPrice(Number(e.target.value))} />
                             </div>
                         )}
                     </div>
@@ -408,13 +413,12 @@ const Page = () => {
                             return <DropDown key={field.name} label={field.label} selectedValue={status} options={field.options || []} handleSelect={setStatus} />;
                         }
                         if (field.type === 'textarea') {
-                            // --- MODIFIED DESCRIPTION FIELD ---
                             return (
                                 <div key={field.name} className='flex flex-col col-span-1 gap-1'>
                                     <label className='text-blue-100' htmlFor={field.name}>{field.label}</label>
                                     <div className='relative w-full'>
                                         <Textarea
-                                            className='text-blue-100 pr-12' // Add padding to the right for the mic icon
+                                            className='text-blue-100 pr-12'
                                             id={field.name}
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
@@ -430,7 +434,6 @@ const Page = () => {
                                     </div>
                                 </div>
                             );
-                            // --- END MODIFIED DESCRIPTION FIELD ---
                         }
                         if (field.type === 'date') {
                             return <DatePicker key={field.name} label={field.label} date={dateFields[field.name as keyof typeof dateFields]} setDate={(date) => handleDateChange(field.name, date)} />;
@@ -467,13 +470,9 @@ const Page = () => {
                 </div>
                 <div className='flex w-full justify-center'>
                     <div className='flex w-1/2 px-12 justify-between mt-4'>
-                        <Button onClick={handleSave} className='cursor-pointer'>
+                        <Button onClick={handleSave} className='cursor-pointer' disabled={loading}>
                             {loading ? <LoaderIcon className='animate-spin' /> :
-                                t(`${baseKey}.buttons.save`)}
-                        </Button>
-                        <Button onClick={handleSave} className='cursor-pointer'>
-                            {loading ? <LoaderIcon className='animate-spin' /> :
-                                t(`${baseKey}.buttons.modify`)}
+                                (existingId ? t(`${baseKey}.buttons.update`) : t(`${baseKey}.buttons.save`))}
                         </Button>
                         <Button onClick={handlePrint} className='cursor-pointer'>
                             {t(`${baseKey}.buttons.print`)}

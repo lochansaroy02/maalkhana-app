@@ -44,6 +44,7 @@ export default function EntryReportDetail() {
         { key: "boxNo", label: "Box No" },
         { key: "description", label: "Description" },
         { key: "photoUrl", label: "Photo" },
+        { key: "accused", label: "accused" },
 
         // Movement Report Fields (NEWLY ADDED)
         { key: "moveDate", label: "Move Date" },
@@ -72,6 +73,7 @@ export default function EntryReportDetail() {
                                 visibleKeys.includes(field.key) && entryData[field.key]
                             );
                             setFieldsToDisplay(filteredFields);
+
                         } catch (e) {
                             setFieldsToDisplay(allPossibleFields);
                         }
@@ -85,6 +87,47 @@ export default function EntryReportDetail() {
 
 
 
+    const handlePrintWithIframe = () => {
+        // Find the div you want to print
+        const printContent = document.getElementById('printable-area');
+        if (!printContent) return;
+
+
+        // Create a new, hidden iframe
+        const iframe = document.createElement('iframe');
+        if (iframe == null) {
+            return
+        }
+        iframe.style.position = 'absolute';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = 'none';
+        document.body.appendChild(iframe);
+
+        // Get the iframe's document
+        //@ts-ignore
+        const iframeDoc = iframe.contentWindow.document;
+
+        // Copy all <link> and <style> tags from the main document's <head>
+        const headElements = document.querySelectorAll('head > link[rel="stylesheet"], head > style');
+        headElements.forEach(node => {
+            iframeDoc.head.appendChild(node.cloneNode(true));
+        });
+
+        // Set a brief timeout to ensure styles are loaded before printing
+        setTimeout(() => {
+            // Copy the div's HTML into the iframe's body
+            iframeDoc.body.innerHTML = printContent.innerHTML;
+            //@ts-ignore
+            iframe.contentWindow.focus(); // Focus is needed for some browsers
+            //@ts-ignore
+            iframe.contentWindow.print();
+
+            // Clean up by removing the iframe after printing
+            document.body.removeChild(iframe);
+        }, 500); // 500ms delay
+    };
+
 
     if (!entry) return <div className="p-4 text-center h-screen text-white">Loading..</div>;
 
@@ -95,9 +138,11 @@ export default function EntryReportDetail() {
                 <Button onClick={() => {
                     router.back()
                 }} className="cursor-pointer   "><span><ArrowLeft /></span>Back</Button>
-                <Button className="cursor-pointer    ">Print</Button>
+                <Button onClick={handlePrintWithIframe} className="cursor-pointer    ">Print</Button>
             </div>
-            <div ref={divRef} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
+            <div
+                id="printable-area"
+                ref={divRef} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
                 <div className="border border-gray-400 p-8">
                     <div className="text-center border-b pb-4 mb-6">
                         <h1 className="text-3xl font-bold text-gray-800">DIGITAL MALKHANA</h1>

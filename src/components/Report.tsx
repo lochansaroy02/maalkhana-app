@@ -98,6 +98,7 @@ const Report = ({
     };
 
     const handleDoubleClick = (item: any) => {
+       
         const allKeys = Object.keys(item).filter((key) => !excluded.includes(key));
         const sortedVisibleKeys: any[] = [];
         orderedKeys.forEach((key) => {
@@ -141,8 +142,6 @@ const Report = ({
         return formatValue(key, value);
     };
 
-
-
     const handleExport = () => {
         if (selectedIds.length === 0) {
             toast.error("No entries selected for export.");
@@ -162,7 +161,7 @@ const Report = ({
             return row;
         });
 
-        console.log(exportedData)
+
         // Create a new workbook and add the data
         const worksheet = XLSX.utils.json_to_sheet(exportedData);
         const workbook = XLSX.utils.book_new();
@@ -292,7 +291,7 @@ const Report = ({
                                     {!headers && orderedKeys
                                         .filter((key) => !excluded.includes(key) && !Object.values(exportMap).includes(key))
                                         .map((key) => (
-                                            <td key={key} className="px-4 border border-black py-2">
+                                            <td key={key} className="px-12 border bg-green-400 border-black py-2">
                                                 {renderCellContent(key, item[key])}
                                             </td>
                                         ))}

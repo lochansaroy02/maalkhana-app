@@ -135,7 +135,7 @@ const Page = () => {
                 default:
                     dataToShow = entries;
 
-                    headers = ["FIR No", "Sr No", "Entry Type", "Case Property", "GD No", "GD Date", "Year", "Police Station", "Vadi Name", "IOName",];
+                    headers = ["FIR No", "Sr No", "Entry Type", "Description", "Case Property", "GD No", "GD Date", "Year", "Police Station", "Vadi Name", "IOName", "box No", "court No", "court Name"];
                     break;
             }
 
