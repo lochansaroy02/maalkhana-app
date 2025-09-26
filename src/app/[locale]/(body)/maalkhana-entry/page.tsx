@@ -274,7 +274,7 @@ const Page = () => {
             toast.error(`${t('validation.fillRequiredFields')}: ${emptyFields.join(', ')}`);
             setLoading(false);
             return;
-        }
+    }
 
         if (dropdownSelection === 'other' && !entryType) {
             toast.error(t(`${baseKey}.toasts.specifyOtherError`));

@@ -33,6 +33,9 @@ export default function EntryReportDetail() {
         { key: "policeStation", label: "Police Station" },
         { key: "IOName", label: "IO Name" },
         { key: "entryType", label: "Entry Type" },
+        { key: "vadiName", label: "Vadi Name" },
+        { key: "HM", label: "HM Name" },
+
         { key: "wine", label: "Wine" },
         { key: "cash", label: "Cash" },
         { key: "wineType", label: "Wine Type" },
@@ -43,7 +46,6 @@ export default function EntryReportDetail() {
         { key: "courtName", label: "Court Name" },
         { key: "boxNo", label: "Box No" },
         { key: "description", label: "Description" },
-        { key: "photoUrl", label: "Photo" },
         { key: "accused", label: "accused" },
 
         // Movement Report Fields (NEWLY ADDED)
@@ -53,7 +55,8 @@ export default function EntryReportDetail() {
         { key: "moveTrackingNo", label: "Move Tracking No" },
         { key: "returnDate", label: "Return Date" },
         { key: "receivedBy", label: "Received By" },
-        { key: "returnBackFrom", label: "Return Back From" }
+        { key: "returnBackFrom", label: "Return Back From" },
+        { key: "photoUrl", label: "Photo" },
     ];
 
     useEffect(() => {
@@ -168,9 +171,29 @@ export default function EntryReportDetail() {
                                     </div>
                                 );
                             }
+
+                            if (key === "description") {
+                                return (
+                                    <div
+                                        key={key}
+                                        className="col-span-1 md:col-span-2 gap-2  flex flex-col border-b pb-2" >
+                                        <span className="text-sm font-semibold">{label}:</span>
+                                        <p className="text-gray-800  text-sm whitespace-pre-line">
+                                            {String(value)}
+                                        </p>
+                                    </div>
+                                );
+                            }
                             return (
-                                <div key={key} className="flex flex-col border-b pb-2">
-                                    <span className="text-sm font-semibold text-gray-600">{label}: {String(value)}</span>
+                                <div key={key} className="flex text-wrap flex-col border-b pb-2">
+                                    <span className="text-sm flex  gap-2  font-semibold ">
+                                        <h1 className="text-sm ">
+                                            {label}:
+                                        </h1>
+                                        <h1 className="text-wrap font-semibold text-gray-800 ">
+                                            {String(value)}
+                                        </h1>
+                                    </span>
                                 </div>
                             );
                         })}

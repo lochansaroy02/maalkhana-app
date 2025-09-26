@@ -177,9 +177,9 @@ export default function EntryReportDetail() {
                                 );
                             }
                             return (
-                                <div key={key} className="flex flex-col border-b pb-2">
-                                    <span className="text-sm font-semibold text-gray-600">{label}:</span>
-                                    <span className="text-md text-gray-800">{String(value)}</span>
+                                <div key={key} className="flex flex-row gap-4  border-b pb-2">
+                                    <span className="text-sm font-semibold ">{label}:</span>
+                                    <span className="text-sm text-gray-800">{String(value)}</span>
                                 </div>
                             );
                         })}

@@ -1,10 +1,14 @@
 "use client";
 
 import InputComponent from '@/components/InputComponent';
+import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
+import { useBackupStore } from '@/store/backupStore';
 import axios from 'axios'; // 1. Import axios
+import { Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import toast from 'react-hot-toast';
 
 // A simple component to display messages (success or error)
 const AlertMessage = ({ message, type }: { message: string; type: 'success' | 'error' }) => {
@@ -23,6 +27,8 @@ const UserProfilePage = () => {
     const { userId: pageUserId } = params;
     const { user } = useAuthStore();
 
+
+    const { createBackup } = useBackupStore()
     // State for the form
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -32,6 +38,7 @@ const UserProfilePage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [isBackingUp, setIsBackingUp] = useState(false)
 
     // Security check: Ensure the logged-in user is viewing their own page
     if (user?.id !== pageUserId) {
@@ -89,6 +96,25 @@ const UserProfilePage = () => {
     };
 
 
+    const handleBackup = async () => {
+        setIsBackingUp(true); // Start loader
+        try {
+            const { message, success } = await createBackup(pageUserId);
+
+            if (success) {
+                toast.success(message || 'Backup sent to Email');
+            } else {
+                toast.error(message || 'Failed to create backup.');
+            }
+        } catch (backupError) {
+            console.error("Backup failed:", backupError);
+            toast.error('An unexpected error occurred during backup.');
+        } finally {
+            setIsBackingUp(false);
+        }
+
+    }
+
     return (
         <div className="h-screen mx-auto mt-8 ">
             <div className="flex justify-center py-4 border  border-white/50 rounded-xl bg-maroon">
@@ -104,6 +130,19 @@ const UserProfilePage = () => {
                         <p><strong>Mobile No.:</strong> {user?.mobile || 'N/A'}</p>
                         <p><strong>Rank:</strong> {user?.rank || 'N/A'}</p>
                         <p><strong>Police Station:</strong> {user?.policeStation || 'N/A'}</p>
+                    </div>
+
+                    <div>
+                        <Button onClick={handleBackup} disabled={isBackingUp}>
+                            {isBackingUp ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Creating Backup...
+                                </>
+                            ) : (
+                                'Backup'
+                            )}
+                        </Button>
                     </div>
                 </div>
 
