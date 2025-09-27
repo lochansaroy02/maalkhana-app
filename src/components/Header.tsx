@@ -1,12 +1,14 @@
 "use client";
 
 import { useAuthStore } from "@/store/authStore";
+import { useBackupStore } from "@/store/backupStore";
 import { useDistrictStore } from "@/store/districtStore";
 import { useSidebarStore } from "@/store/sidebarStore";
-import { Menu } from "lucide-react";
+import { Loader2, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { Button } from "./ui/button";
 import DropDown from "./ui/DropDown";
 
@@ -14,6 +16,8 @@ const Header = () => {
 
 
 
+
+    const { createBackup } = useBackupStore()
 
     const { getAllUsers, setUserId, userId } = useDistrictStore()
     const { isLoggedIn, logout, user } = useAuthStore();
@@ -23,7 +27,7 @@ const Header = () => {
     const [userData, setUserData] = useState([]);
     const [userOptions, setUserOptions] = useState<any[]>([])
     const [selectedUser, setselectedUser] = useState("")
-
+    const [isBackingUp, setIsBackingUp] = useState(false)
     const { toggleOpen } = useSidebarStore();
 
     const handleLogout = () => {
@@ -70,6 +74,24 @@ const Header = () => {
 
 
 
+
+    const handleBackup = async () => {
+        setIsBackingUp(true); // Start loader
+        try {
+            const { message, success } = await createBackup(user?.id);
+
+            if (success) {
+                toast.success(message || 'Backup sent to Email');
+            } else {
+                toast.error(message || 'Failed to create backup.');
+            }
+        } catch (backupError) {
+            console.error("Backup failed:", backupError);
+            toast.error('An unexpected error occurred during backup.');
+        } finally {
+            setIsBackingUp(false);
+        }
+    }
 
 
 
@@ -142,6 +164,19 @@ const Header = () => {
                             </Button>
                         </Link>
                     )}
+
+                    <div>
+                        <Button onClick={handleBackup} disabled={isBackingUp}>
+                            {isBackingUp ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Creating Backup...
+                                </>
+                            ) : (
+                                'Backup'
+                            )}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div >
