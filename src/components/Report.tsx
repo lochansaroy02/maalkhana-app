@@ -98,7 +98,7 @@ const Report = ({
     };
 
     const handleDoubleClick = (item: any) => {
-       
+
         const allKeys = Object.keys(item).filter((key) => !excluded.includes(key));
         const sortedVisibleKeys: any[] = [];
         orderedKeys.forEach((key) => {
