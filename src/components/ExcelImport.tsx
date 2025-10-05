@@ -67,7 +67,7 @@ const ExcelImport = () => {
 
             setError("");
             setParsedData(jsonData); // Directly set the parsed data without mapping
-            
+
         };
 
         reader.readAsBinaryString(file);

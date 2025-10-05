@@ -1,4 +1,7 @@
+import { useAuthStore } from "@/store/authStore";
+
 // A utility function to create a reverse map. 
+
 // You can place this in a utils file or at the top of your component file.
 const createReverseMap = (map: Record<string, string>): Record<string, string> => {
     const reverseMap: Record<string, string> = {};
@@ -112,7 +115,7 @@ export function validateAndMapExcelSchema(data: any[], schemaType: keyof typeof 
         }
 
 
-        
+
         return completeRow;
     });
 

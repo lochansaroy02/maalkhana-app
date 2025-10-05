@@ -87,10 +87,10 @@ model MalkhanaEntry {
   srNo Int?
   gdNo Int?
   Year Int?
-
+  cash Int?
   boxNo Int @default(0)
 
-  cash Int?
+
 
   yellowItemPrice Int?
 

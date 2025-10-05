@@ -8,11 +8,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import * as XLSX from "xlsx";
 import { Button } from "./ui/button";
 import DropDown from "./ui/DropDown";
 
-import * as XLSX from "xlsx";
-
+// 💡 STEP 1: Import the converter utility
+import { convertUnicodeToKurtidev } from "@/utils/kurtidevConverter";
 
 
 interface ReportProps {
@@ -23,6 +24,22 @@ interface ReportProps {
     fetchData?: () => void;
     headers?: string[];
 }
+
+// 💡 STEP 2: Define which keys in your data contain Hindi/Devanagari text
+const kurtidevKeys = [
+    // IMPORTANT: Add the actual database field names (keys) that hold Hindi text here.
+    "description",
+    "firNo",
+    "srNo",
+    "gdNo",
+    "gdDate",
+    "underSection",
+    "policeStation",
+    "caseProperty",
+
+    // ... add any other fields you need
+];
+
 
 const Report = ({
     data,
@@ -78,6 +95,9 @@ const Report = ({
             return;
         }
         try {
+            // 💡 Add confirmation check here if missing:
+            if (!window.confirm("Are you sure you want to delete the selected entries?")) return;
+
             await axios.post("/api/entry/delete-multiple", { ids: selectedIds });
             toast.success("Deleted successfully");
             setSelectedIds([]);
@@ -139,7 +159,13 @@ const Report = ({
                 </Link>
             );
         }
-        return formatValue(key, value);
+
+        // 💡 STEP 3: Apply conversion if the key is in our list
+        let formattedValue = formatValue(key, value);
+        if (kurtidevKeys.includes(key)) {
+            formattedValue = convertUnicodeToKurtidev(formattedValue);
+        }
+        return formattedValue;
     };
 
     const handleExport = () => {
@@ -156,6 +182,7 @@ const Report = ({
                 //@ts-ignore
                 const dbKey = exportMap[header];
                 //@ts-ignore
+                // NOTE: Typically, you export the original Unicode text, not the converted text.
                 row[header] = formatValue(dbKey, item[dbKey]);
             });
             return row;
@@ -190,9 +217,12 @@ const Report = ({
         }
     }, [selectedIds, data]);
 
+    const isKurtidevCell = (key: string) => kurtidevKeys.includes(key);
+
 
     return (
         <div className="p-4 relative ">
+            {/* REMOVE the <style jsx global> block here and use the external CSS class */}
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold text-white">{heading}</h1>
                 {heading === "Maalkhana Data" && (
@@ -257,6 +287,8 @@ const Report = ({
                                     ))}
                             </tr>
                         </thead>
+                        {/* 💡 The class 'report-table-body' from your style block is removed, as it's not a common practice. 
+                           We'll apply the specific font class directly to the cells that need it. */}
                         <tbody className="bg-white/90 text-black">
                             {data.map((item, index) => (
                                 <tr
@@ -278,20 +310,32 @@ const Report = ({
                                         const itemKey = orderedKeys.find(key => key.toLowerCase() === header.replace(" ", "").toLowerCase() || header.toLowerCase().includes(key.toLowerCase()));
                                         const finalKey = itemKey || (header === "ID" ? "id" : header);
                                         return (
-                                            <td key={index} className="px-4 border border-black py-2">
+                                            <td
+                                                key={index}
+                                                // 💡 STEP 4: Apply the utility class (assuming you named it 'font-kurtidev' or similar)
+                                                className={`px-4 border border-black py-2 ${isKurtidevCell(finalKey) ? 'font-kurtidev' : ''}`}
+                                            >
                                                 {renderCellContent(finalKey, item[finalKey])}
                                             </td>
                                         );
                                     })}
                                     {!headers && Object.values(exportMap).map((dbKey) => (
-                                        <td key={dbKey} className="px-4 border border-black py-2">
+                                        <td
+                                            key={dbKey}
+                                            // 💡 STEP 4: Apply the utility class
+                                            className={`px-4 border border-black py-2 ${isKurtidevCell(dbKey) ? 'font-kurtidev' : ''}`}
+                                        >
                                             {renderCellContent(dbKey, item[dbKey])}
                                         </td>
                                     ))}
                                     {!headers && orderedKeys
                                         .filter((key) => !excluded.includes(key) && !Object.values(exportMap).includes(key))
                                         .map((key) => (
-                                            <td key={key} className="px-12 border bg-green-400 border-black py-2">
+                                            <td
+                                                key={key}
+                                                // 💡 STEP 4: Apply the utility class (while retaining existing styles)
+                                                className={`px-12 border bg-green-400 border-black py-2 ${isKurtidevCell(key) ? 'font-kurtidev' : ''}`}
+                                            >
                                                 {renderCellContent(key, item[key])}
                                             </td>
                                         ))}

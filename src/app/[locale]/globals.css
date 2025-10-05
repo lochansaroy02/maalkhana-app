@@ -4,6 +4,22 @@
 @custom-variant dark (&:is(.dark *));
 
 
+@font-face {
+  font-family: 'Kurtidev 010';
+  /* 💡 FIX: Removed '/public' from the path. Next.js serves from root (/). */
+  src: url('/fonts/KrutiDev010.woff2') format('woff2'),
+    url('/fonts/k010.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  /* Best practice for performance */
+}
+
+.font-kurtidev {
+  font-family: 'Kurtidev 010', sans-serif;
+  /* Optional: Adjust font size if the legacy font renders differently */
+  /* font-size: 1.1em; */
+}
 
 @theme {
   --breakpoint-*: initial;

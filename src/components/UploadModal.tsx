@@ -3,6 +3,8 @@
 import { expectedSchemas } from "@/constants/schemas";
 import { useAuthStore } from "@/store/authStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
+// 🚨 This is where the logic for handling missing/empty columns must reside.
+// It should map missing Excel headers to 'null' or skip non-required fields.
 import { validateAndMapExcelSchema } from "@/utils/validateSchemas";
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
@@ -88,9 +90,54 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                     return;
                 }
 
-                // Now, send     the validated data (which is an array) to the API
-                console.log(validatedData);
-                const isSuccess = await addMaalkhanaEntry(validatedData);
+                // 1. Define fields that MUST be integers (Int or Null)
+                // Includes previous fields and likely numeric ones (Cash, Wine)
+                const integerFields = ["srNo", "gdNo", "boxNo", "Year", "cash", "wine"];
+
+                // 2. Get ALL possible database keys from your export map to ensure no argument is missing
+                const allDatabaseKeys = Object.values(exportMap);
+
+                const fixedData = validatedData.map((entry: any) => {
+                    const newEntry: any = {};
+                    if (user?.id) {
+                        newEntry.userId = user.id;
+                    }
+                    // Iterate over ALL possible database keys to ensure every field is present (or null)
+                    for (const key of allDatabaseKeys) {
+                        // The value from the Excel data
+                        const rawValue = entry[key];
+
+                        if (integerFields.includes(key)) {
+                            // --- Logic for Integer Fields (Int or Null) ---
+                            const valueStr = rawValue != null ? String(rawValue).trim() : "";
+
+                            if (valueStr === "") {
+                                newEntry[key] = null;
+                            } else {
+                                const parsedInt = parseInt(valueStr, 10);
+                                // Ensure it's a valid, non-floating-point integer, otherwise set to null
+                                newEntry[key] = isNaN(parsedInt) || String(parsedInt) !== valueStr ? null : parsedInt;
+                            }
+
+                        } else {
+                            // --- Logic for String Fields (String or Null, including 'wineType', 'accused',a etc.) ---
+
+                            if (rawValue == null || String(rawValue).trim() === "") {
+                                // Explicitly set missing/empty string fields to null 
+                                newEntry[key] = "";
+                            } else {
+                                // Ensure it is explicitly a string and trim whitespace
+                                newEntry[key] = String(rawValue).trim();
+                            }
+                        }
+                    }
+
+                    return newEntry; // Return the new entry with all keys guaranteed
+                });
+
+                // Now, send the FIXED data (which is an array) to the API
+                console.log(fixedData);
+                const isSuccess = await addMaalkhanaEntry(fixedData);
 
                 if (isSuccess) {
                     onSuccess("✅ Data imported successfully");
