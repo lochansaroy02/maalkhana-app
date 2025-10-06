@@ -62,7 +62,7 @@ const Sidebar = () => {
                     <div className='lg:p-2 items-center flex flex-col justify-center mb-2 rounded-xl border border-white/20 bg-blue'>
                         <Spycore />
                         <h1 className='text-blue-100 text-xl'>Helpline</h1>
-                        <h2 className='text-blue-100'>+917017308109</h2>
+                        <h2 className='text-blue-100'>+917500064949</h2>
                     </div>
                 </div>
             </div>
