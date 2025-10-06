@@ -105,11 +105,13 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
             });
 
             if (response.data.success) {
+                console.log(response.data);
                 if (Array.isArray(vehicle)) {
                     set((state) => ({
                         vehicles: [...state.vehicles, ...vehicle],
                     }));
                 } else {
+
                     set((state) => ({
                         vehicles: [...state.vehicles, response.data.data],
                     }));

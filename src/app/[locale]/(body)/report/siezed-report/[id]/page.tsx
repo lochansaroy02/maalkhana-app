@@ -4,15 +4,15 @@ import { Button } from "@/components/ui/button";
 import { useSeizedVehicleStore } from "@/store/siezed-vehical/seizeStore";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useReactToPrint } from "react-to-print";
+// Removed: import { useReactToPrint } from "react-to-print";
 
+import Logo from "@/assets/Logo";
 import { useEffect, useRef, useState } from "react";
 
 export default function EntryReportDetail() {
     const { id } = useParams();
     const router = useRouter();
     const [data, setData] = useState<any>(null);
-    // This state will now be populated by the new useEffect
     const [fieldsToDisplay, setFieldsToDisplay] = useState<any[]>([]);
 
     const { getById } = useSeizedVehicleStore();
@@ -65,30 +65,26 @@ export default function EntryReportDetail() {
         { key: "documentUrl", label: "Document" },
     ];
 
-    const handlePrint = useReactToPrint({
-        //@ts-ignore
-        content: () => divRef.current,
-    });
+    // NOTE: Removed `handlePrint = useReactToPrint(...)`
+
     useEffect(() => {
         const getData = async () => {
             if (id) {
                 try {
+                    // Assuming getById fetches data
                     const response = await getById(id);
                     if (response.success) {
-                        console.log(response.data)
                         setData(response.data);
                     }
                 } catch (error) {
                     console.error("Failed to fetch data:", error);
-                    // Optionally, handle the error (e.g., show a toast notification)
                 }
             }
         };
         getData();
-    }, [id]);
+    }, [id, getById]);
 
-    // --- FIX APPLIED HERE ---
-    // NEW: This useEffect runs after data is fetched to determine which fields to display.
+    // This useEffect runs after data is fetched to determine which fields to display.
     useEffect(() => {
         if (data) {
             const filteredFields = allPossibleFields.filter(field => {
@@ -101,46 +97,68 @@ export default function EntryReportDetail() {
     }, [data]);
 
 
+    // ----------------------------------------------------------------------
+    // FIXED PRINTING LOGIC (Reliable iframe method using onload)
+    // ----------------------------------------------------------------------
     const handlePrintWithIframe = () => {
-        // Find the div you want to print
         const printContent = document.getElementById('printable-area');
         if (!printContent) return;
 
-
-        // Create a new, hidden iframe
+        // Create and hide the iframe
         const iframe = document.createElement('iframe');
-        if (iframe == null) {
-            return
-        }
         iframe.style.position = 'absolute';
         iframe.style.width = '0';
         iframe.style.height = '0';
         iframe.style.border = 'none';
+        iframe.style.top = '-1000px';
+        iframe.style.left = '-1000px';
         document.body.appendChild(iframe);
 
-        // Get the iframe's document
-        //@ts-ignore
+        if (!iframe.contentWindow) {
+            document.body.removeChild(iframe);
+            return;
+        }
+
         const iframeDoc = iframe.contentWindow.document;
 
-        // Copy all <link> and <style> tags from the main document's <head>
+        // Write a complete HTML document into the iframe
+        iframeDoc.open();
+        iframeDoc.write('<!DOCTYPE html><html><head><title>Print Report</title>');
+
+        // Copy all style links and style tags from the main document's head
         const headElements = document.querySelectorAll('head > link[rel="stylesheet"], head > style');
         headElements.forEach(node => {
-            iframeDoc.head.appendChild(node.cloneNode(true));
+            // Use outerHTML to get the full tag including attributes
+            iframeDoc.write(node.outerHTML);
         });
 
-        // Set a brief timeout to ensure styles are loaded before printing
-        setTimeout(() => {
-            // Copy the div's HTML into the iframe's body
-            iframeDoc.body.innerHTML = printContent.innerHTML;
-            //@ts-ignore
-            iframe.contentWindow.focus(); // Focus is needed for some browsers
-            //@ts-ignore
-            iframe.contentWindow.print();
+        // Add body and the content to be printed
+        iframeDoc.write('</head><body>');
+        // Use outerHTML to copy the target div and its ID
+        iframeDoc.write(printContent.outerHTML);
+        iframeDoc.write('</body></html>');
+        iframeDoc.close();
 
-            // Clean up by removing the iframe after printing
-            document.body.removeChild(iframe);
-        }, 500); // 500ms delay
+        // Use onload event to ensure all resources (especially styles) are loaded
+        iframe.onload = () => {
+            try {
+                // Focus and Print
+                iframe.contentWindow!.focus();
+                iframe.contentWindow!.print();
+
+                // Clean up the iframe after a short delay
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 50);
+            } catch (error) {
+                console.error("Error during print:", error);
+                document.body.removeChild(iframe);
+            }
+        };
     };
+    // ----------------------------------------------------------------------
+
+    if (!data) return <div className="p-4 text-center h-screen text-white">Loading..</div>;
 
     return (
         <div className="p-8 min-h-screen flex flex-col items-center">
@@ -148,19 +166,21 @@ export default function EntryReportDetail() {
                 <Button onClick={() => router.back()} className="cursor-pointer">
                     <span><ArrowLeft /></span>Back
                 </Button>
+                {/* Now using the fixed iframe print handler */}
                 <Button onClick={handlePrintWithIframe} className="cursor-pointer">Print</Button>
             </div>
             <div ref={divRef}
                 id="printable-area"
                 className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
                 <div className="border border-gray-400 p-8">
-                    <div className="text-center border-b pb-4 mb-6">
-                        <h1 className="text-3xl font-bold text-gray-800">DIGITAL MALKHANA</h1>
-                        <h2 className="text-lg font-semibold text-gray-600">Entry Detail</h2>
+                    <div className="flex  p-4 justify-around items-center  ">
+                        <Logo width={100} height={100} />
+                        <div className="text-center  ">
+                            <h1 className="text-3xl font-bold text-gray-800">DIGITAL MALKHANA</h1>
+                            <h2 className="text-lg font-semibold text-gray-600">Entry Detail</h2>
+                        </div>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                        {/* Now this map will work because fieldsToDisplay is populated */}
                         {fieldsToDisplay.map(({ key, label }) => {
                             const value = data[key];
 
@@ -176,10 +196,29 @@ export default function EntryReportDetail() {
                                     </div>
                                 );
                             }
+
+                            // Handling documents as links
+                            if (key === "documentUrl") {
+                                return (
+                                    <div key={key} className="col-span-1 md:col-span-2 text-center mt-4">
+                                        <h3 className="text-lg font-semibold text-gray-700 mb-2">{label}</h3>
+                                        <a
+                                            href={String(value)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 underline"
+                                        >
+                                            View Document
+                                        </a>
+                                    </div>
+                                );
+                            }
+
                             return (
                                 <div key={key} className="flex flex-row gap-4  border-b pb-2">
                                     <span className="text-sm font-semibold ">{label}:</span>
-                                    <span className="text-sm text-gray-800">{String(value)}</span>
+                                    {/* Using flex-wrap to handle long content */}
+                                    <span className="text-sm text-gray-800 flex-wrap">{String(value)}</span>
                                 </div>
                             );
                         })}

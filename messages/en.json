@@ -32,9 +32,10 @@
         "returnedEntries": "Returned Entries",
         "totalEnglishWine": "Total English Wine (in Ltr)",
         "totalDesiWine": "Total Desi Wine (in Ltr)",
-        "totalWine": "Total Wine (in Ltr)",
+        "totalWine": "Total Explosive (in Kg)",
         "totalCash": "Total Cash",
         "unitLtr": "Ltr",
+        "unitKG": "Kg",
         "totalYellowItem": "Total Yellow Item"
     },
     "entry": {
@@ -47,7 +48,7 @@
                     "fsl": "FSL",
                     "kurki": "Kurki",
                     "cash": "Cash Entry",
-                    "wine": "Wine/Daru",
+                    "wine": "Explosive",
                     "unclaimed": "Unclaimed Entry",
                     "other": "Other Entry",
                     "yellowItem": "Yellow Item"

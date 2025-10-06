@@ -47,7 +47,7 @@ export const useTotalEntriesStore = create<TotalEntriesStore>((set) => ({
         set({ loading: true, error: null });
         try {
             const response = await axios.get(`/api/report/get-all`);
-            const data = response.data;
+            const data = response.data
             set({
                 data: {
                     total: data.total,

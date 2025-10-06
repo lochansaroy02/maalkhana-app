@@ -82,15 +82,13 @@ model SeizedVehicle {
 }
 
 model MalkhanaEntry {
-  id   String @id @default(uuid())
-  wine Int?
-  srNo Int?
-  gdNo Int?
-  Year Int?
-  cash Int?
-  boxNo Int @default(0)
-
-
+  id    String @id @default(uuid())
+  wine  Int?
+  srNo  Int?
+  gdNo  Int?
+  Year  Int?
+  cash  Int?
+  boxNo Int    @default(0)
 
   yellowItemPrice Int?
 

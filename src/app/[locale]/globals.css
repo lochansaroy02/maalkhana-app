@@ -15,6 +15,10 @@
   /* Best practice for performance */
 }
 
+.font-mangal {
+  font-family: "Mangal", "Arial Unicode MS", "Nirmala UI", sans-serif;
+}
+
 .font-kurtidev {
   font-family: 'Kurtidev 010', sans-serif;
   /* Optional: Adjust font size if the legacy font renders differently */

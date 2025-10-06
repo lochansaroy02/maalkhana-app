@@ -1,11 +1,12 @@
 // pages/index.tsx (The Dashboard component)
 "use client";
 
+import { PiChart } from "@/components/Charts";
 import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
 import { useDistrictStore } from "@/store/districtStore";
-import { ArrowDownNarrowWide, Banknote, Car, Megaphone, Menu, Settings, Shield, Shredder, User, Wine } from "lucide-react";
+import { ArrowDownNarrowWide, Banknote, Bomb, Car, Megaphone, Menu, Settings, Shield, Shredder, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
@@ -13,6 +14,7 @@ const Page = () => {
     const { fetchTotalEntries, data, fetchAdminEntries } = useTotalEntriesStore();
     const { user, } = useAuthStore();
     const { userId } = useDistrictStore()
+
 
     useEffect(() => {
         if (user?.role === "policeStation") {
@@ -92,23 +94,14 @@ const Page = () => {
             value: data?.breakdown?.totalReturn || 0,
             url: "/report/entry-report?reportType=return"
         },
-        {
-            title: t("totalEnglishWine"),
-            icon: <Wine size={40} />,
-            bgColour: "bg-gray-500",
-            value: `${data?.breakdown?.english?._sum?.wine || 0} ${t("unitLtr")}`,
-        },
-        {
-            title: t("totalDesiWine"),
-            icon: <Wine size={40} />,
-            bgColour: "bg-fuchsia-700",
-            value: `${data?.breakdown?.desi?._sum?.wine || 0} ${t("unitLtr")}`,
-        },
+
+
+
         {
             title: t("totalWine"),
-            icon: <Wine size={40} />,
+            icon: <Bomb size={40} />,
             bgColour: "bg-purple-700",
-            value: `${data?.breakdown?.totalWine?._sum?.wine || 0} ${t("unitLtr")}`,
+            value: `${data?.breakdown?.totalWine?._sum?.wine || 0} ${t("unitKG")}`,
         },
         {
             title: t("totalCash"),
@@ -125,14 +118,14 @@ const Page = () => {
     ];
 
     return (
-        <div className="flex lg:h-screen  flex-col glass-effect">
+        <div className="flex lg:h-fit flex-col glass-effect">
             <div className="flex justify-center py-4 border-b border-white/50 rounded-t-xl bg-maroon">
                 <h1 className="text-textColor text-2xl text-blue-100 font-bold">Dashboard</h1>
             </div>
             <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 p-6 gap-4">
                 {reportItems.map((item, index) => {
                     if (user?.role === "policeStation" && item.title === t("totalPoliceStation") && userId === "") {
-                        return null; // skip rendering
+                        return null;
                     }
                     return (
                         <ReportCard
@@ -145,7 +138,13 @@ const Page = () => {
                         />
                     );
                 })}
+
             </div>
+
+            <div className="p-4 ">
+                <PiChart data={data} />
+            </div>
+            {/* <chart */}
         </div>
     );
 };

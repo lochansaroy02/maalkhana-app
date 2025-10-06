@@ -1,30 +1,23 @@
 "use client";
 
+import Logo from "@/assets/Logo";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-
-
 export default function EntryReportDetail() {
+    // Hooks and State
     const { id } = useParams();
     const router = useRouter()
     const [entry, setEntry] = useState<any>(null);
     const [fieldsToDisplay, setFieldsToDisplay] = useState<any[]>([]);
 
-
-
-
     const divRef = useRef(null)
 
-
-
-
-
+    // All Possible Fields
     const allPossibleFields = [
-
         { key: "firNo", label: "FIR No" },
         { key: "Year", label: "Year" },
         { key: "srNo", label: "Sr No" },
@@ -35,7 +28,7 @@ export default function EntryReportDetail() {
         { key: "entryType", label: "Entry Type" },
         { key: "vadiName", label: "Vadi Name" },
         { key: "HM", label: "HM Name" },
-
+        { key: "underSection", label: "Under Section" },
         { key: "wine", label: "Wine" },
         { key: "cash", label: "Cash" },
         { key: "wineType", label: "Wine Type" },
@@ -47,7 +40,6 @@ export default function EntryReportDetail() {
         { key: "boxNo", label: "Box No" },
         { key: "description", label: "Description" },
         { key: "accused", label: "accused" },
-
         // Movement Report Fields (NEWLY ADDED)
         { key: "moveDate", label: "Move Date" },
         { key: "takenOutBy", label: "Taken Out By" },
@@ -59,6 +51,7 @@ export default function EntryReportDetail() {
         { key: "photoUrl", label: "Photo" },
     ];
 
+    // Effect to fetch entry data
     useEffect(() => {
         if (id) {
             axios.get(`/api/entry/${id}`)
@@ -67,97 +60,129 @@ export default function EntryReportDetail() {
                     setEntry(entryData);
 
                     const storedFieldsJson = sessionStorage.getItem('visibleReportFields');
+                    let filteredFields = allPossibleFields;
 
                     if (storedFieldsJson) {
                         try {
                             const visibleKeys = JSON.parse(storedFieldsJson);
-                            const filteredFields = allPossibleFields.filter(field =>
-                                // Also check if the entry actually has data for this key
+                            filteredFields = allPossibleFields.filter(field =>
+                                // Only display fields that are selected AND have non-null/non-empty data
                                 visibleKeys.includes(field.key) && entryData[field.key]
                             );
-                            setFieldsToDisplay(filteredFields);
-
                         } catch (e) {
-                            setFieldsToDisplay(allPossibleFields);
+                            // Fallback to all fields if parsing fails
+                            console.error("Error parsing visibleReportFields:", e);
                         }
-                    } else {
-                        setFieldsToDisplay(allPossibleFields);
                     }
+
+                    // Final filter to ensure only fields with data are shown
+                    const finalFieldsToDisplay = filteredFields.filter(field =>
+                        entryData[field.key] !== null && entryData[field.key] !== undefined && entryData[field.key] !== ""
+                    );
+                    setFieldsToDisplay(finalFieldsToDisplay);
                 })
                 .catch(err => console.error(err));
         }
     }, [id]);
 
-
-
+    // ----------------------------------------------------------------------
+    // CORRECTED PRINTING LOGIC
+    // ----------------------------------------------------------------------
     const handlePrintWithIframe = () => {
-        // Find the div you want to print
         const printContent = document.getElementById('printable-area');
         if (!printContent) return;
 
-
-        // Create a new, hidden iframe
+        // Create and hide the iframe
         const iframe = document.createElement('iframe');
-        if (iframe == null) {
-            return
-        }
         iframe.style.position = 'absolute';
         iframe.style.width = '0';
         iframe.style.height = '0';
         iframe.style.border = 'none';
+        iframe.style.top = '-1000px';
+        iframe.style.left = '-1000px';
         document.body.appendChild(iframe);
 
-        // Get the iframe's document
-        //@ts-ignore
+        if (!iframe.contentWindow) {
+            document.body.removeChild(iframe);
+            return;
+        }
+
         const iframeDoc = iframe.contentWindow.document;
 
-        // Copy all <link> and <style> tags from the main document's <head>
+        // Write a complete HTML document into the iframe
+        iframeDoc.open();
+        iframeDoc.write('<!DOCTYPE html><html><head><title>Print Report</title>');
+
+        // Copy all style links and style tags from the main document's head
         const headElements = document.querySelectorAll('head > link[rel="stylesheet"], head > style');
         headElements.forEach(node => {
-            iframeDoc.head.appendChild(node.cloneNode(true));
+            // Use outerHTML to get the full tag including attributes
+            iframeDoc.write(node.outerHTML);
         });
 
-        // Set a brief timeout to ensure styles are loaded before printing
-        setTimeout(() => {
-            // Copy the div's HTML into the iframe's body
-            iframeDoc.body.innerHTML = printContent.innerHTML;
-            //@ts-ignore
-            iframe.contentWindow.focus(); // Focus is needed for some browsers
-            //@ts-ignore
-            iframe.contentWindow.print();
+        // Add body and the content to be printed
+        iframeDoc.write('</head><body>');
+        // Use outerHTML to copy the target div and its ID
+        iframeDoc.write(printContent.outerHTML);
+        iframeDoc.write('</body></html>');
+        iframeDoc.close();
 
-            // Clean up by removing the iframe after printing
-            document.body.removeChild(iframe);
-        }, 500); // 500ms delay
+        // Use onload event to ensure all resources (especially styles) are loaded
+        iframe.onload = () => {
+            try {
+                // Focus and Print
+                iframe.contentWindow!.focus();
+                iframe.contentWindow!.print();
+
+                // Clean up the iframe after a short delay
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 50);
+            } catch (error) {
+                console.error("Error during print:", error);
+                document.body.removeChild(iframe);
+            }
+        };
+
+        // Note: For some browsers/configurations, the iframe might load instantly, 
+        // so the onload might not fire. A fallback could be a short timeout here,
+        // but onload is generally more reliable for handling resource loading.
     };
-
+    // ----------------------------------------------------------------------
+    // END OF CORRECTED PRINTING LOGIC
+    // ----------------------------------------------------------------------
 
     if (!entry) return <div className="p-4 text-center h-screen text-white">Loading..</div>;
 
-
+    // Render Function
     return (
         <div className="p-8 min-h-screen flex flex-col items-center">
+
             <div className="flex  mb-2  gap-4   ">
                 <Button onClick={() => {
                     router.back()
                 }} className="cursor-pointer   "><span><ArrowLeft /></span>Back</Button>
                 <Button onClick={handlePrintWithIframe} className="cursor-pointer    ">Print</Button>
             </div>
+
             <div
                 id="printable-area"
                 ref={divRef} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
                 <div className="border border-gray-400 p-8">
-                    <div className="text-center border-b pb-4 mb-6">
-                        <h1 className="text-3xl font-bold text-gray-800">DIGITAL MALKHANA</h1>
-                        <h2 className="text-lg font-semibold text-gray-600">Entry Detail</h2>
+                    <div className="flex  p-4 justify-around items-center  ">
+                        <Logo width={100} height={100} />
+                        <div className="text-center  ">
+                            <h1 className="text-3xl font-bold text-gray-800">DIGITAL MALKHANA</h1>
+                            <h2 className="text-lg font-semibold text-gray-600">Entry Detail</h2>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                         {fieldsToDisplay.map(({ key, label }) => {
                             const value = entry[key];
 
-                            // This check is good, but the main filtering happens in useEffect
-                            if (value === null || value === undefined || value === "") return null;
+                            // No need for null/undefined/empty check here since it's filtered in useEffect, 
+                            // but keeping the logic for photoUrl and description is fine.
 
                             if (key === "photoUrl") {
                                 return (
@@ -199,9 +224,7 @@ export default function EntryReportDetail() {
                         })}
                     </div>
                 </div>
-
             </div>
-
         </div>
     );
 }

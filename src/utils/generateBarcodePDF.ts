@@ -7,7 +7,7 @@ import { jsPDF } from "jspdf";
  * @param {Array<Object>} entries - An array of objects, each containing data for a barcode.
  * @param {boolean} [drawGrid=true] - If true, draws a light gray border around each label for alignment.
  */
-export const generateBarcodePDF = async (entries: any, drawGrid = true) => {
+export const generateBarcodePDF = async (entries: any, dbName: string | undefined, drawGrid = true,) => {
     // --- Page and Label Layout Configuration (A4 Dimensions: 210mm x 297mm) ---
     const LABELS_PER_ROW = 4;
     const LABELS_PER_COLUMN = 10;
@@ -65,9 +65,10 @@ export const generateBarcodePDF = async (entries: any, drawGrid = true) => {
 
         doc.text(String(entry.srNo || ''), labelX + LABEL_WIDTH / 2, srNoY, { align: 'center' });
 
-        const canvas = document.createElement("canvas");
-        const barcodeValue = `${entry.dbName || ''}-${entry.firNo || ''}-${entry.srNo || ''}`;
 
+        const canvas = document.createElement("canvas");
+        const barcodeValue = `${entry.dbName || dbName}-${entry.firNo || ''}-${entry.srNo || ''}`;
+        console.log(dbName, entry.firNo, entry.srNo);
         JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
             width: 2,

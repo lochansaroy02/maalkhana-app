@@ -47,7 +47,7 @@ const casePropertyOptions = [
 
 // Define a type for the report data and headers
 type ReportData = {
-    data: any[];
+    data: SeizedVehicleEntry[]; // Updated to use SeizedVehicleEntry[] for better type safety
     headers: string[];
 };
 
@@ -85,33 +85,35 @@ const Page = () => {
         let headers: string[] = [];
 
         // Apply filters based on the report type
-        const applyFilters = () => {
+        const applyFilters = (): ReportData => {
             let dataToShow: SeizedVehicleEntry[] = [...vehicles];
 
             switch (reportType) {
                 case "movement":
-                    dataToShow = vehicles.filter(vehicle => vehicle.isMovement === true);
+                    dataToShow = dataToShow.filter(vehicle => vehicle.isMovement === true);
                     headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"];
                     break;
                 case "release":
-                    dataToShow = vehicles.filter(vehicle => vehicle.isRelease === true);
-                    headers = ["FIR No", "Sr No", "Case Property", "releaseItemName", "Court Name", "Court No", "Receiver Name"];
+                    dataToShow = dataToShow.filter(vehicle => vehicle.isRelease === true);
+                    // NOTE: 'releaseItemName' is not in the interface, check if it's correct.
+                    headers = ["FIR No", "Sr No", "Case Property", "Court Name", "Court No", "Receiver Name"];
                     break;
                 case "destroy":
-                    dataToShow = vehicles.filter(vehicle => vehicle.status?.toLowerCase() === 'destroy');
-                    headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
-                    break;
-                case "destroy":
-                    dataToShow = vehicles.filter(vehicle => vehicle.status?.toLowerCase() === 'nilami');
+                // Fallthrough is implied here: If status is 'destroy' or 'nilami'
+                case "nilami":
+                    dataToShow = dataToShow.filter(vehicle =>
+                        vehicle.status?.toLowerCase() === 'destroy' || vehicle.status?.toLowerCase() === 'nilami'
+                    );
                     headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
                     break;
                 case "return":
-                    dataToShow = vehicles.filter(vehicle => vehicle.isReturned === true);
+                    dataToShow = dataToShow.filter(vehicle => vehicle.isReturned === true);
                     headers = ["FIR No", "Sr No", "Return Date", "Received By", "Return Back From", "Is Returned"];
                     break;
                 default: // 'all' or default view
                     dataToShow = vehicles;
-                    headers = ["FIR No", "Sr No", "Case Property", "Place", "GD No", "GD Date", "Year", "Police Station", "I O Name", "vadiName"];
+                    // NOTE: 'I O Name' is not explicitly in the interface, check if it's correct.
+                    headers = ["FIR No", "Sr No", "underSection", "description", "vehicleType", "Case Property", "GD No", "GD Date", "Year", "status", "Police Station", "colour", "registrationNo", "seizedBy"];
                     break;
             }
 
@@ -125,7 +127,8 @@ const Page = () => {
             // Apply search filter if searchData is available
             if (searchData.length > 0) {
                 // Assuming searchData is already filtered and formatted correctly
-                return { data: searchData, headers: headers };
+                // NOTE: This assumes searchData is an array of SeizedVehicleEntry objects
+                return { data: searchData as SeizedVehicleEntry[], headers: headers };
             }
 
             return { data: dataToShow, headers: headers };
@@ -141,6 +144,7 @@ const Page = () => {
             fetchVehicles(user.id);
         }
     };
+
 
 
     return (

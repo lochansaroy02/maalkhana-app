@@ -136,7 +136,6 @@ const Page = () => {
         setWine(data.wine || 0);
         setCash(data.cash || 0);
         setWineType(data.wineType || '');
-
         const entryTypeKey = data.entryTypeKey || '';
         setDropdownSelection(entryTypeKey);
         if (entryTypeKey === 'other') {
@@ -373,11 +372,12 @@ const Page = () => {
                             </div>
                         )}
                     </div>
-                    <div className={`w-full ml-6 gap-6 ${dropdownSelection === 'wine' ? "flex" : "hidden"} items-center`}>
+                    {/* <div className={`w-full ml-6 gap-6 
+                        ${dropdownSelection === 'wine' ? "hidden" : "hidden"} items-center`}>
                         <DropDown label={t(`${baseKey}.wineSection.typeLabel`)} selectedValue={wineType} options={wineTypeOptions} handleSelect={setWineType} />
-                    </div>
+                    </div> */}
                     <div className={`w-full ml-6 gap-6 ${dropdownSelection === 'wine' ? "flex" : "hidden"} items-center`}>
-                        <label className='text-blue-100'>{t(`${baseKey}.wineSection.quantityLabel`)}</label>
+                        <label className='text-blue-100'>{`Explosive`}</label>
                         <Input type='number' value={wine} onChange={(e) => setWine(Number(e.target.value))} />
                     </div>
                     <div className={`w-3/4 ml-18 ${dropdownSelection === 'cash' ? "flex flex-col" : "hidden"}`}>
