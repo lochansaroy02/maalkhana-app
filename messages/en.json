@@ -106,7 +106,8 @@
                 "save": "Save",
                 "print": "Print",
                 "modify": "Modify",
-                "clear": "Clear"
+                "clear": "Clear",
+                "update": "Update"
             },
             "toasts": {
                 "specifyOtherError": "Please specify the 'Other' entry type.",

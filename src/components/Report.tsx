@@ -6,15 +6,11 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react"; // 💡 Added useMemo
+import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { Button } from "./ui/button";
 import DropDown from "./ui/DropDown";
-
-// 💡 STEP 1: Import the converter utility
-// Assuming you moved the converter and the keys definition to a utility file
-import { convertUnicodeToKurtidev } from "@/utils/font";
 
 interface ReportProps {
     data: any[];
@@ -25,35 +21,9 @@ interface ReportProps {
     headers?: string[];
 }
 
-// 💡 STEP 2: Define ALL keys that *could* contain Hindi text
-const kurtidevKeys = [
-    "description", "firNo", "srNo", "gdNo", "gdDate", "underSection", "policeStation", "caseProperty",
-    "vadiName", "courtName", "receiverName", "takenOutBy", "movePurpose", "returnBackFrom", "receivedBy",
-];
+// ❌ Removed: const kurtidevKeys = [...]
 
-// 💡 NEW UTILITY: Heuristic check for existing Kruti Dev / Kurtidev encoding
-const isLikelyKurtidev = (text: any): boolean => {
-    if (!text || typeof text !== 'string') return false;
-
-    // Check for common Devanagari Unicode characters (U+0900 to U+097F).
-    const hasDevanagariUnicode = /[\u0900-\u097F]/.test(text);
-
-    // Check for specific non-standard ASCII characters common in Kruti Dev/Kurtidev encoding.
-    const hasSpecificLegacyChars = /[\u0080-\u00FF\u00A0-\u00BF]/.test(text);
-
-    // Rule: If it contains non-standard ASCII but *NO* Devanagari Unicode, it is likely legacy-encoded.
-    if (hasSpecificLegacyChars && !hasDevanagariUnicode) {
-        return true;
-    }
-
-    // If it contains Devanagari Unicode, assume it is Mangal/Unicode and does NOT need conversion.
-    if (hasDevanagariUnicode) {
-        return false;
-    }
-
-    return false;
-};
-
+// ❌ Removed: const isLikelyKurtidev = (text: any): boolean => { ... };
 
 const Report = ({
     data,
@@ -203,13 +173,12 @@ const Report = ({
 
         let formattedValue = formatValue(key, value);
 
-        // 💡 CONDITIONAL FONT CONVERSION LOGIC
-        if (kurtidevKeys.includes(key)) {
-            // ONLY convert if the text is NOT already detected as legacy Kurtidev
-            if (!isLikelyKurtidev(formattedValue)) {
-                formattedValue = convertUnicodeToKurtidev(formattedValue);
-            }
-        }
+        // ❌ Removed: CONDITIONAL FONT CONVERSION LOGIC
+        // if (kurtidevKeys.includes(key)) {
+        //     if (!isLikelyKurtidev(formattedValue)) {
+        //         formattedValue = convertUnicodeToKurtidev(formattedValue);
+        //     }
+        // }
         return formattedValue;
     };
 
@@ -268,7 +237,7 @@ const Report = ({
         }
     }, [selectedIds, currentEntries]);
 
-    const isKurtidevCell = (key: string) => kurtidevKeys.includes(key);
+    // ❌ Removed: const isKurtidevCell = (key: string) => kurtidevKeys.includes(key);
 
     const renderPaginationControls = () => {
         if (totalPages <= 1) return null;
@@ -426,7 +395,7 @@ const Report = ({
                             </tr>
                         </thead>
                         <tbody className="bg-white/90 text-black">
-                            {/* 💡 Rendering ONLY the entries for the current page */}
+                            {/* Rendering ONLY the entries for the current page */}
                             {currentEntries.map((item, index) => {
                                 const actualSrNo = indexOfFirstEntry + index + 1; // Calculate global index
 
@@ -460,7 +429,7 @@ const Report = ({
                                         {keysToRender.map((finalKey) => (
                                             <td
                                                 key={finalKey}
-                                                className={`px-4 border border-black py-2 ${isKurtidevCell(finalKey) ? 'font-kurtidev' : ''}`}
+                                                className={`px-4 border border-black py-2`} // ❌ Removed: ${isKurtidevCell(finalKey) ? 'font-kurtidev' : ''}
                                             >
                                                 {renderCellContent(finalKey, item[finalKey])}
                                             </td>
@@ -477,7 +446,7 @@ const Report = ({
                 </div>
             )}
 
-            {/* 💡 Render Pagination Controls */}
+            {/* Render Pagination Controls */}
             {renderPaginationControls()}
         </div>
     );
