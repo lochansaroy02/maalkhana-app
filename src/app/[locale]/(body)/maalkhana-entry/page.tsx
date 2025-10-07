@@ -298,7 +298,8 @@ const Page = () => {
                 photoUrl,
                 description,
                 yellowItemPrice: Number(yellowItemPrice),
-                gdDate: dateFields.gdDate?.toISOString() ?? '',
+                gdDate: dateFields.gdDate && !isNaN(dateFields.gdDate.getTime())
+                    ? dateFields.gdDate.toISOString() : "",
                 isRelease, isReturned
             };
 
@@ -332,7 +333,7 @@ const Page = () => {
             }
         } catch (error) {
             console.error("Save error:", error);
-            toast.error(t(`${baseKey}.toasts.saveError`));
+            toast.error(t(`Error while saving entry `));
         } finally {
             setLoading(false);
         }
@@ -462,9 +463,14 @@ const Page = () => {
                             <label className='text-nowrap text-blue-100' htmlFor="photo">{t(`${baseKey}.photoUpload.label`)}</label>
                             <input ref={photoRef} className='text-blue-100 rounded-xl glass-effect px-2 py-1' id="photo" type='file' onChange={handlePhotoChange} />
                         </div>
-                        <div className='w-[60%] flex flex-col gap-4 relative'>
-                            {photoUrl && <Button onClick={() => SetPhotoUrl("")} className='absolute right-0 bg-red-800 hover:bg-red-500 cursor-pointer'><Trash /></Button>}
-                            {photoUrl && <img src={photoUrl} className='rounded-md w-full h-full border' alt="upload preview" />}
+                        <div className='bg-green-400 flex size-1/4 flex-col gap-4 relative'>
+                            {photoUrl && <Button onClick={() => {
+                                SetPhotoUrl("")
+                                if (photoRef.current) photoRef.current.value = '';
+
+                            }} className='absolute right-0 bg-red-800 hover:bg-red-500 cursor-pointer'><Trash /></Button>}
+                            {photoUrl && <img src={photoUrl} className='rounded-md 
+                            border' alt="upload preview" />}
                         </div>
                     </div>
                 </div>

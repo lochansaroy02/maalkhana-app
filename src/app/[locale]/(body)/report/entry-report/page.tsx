@@ -100,6 +100,7 @@ const Page = () => {
         });
     };
 
+
     // Define all report-related logic within a useMemo hook for performance
     const reportContent: ReportData = useMemo(() => {
         //@ts-ignore
@@ -109,7 +110,7 @@ const Page = () => {
         // Apply filters based on the report type and selected case property
         const applyFilters = () => {
             let dataToShow = [...entries];
-
+            console.log(dataToShow);
             // Filter based on reportType
             switch (reportType) {
                 case "movement":
@@ -135,7 +136,7 @@ const Page = () => {
                 default:
                     dataToShow = entries;
 
-                    headers = ["FIR No", "Sr No", "Entry Type", "Description", "Case Property", "GD No", "GD Date", "Year", "Police Station", "Vadi Name", "IOName", "box No", "court No", "court Name"];
+                    headers = ["FIR No", "Sr No", "Entry Type", "underSection", "Description", "Case Property", "GD No", "GD Date", "Year", "Police Station", "Vadi Name", "IOName", "box No", "court No", "court Name"];
                     break;
             }
 

@@ -1,8 +1,10 @@
 "use client";
 import { useSearchStore } from "@/store/searchStore";
+import { kurtidevKeys } from "@/utils/font";
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
 import { exportMap, orderedKeys } from "@/utils/map";
 import axios from "axios";
+import { ChevronDown, ChevronUp } from "lucide-react"; // Import for sort icons
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -21,9 +23,58 @@ interface ReportProps {
     headers?: string[];
 }
 
-// ❌ Removed: const kurtidevKeys = [...]
+// =================================================================
+// 🚀 FONT INTEGRATION: KURTIDEV UTILITIES (MUST BE COMPLETED)
+// =================================================================
 
-// ❌ Removed: const isLikelyKurtidev = (text: any): boolean => { ... };
+/**
+ * 1. Define the keys that should be displayed in Kurtidev font.
+ * Adjust this list to match the fields in your DB that contain Devanagari text.
+ */
+
+
+/**
+ * 2. Utility to check if text is likely already in the non-Unicode Kurtidev font.
+ * This is crucial to prevent double-conversion.
+ * You should replace the placeholder logic with a check for characters or patterns
+ * typical of your Kurtidev encoding (often non-ASCII or specific legacy codes).
+ */
+const isLikelyKurtidev = (text: any): boolean => {
+    if (typeof text !== 'string' || text.length === 0) return false;
+    // PLACEHOLDER: Checks for non-Unicode Hindi characters typically found in legacy fonts (e.g., specific ASCII ranges).
+    // A robust check for actual Kurtidev text is required here.
+    const nonUnicodePattern = /[\u0080-\u00FF]/; // Simple check for characters in the extended ASCII range
+    const unicodePattern = /[\u0900-\u097F]/; // Checks for Devanagari Unicode range (Mangal)
+
+    // Return true if it has non-Unicode characters AND few or no Unicode Devanagari characters
+    return nonUnicodePattern.test(text) && !unicodePattern.test(text.substring(0, 10));
+};
+
+/**
+ * 3. Utility for conversion from Unicode (e.g., Mangal) to Kurtidev.
+ * THIS IS A PLACEHOLDER. You MUST implement your actual conversion function here.
+ * A full conversion is complex and requires a complete mapping table.
+ */
+const convertUnicodeToKurtidev = (unicodeText: string): string => {
+    if (typeof unicodeText !== 'string') return unicodeText;
+    // ⚠️ WARNING: REPLACE THIS LINE WITH YOUR REAL CONVERSION LOGIC
+    // Example: return yourActualConversionFunction(unicodeText);
+    return `${unicodeText}`; // Placeholder prefix
+};
+
+/**
+ * 4. Utility to determine if a table cell should have the Kurtidev font class.
+ */
+const isKurtidevCell = (key: string) => kurtidevKeys.includes(key);
+
+// =================================================================
+// -----------------------------------------------------------------
+
+// Type definition for sorting state
+type SortConfig = {
+    key: string;
+    direction: 'ascending' | 'descending';
+};
 
 const Report = ({
     data,
@@ -36,10 +87,13 @@ const Report = ({
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [selectAll, setSelectAll] = useState(false);
+    const [isKurtidevEnabled, setIsKurtidevEnabled] = useState(false);
+    // ✅ NEW STATE: Sorting configuration
+    const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: 'descending' });
 
     // --- PAGINATION STATES ---
     const [currentPage, setCurrentPage] = useState(1);
-    const [entriesPerPage, setEntriesPerPage] = useState(25); // Set default to 25 entries per page
+    const [entriesPerPage, setEntriesPerPage] = useState(25);
     // -------------------------
 
     const { setYear, year } = useSearchStore();
@@ -50,28 +104,7 @@ const Report = ({
         return { value: String(year), label: String(year) };
     });
 
-    // --- PAGINATION LOGIC ---
-    const totalPages = Math.ceil(data.length / entriesPerPage);
-    const indexOfLastEntry = currentPage * entriesPerPage;
-    const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
-
-    const currentEntries = useMemo(() => {
-        return data.slice(indexOfFirstEntry, indexOfLastEntry);
-    }, [data, indexOfFirstEntry, indexOfLastEntry]);
-
-    const paginate = (pageNumber: number) => {
-        if (pageNumber < 1 || pageNumber > totalPages) return;
-        setCurrentPage(pageNumber);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const pathName = usePathname()
-
-    // Reset page to 1 if entriesPerPage or data changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [data, entriesPerPage]);
-    // -------------------------
+    // --- UTILITIES ---
 
     const formatValue = (key: string, value: any) => {
         if (key.toLowerCase().includes("date") || key.toLowerCase().includes("returndate") || key.toLowerCase().includes("movedate")) {
@@ -92,6 +125,81 @@ const Report = ({
     const excluded = [
         "Id", "id", "createdAt", "updatedAt", "photo", "document", "isReturned", "dbName", "isMovement", "isRelease", "userId", "districtId", "_id", "__v", "",
     ];
+
+    const pathName = usePathname();
+
+    // --- SORTING LOGIC ---
+
+    const requestSort = (key: string) => {
+        let direction: SortConfig['direction'] = 'ascending';
+        if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+            direction = 'descending';
+        } else if (sortConfig.key === key && sortConfig.direction === 'descending') {
+            // Clicking descending a second time resets the sort
+            setSortConfig({ key: '', direction: 'descending' });
+            return;
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const sortedData = useMemo(() => {
+        let sortableItems = [...data];
+        if (sortConfig.key) {
+            sortableItems.sort((a, b) => {
+                const aValue = a[sortConfig.key];
+                const bValue = b[sortConfig.key];
+
+                let comparison = 0;
+
+                // Simple date comparison for known date keys
+                if (sortConfig.key.toLowerCase().includes("date") || sortConfig.key.toLowerCase().includes("returndate") || sortConfig.key.toLowerCase().includes("movedate")) {
+                    const dateA = aValue ? new Date(aValue).getTime() : 0;
+                    const dateB = bValue ? new Date(bValue).getTime() : 0;
+                    comparison = dateA - dateB;
+                }
+                // Default string/number comparison
+                else if (typeof aValue === 'string' && typeof bValue === 'string') {
+                    comparison = aValue.localeCompare(bValue);
+                } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+                    comparison = aValue - bValue;
+                }
+
+                // If comparison is 0, try to ensure descending by a fixed field, like a primary ID, for stability
+                if (comparison === 0) {
+                    // Use 'id' for stable sort when primary sort fields are equal
+                    const idA = a.id || 0;
+                    const idB = b.id || 0;
+                    comparison = idA - idB;
+                }
+
+                return sortConfig.direction === 'ascending' ? comparison : comparison * -1;
+            });
+        }
+        return sortableItems;
+    }, [data, sortConfig]);
+
+    // --- PAGINATION LOGIC ---
+    const totalPages = Math.ceil(sortedData.length / entriesPerPage);
+    const indexOfLastEntry = currentPage * entriesPerPage;
+    const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+
+    const currentEntries = useMemo(() => {
+        // Use sortedData instead of original data
+        return sortedData.slice(indexOfFirstEntry, indexOfLastEntry);
+    }, [sortedData, indexOfFirstEntry, indexOfLastEntry]);
+
+    const paginate = (pageNumber: number) => {
+        if (pageNumber < 1 || pageNumber > totalPages) return;
+        setCurrentPage(pageNumber);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Reset page to 1 if entriesPerPage, data, or sortConfig changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [data, entriesPerPage, sortConfig]);
+
+    // --- ACTIONS ---
 
     const toggleSelect = (id: string) => {
         setSelectedIds((prev) =>
@@ -118,13 +226,14 @@ const Report = ({
     };
 
     const handleGenerateBarcodePDF = async () => {
+        // Use sortedData or original data based on preference, here we use original data via selectedIds
         const selectedData = data.filter((item) => selectedIds.includes(item.id));
 
         if (selectedData.length === 0) {
             toast.error("No entries selected");
             return;
         }
-        let dbName = pathName.includes("entry-report") ? "m" : "s"; // Simplified check
+        let dbName = pathName.includes("entry-report") ? "m" : "s";
 
         await generateBarcodePDF(selectedData, dbName);
     };
@@ -173,12 +282,11 @@ const Report = ({
 
         let formattedValue = formatValue(key, value);
 
-        // ❌ Removed: CONDITIONAL FONT CONVERSION LOGIC
-        // if (kurtidevKeys.includes(key)) {
-        //     if (!isLikelyKurtidev(formattedValue)) {
-        //         formattedValue = convertUnicodeToKurtidev(formattedValue);
-        //     }
-        // }
+        if (isKurtidevEnabled && kurtidevKeys.includes(key)) {
+            if (formattedValue && formattedValue !== "-" && !isLikelyKurtidev(formattedValue)) {
+                formattedValue = convertUnicodeToKurtidev(formattedValue);
+            }
+        }
         return formattedValue;
     };
 
@@ -211,14 +319,11 @@ const Report = ({
     };
 
     const handleSelectAll = () => {
-        // Get the IDs of the entries currently visible on the page
         const currentEntryIds = currentEntries.map((item) => item.id);
 
         if (selectAll) {
-            // Deselect all entries on the current page
             setSelectedIds((prev) => prev.filter((id) => !currentEntryIds.includes(id)));
         } else {
-            // Select all entries on the current page, ensuring no duplicates
             setSelectedIds((prev) => [
                 ...prev.filter((id) => !currentEntryIds.includes(id)),
                 ...currentEntryIds,
@@ -237,7 +342,6 @@ const Report = ({
         }
     }, [selectedIds, currentEntries]);
 
-    // ❌ Removed: const isKurtidevCell = (key: string) => kurtidevKeys.includes(key);
 
     const renderPaginationControls = () => {
         if (totalPages <= 1) return null;
@@ -313,17 +417,72 @@ const Report = ({
                         {indexOfFirstEntry + 1}
                     </span> to
                     <span className="font-bold mx-1 ">
-                        {Math.min(indexOfLastEntry, data.length)}
+                        {Math.min(indexOfLastEntry, sortedData.length)}
                     </span>
                     of
                     <span className="font-bold mx-1 ">
 
-                        {data.length}
+                        {sortedData.length}
                     </span> entries
                 </div>
             </div>
         );
     };
+
+    const KurtidevToggle = () => (
+        <Button
+            onClick={() => setIsKurtidevEnabled(prev => {
+                const newState = !prev;
+                toast.success(newState ? "Kurtidev Font Enabled" : "Kurtidev Font Disabled");
+                return newState;
+            })}
+            variant={isKurtidevEnabled ? "default" : "outline"}
+            className={isKurtidevEnabled ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-700 hover:bg-gray-600 text-white"}
+        >
+            {isKurtidevEnabled ? "Kurtidev: ON 🇮🇳" : "Kurtidev: OFF"}
+        </Button>
+    );
+
+    const getSortIndicator = (key: string) => {
+        if (sortConfig.key !== key) {
+            return null;
+        }
+        if (sortConfig.direction === 'ascending') {
+            return <ChevronUp className="w-4 h-4 ml-1" />;
+        }
+        return <ChevronDown className="w-4 h-4 ml-1" />;
+    };
+
+    // Determine the keys to display in the header
+    const headerKeysToRender = useMemo(() => {
+        // Find the actual database key for each exportable header
+        const mappedKeys = Object.entries(exportMap).map(([headerName, dbKey]) => ({
+            header: headerName,
+            key: dbKey,
+        }));
+
+        // Include other non-excluded keys if headers prop is not used
+        if (!headers) {
+            const extraKeys = orderedKeys
+                .filter(key => !excluded.includes(key) && !Object.values(exportMap).includes(key))
+                .map(key => ({
+                    header: key === "photoUrl" ? "Photo" : key === "documentUrl" ? "Document" : key,
+                    key: key,
+                }));
+            return [...mappedKeys, ...extraKeys];
+        }
+
+        // If 'headers' prop is provided, map them back to database keys if possible
+        return headers.map(header => {
+            const foundKey = orderedKeys.find(key => key.toLowerCase() === header.replace(/\s/g, '').toLowerCase() || header.toLowerCase().includes(key.toLowerCase()));
+            return {
+                header: header,
+                key: foundKey || (header === "ID" ? "id" : header),
+            };
+        }).filter(item => !!item.key);
+
+    }, [headers]);
+
 
     return (
         <div className="p-4 relative ">
@@ -345,7 +504,8 @@ const Report = ({
                         />
                     </div>
                 )}
-                <div className="flex gap-4">
+                <div className="flex gap-4 items-center">
+                    <KurtidevToggle />
                     {onImportClick && <Button onClick={onImportClick}>Import</Button>}
                     <Button onClick={handleExport}>Export Selected</Button>
                     <Button onClick={handleDeleteSelected} variant="destructive">
@@ -375,38 +535,27 @@ const Report = ({
                                     </div>
                                 </th>
                                 <th className="px-4 py-2 text-left capitalize">Sr. No.</th>
-                                {headers && headers.map((header) => (
-                                    <th key={header} className="px-4 py-2 text-left capitalize">
-                                        {header}
+                                {/* ✅ MODIFIED: Render headers and make them clickable for sorting */}
+                                {headerKeysToRender.map((item) => (
+                                    <th
+                                        key={item.key}
+                                        className="px-4 py-2 text-left capitalize cursor-pointer hover:bg-gray-600/50 transition duration-150"
+                                        onClick={() => requestSort(item.key)}
+                                    >
+                                        <div className="flex items-center">
+                                            {item.header}
+                                            {getSortIndicator(item.key)}
+                                        </div>
                                     </th>
                                 ))}
-                                {!headers && Object.keys(exportMap).map((key) => (
-                                    <th key={key} className="px-4 py-2 text-left capitalize">
-                                        {key}
-                                    </th>
-                                ))}
-                                {!headers && orderedKeys
-                                    .filter((key) => !excluded.includes(key) && !Object.values(exportMap).includes(key))
-                                    .map((key) => (
-                                        <th key={key} className="px-4 py-2 text-left capitalize">
-                                            {key === "photoUrl" ? "Photo" : key === "documentUrl" ? "Document" : key}
-                                        </th>
-                                    ))}
                             </tr>
                         </thead>
                         <tbody className="bg-white/90 text-black">
-                            {/* Rendering ONLY the entries for the current page */}
                             {currentEntries.map((item, index) => {
-                                const actualSrNo = indexOfFirstEntry + index + 1; // Calculate global index
+                                const actualSrNo = indexOfFirstEntry + index + 1;
 
-                                // Determine keys to display (prioritizing the 'headers' prop)
-                                const keysToRender = headers
-                                    ? headers.map(header => {
-                                        // Find the corresponding database key based on the header text
-                                        const foundKey = orderedKeys.find(key => key.toLowerCase() === header.replace(/\s/g, '').toLowerCase() || header.toLowerCase().includes(key.toLowerCase()));
-                                        return foundKey || (header === "ID" ? "id" : header);
-                                    }).filter(key => !!key)
-                                    : Object.keys(item).filter(key => !excluded.includes(key));
+                                // Determine keys to display (using the logic from headerKeysToRender)
+                                const keysToRender = headerKeysToRender.map(h => h.key);
 
                                 return (
                                     <tr
@@ -429,7 +578,7 @@ const Report = ({
                                         {keysToRender.map((finalKey) => (
                                             <td
                                                 key={finalKey}
-                                                className={`px-4 border border-black py-2`} // ❌ Removed: ${isKurtidevCell(finalKey) ? 'font-kurtidev' : ''}
+                                                className={`px-4 border border-black py-2 ${isKurtidevEnabled && isKurtidevCell(finalKey) ? 'font-kurtidev' : ''}`}
                                             >
                                                 {renderCellContent(finalKey, item[finalKey])}
                                             </td>

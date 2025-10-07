@@ -113,7 +113,7 @@ const Page = () => {
                 default: // 'all' or default view
                     dataToShow = vehicles;
                     // NOTE: 'I O Name' is not explicitly in the interface, check if it's correct.
-                    headers = ["FIR No", "Sr No", "underSection", "description", "vehicleType", "Case Property", "GD No", "GD Date", "Year", "status", "Police Station", "colour", "registrationNo", "seizedBy"];
+                    headers = ["FIR No", "Sr No", "underSection", "description", "vehicleType", "Case Property", "GD No", "GD Date", "Year", "status", "Police Station", "colour", "registrationNo", "seizedBy", ""];
                     break;
             }
 
