@@ -32,6 +32,7 @@ const Page: React.FC = () => {
     // State for Search and Search Results
     const [type, setType] = useState<string>("");
     const [searchFirNo, setSearchFirNo] = useState("");
+    console.log(searchFirNo);
     const [searchSrNo, setSearchSrNo] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');

@@ -40,7 +40,8 @@ export const GET = async (req: NextRequest) => {
             },
             where: {
                 wineType: 'Angrezi',
-                userId: userId, // optional if filtering by user
+                userId: userId,
+                // optional if filtering by user
             },
         });
         const totalWine = await prisma.malkhanaEntry.aggregate({
