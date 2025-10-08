@@ -6,7 +6,7 @@ import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
 import { useDistrictStore } from "@/store/districtStore";
-import { ArrowDownNarrowWide, Banknote, Bomb, Car, Megaphone, Menu, Settings, Shield, Shredder, User } from "lucide-react";
+import { ArrowDownNarrowWide, Banknote, Car, Megaphone, Menu, Settings, Shield, Shredder, User, Wine } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
@@ -97,11 +97,28 @@ const Page = () => {
         },
         {
             title: t("totalWine"),
-            icon: <Bomb size={40} />,
+            icon: <Wine size={40} />,
             bgColour: "bg-purple-700",
 
             // I will fix it leter
-            value: `${0} ${t("unitKG")}`,
+            value: `${0} ${t("unitLtr")}`,
+        },
+
+        {
+            title: t("totalDesiWine"),
+            icon: <Wine size={40} />,
+            bgColour: "bg-purple-700",
+
+            // I will fix it leter
+            value: `${data?.desi?._sum.wine || 0} ${t("unitLtr")}`,
+        },
+        {
+            title: t("totalEnglishWine"),
+            icon: <Wine size={40} />,
+            bgColour: "bg-amber-700",
+
+            // I will fix it leter
+            value: `${data?.angrezi?._sum.wine || 0} ${t("unitLtr")}`,
         },
         {
             title: t("totalCash"),

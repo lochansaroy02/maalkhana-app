@@ -375,12 +375,12 @@ const Page = () => {
                             </div>
                         )}
                     </div>
-                    {/* <div className={`w-full ml-6 gap-6 
-                        ${dropdownSelection === 'wine' ? "hidden" : "hidden"} items-center`}>
+                    <div className={`w-full ml-6 gap-6 
+                        ${dropdownSelection === 'wine' ? "" : "hidden"} items-center`}>
                         <DropDown label={t(`${baseKey}.wineSection.typeLabel`)} selectedValue={wineType} options={wineTypeOptions} handleSelect={setWineType} />
-                    </div> */}
+                    </div>
                     <div className={`w-full ml-6 gap-6 ${dropdownSelection === 'wine' ? "flex" : "hidden"} items-center`}>
-                        <label className='text-blue-100'>{`Explosive`}</label>
+                        <label className='text-blue-100'>{`Total ${wineType}`}</label>
                         <Input type='number' value={wine} onChange={(e) => setWine(Number(e.target.value))} />
                     </div>
                     <div className={`w-3/4 ml-18 ${dropdownSelection === 'cash' ? "flex flex-col" : "hidden"}`}>
