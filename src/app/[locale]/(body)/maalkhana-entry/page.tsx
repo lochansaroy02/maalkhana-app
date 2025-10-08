@@ -31,6 +31,7 @@ const Page = () => {
 
     const [firData, setFirData] = useState<any[]>([]);
     const [photoUrl, SetPhotoUrl] = useState("");
+    const [currentEntryType, setCurrentEntryType] = useState("");
     const [dropdownSelection, setDropdownSelection] = useState('');
     const [otherStatus, setOtherStatus] = useState('');
     const [entryType, setEntryType] = useState('');
@@ -137,6 +138,7 @@ const Page = () => {
         setCash(data.cash || 0);
         setWineType(data.wineType || '');
         const entryTypeKey = data.entryTypeKey || '';
+        setCurrentEntryType(data.entryType)
         setDropdownSelection(entryTypeKey);
         if (entryTypeKey === 'other') {
             setEntryType(data.entryType);
@@ -385,9 +387,24 @@ const Page = () => {
                         <label className='text-blue-100'>{t(`${baseKey}.cashSection.label`)}</label>
                         <Input className='text-blue-100' type='number' value={cash} onChange={(e) => setCash(Number(e.target.value))} />
                     </div>
+
+                </div>
+                <div className='my-2 '>
+                    <h1 className='text-blue-100/60'>
+                        Current Status : <span className='text-blue-100'>
+                            {status}
+                        </span>
+                    </h1>
+                    <h1 className='text-blue-100/60'>
+                        Current Entry Type : <span className='text-blue-100'>
+                            {currentEntryType}
+                        </span>
+                    </h1>
                 </div>
 
+
                 <div className='grid lg:grid-cols-2 gap-2'>
+
                     {fields.map(field => {
                         if (field.name === 'firNo' && dropdownSelection === "unclaimed") return null;
                         if (field.name === 'srNo') {

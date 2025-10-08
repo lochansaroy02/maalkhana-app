@@ -13,22 +13,19 @@ import { Button } from "./ui/button";
 import DropDown from "./ui/DropDown";
 
 const Header = () => {
-
-
-
-
-    const { createBackup } = useBackupStore()
-
-    const { getAllUsers, setUserId, userId } = useDistrictStore()
+    const { createBackup } = useBackupStore();
+    const { getAllUsers, setUserId, userId } = useDistrictStore();
     const { isLoggedIn, logout, user } = useAuthStore();
     const router = useRouter();
     const pathname = usePathname();
     const [hasHydrated, setHasHydrated] = useState(false);
     const [userData, setUserData] = useState([]);
-    const [userOptions, setUserOptions] = useState<any[]>([])
-    const [selectedUser, setselectedUser] = useState("")
-    const [isBackingUp, setIsBackingUp] = useState(false)
+    const [userOptions, setUserOptions] = useState<any[]>([]);
+    const [selectedUser, setselectedUser] = useState("");
+    const [isBackingUp, setIsBackingUp] = useState(false);
     const { toggleOpen } = useSidebarStore();
+    // 💡 New state for online status
+    const [isOnline, setIsOnline] = useState(true);
 
     const handleLogout = () => {
         logout();
@@ -43,17 +40,11 @@ const Header = () => {
         }
     };
 
-
-
-
     useEffect(() => {
         if (user?.role === 'district') {
             getUserData()
         }
     }, [user])
-
-
-
 
     useEffect(() => {
         if (hasHydrated && !isLoggedIn) {
@@ -61,19 +52,34 @@ const Header = () => {
         }
     }, [hasHydrated, isLoggedIn, router]);
 
-
     useEffect(() => {
         setHasHydrated(true);
+    }, []);
+
+    // 💡 Effect to check and manage online status
+    useEffect(() => {
+        // Initial check
+        setIsOnline(window.navigator.onLine);
+
+        // Handlers for online/offline events
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        // Add event listeners
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        // Cleanup: remove event listeners when component unmounts
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
     }, []);
 
 
     if (!hasHydrated) {
         return null;
     }
-
-
-
-
 
     const handleBackup = async () => {
         setIsBackingUp(true); // Start loader
@@ -93,12 +99,9 @@ const Header = () => {
         }
     }
 
-
-
     const handleClick = () => {
         toggleOpen();
     };
-
 
     // remove first segment if it is a locale (en or hi)
     const getPathWithoutLocale = () => {
@@ -121,10 +124,15 @@ const Header = () => {
                     <Menu className="text-blue-100" />
                 </button>
 
-                <div className="">
+                <div className="flex items-center gap-2"> {/* 💡 Added flex container for title and dot */}
                     <h1 className="lg:text-xl text-base font-bold text-blue-300">
                         Digital Malkhana
                     </h1>
+                    {/* 💡 Online Status Dot */}
+                    <div
+                        className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-500'}`}
+                        title={isOnline ? 'Online' : 'Offline'}
+                    />
                 </div>
 
                 <div className="flex w-1/2 gap-4 px-2 items-center">
@@ -184,9 +192,3 @@ const Header = () => {
 };
 
 export default Header;
-
-
-
-
-
-

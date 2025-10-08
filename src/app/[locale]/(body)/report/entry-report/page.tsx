@@ -119,7 +119,8 @@ const Page = () => {
                     break;
                 case "release":
                     dataToShow = entries.filter(entry => entry.isRelease);
-                    headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Court Name", "Court No", "Box No", "Release Item Name", "Father's Name", "Address", "Receiver Name"];
+                    console.log(dataToShow);
+                    headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Court Name", "Court No", "Box No", "Release Date", "Release Item Name", "Father's Name", "Address", "Receiver Name"];
                     break;
                 case "destroy":
                     dataToShow = entries.filter(entry => entry.status?.toLowerCase() === 'destroy');

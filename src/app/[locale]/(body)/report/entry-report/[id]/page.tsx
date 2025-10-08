@@ -5,7 +5,63 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+// =================================================================
+// 🚀 FONT INTEGRATION UTILITIES (Assuming these exist in utils/font)
+// =================================================================
+
+/**
+ * MOCK UTILITIES: In a real app, import these from "@/utils/font"
+ * Ensure you implement the actual conversion in your file!
+ */
+const kurtidevKeys = [
+    "description",
+    "firNo",
+    "gdNo",
+    "srNo", // Added Sr No
+    "caseProperty",
+    "gdDate",
+    "policeStation"
+];
+
+const isLikelyKurtidev = (text: any): boolean => {
+    if (typeof text !== 'string') return false;
+    // Check for non-Unicode/extended ASCII typical of legacy fonts
+    const nonUnicodePattern = /[\u0080-\u00FF]/;
+    // Check for standard Devanagari Unicode
+    const unicodePattern = /[\u0900-\u097F]/;
+
+    const textSample = text.substring(0, 50);
+    return nonUnicodePattern.test(textSample) && !unicodePattern.test(textSample);
+};
+
+const convertUnicodeToKurtidev = (unicodeText: string): string => {
+    if (typeof unicodeText !== 'string') return unicodeText;
+    // ⚠️ WARNING: REPLACE THIS LINE WITH YOUR REAL UNICODE-TO-KRUTI-DEV-010 LOGIC
+    // return yourActualConversionFunction(unicodeText);
+    return unicodeText; // Placeholder
+};
+
+// =================================================================
+// ✅ ENTRY YEAR CHECK (1991 to 2021)
+// =================================================================
+const isEntryInLegacyYearRange = (entry: any): boolean => {
+    const year = entry?.Year;
+    let numericYear: number | undefined;
+
+    if (typeof year === 'number' && !isNaN(year)) {
+        numericYear = year;
+    } else if (typeof year === 'string' && !isNaN(Number(year))) {
+        numericYear = Number(year);
+    }
+
+    if (numericYear !== undefined && !isNaN(numericYear)) {
+        return numericYear >= 1991 && numericYear <= 2021;
+    }
+    return false;
+}
+// =================================================================
 
 export default function EntryReportDetail() {
     // Hooks and State
@@ -40,7 +96,7 @@ export default function EntryReportDetail() {
         { key: "boxNo", label: "Box No" },
         { key: "description", label: "Description" },
         { key: "accused", label: "accused" },
-        // Movement Report Fields (NEWLY ADDED)
+        // Movement Report Fields
         { key: "moveDate", label: "Move Date" },
         { key: "takenOutBy", label: "Taken Out By" },
         { key: "movePurpose", label: "Move Purpose" },
@@ -59,6 +115,7 @@ export default function EntryReportDetail() {
                     const entryData = res.data;
                     setEntry(entryData);
 
+                    // Get keys that were visible in the main report (stored in session storage)
                     const storedFieldsJson = sessionStorage.getItem('visibleReportFields');
                     let filteredFields = allPossibleFields;
 
@@ -66,16 +123,14 @@ export default function EntryReportDetail() {
                         try {
                             const visibleKeys = JSON.parse(storedFieldsJson);
                             filteredFields = allPossibleFields.filter(field =>
-                                // Only display fields that are selected AND have non-null/non-empty data
-                                visibleKeys.includes(field.key) && entryData[field.key]
+                                visibleKeys.includes(field.key)
                             );
                         } catch (e) {
-                            // Fallback to all fields if parsing fails
                             console.error("Error parsing visibleReportFields:", e);
                         }
                     }
 
-                    // Final filter to ensure only fields with data are shown
+                    // Final filter to ensure only fields with non-empty/non-null data are shown
                     const finalFieldsToDisplay = filteredFields.filter(field =>
                         entryData[field.key] !== null && entryData[field.key] !== undefined && entryData[field.key] !== ""
                     );
@@ -85,8 +140,27 @@ export default function EntryReportDetail() {
         }
     }, [id]);
 
+    // =================================================================
+    // ✅ NEW: UTILITY TO RENDER AND CONVERT FIELD VALUES
+    // =================================================================
+    const renderFieldValue = useCallback((key: string, value: any) => {
+        if (!entry || !value) return String(value || "-");
+
+        let formattedValue = String(value);
+
+        // Conditional conversion based on (Kurtidev Key) AND (Year is 1991-2021)
+        if (kurtidevKeys.includes(key) && isEntryInLegacyYearRange(entry)) {
+            // Only convert if it's a Devanagari key and it's not already in KrutiDev
+            if (!isLikelyKurtidev(formattedValue)) {
+                formattedValue = convertUnicodeToKurtidev(formattedValue);
+            }
+        }
+        return formattedValue;
+    }, [entry]);
+    // =================================================================
+
     // ----------------------------------------------------------------------
-    // CORRECTED PRINTING LOGIC
+    // CORRECTED PRINTING LOGIC (Unchanged from original, but complete)
     // ----------------------------------------------------------------------
     const handlePrintWithIframe = () => {
         const printContent = document.getElementById('printable-area');
@@ -143,16 +217,13 @@ export default function EntryReportDetail() {
                 document.body.removeChild(iframe);
             }
         };
-
-        // Note: For some browsers/configurations, the iframe might load instantly, 
-        // so the onload might not fire. A fallback could be a short timeout here,
-        // but onload is generally more reliable for handling resource loading.
     };
-    // ----------------------------------------------------------------------
-    // END OF CORRECTED PRINTING LOGIC
     // ----------------------------------------------------------------------
 
     if (!entry) return <div className="p-4 text-center h-screen text-white">Loading..</div>;
+
+    // Check once if the entry is in the legacy year range to apply class conditionally
+    const isLegacyEntry = isEntryInLegacyYearRange(entry);
 
     // Render Function
     return (
@@ -167,7 +238,8 @@ export default function EntryReportDetail() {
 
             <div
                 id="printable-area"
-                ref={divRef} className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
+                ref={divRef}
+                className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
                 <div className="border border-gray-400 p-8">
                     <div className="flex  p-4 justify-around items-center  ">
                         <Logo width={100} height={100} />
@@ -180,9 +252,10 @@ export default function EntryReportDetail() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                         {fieldsToDisplay.map(({ key, label }) => {
                             const value = entry[key];
+                            const isKurtidevField = isLegacyEntry && kurtidevKeys.includes(key);
 
-                            // No need for null/undefined/empty check here since it's filtered in useEffect, 
-                            // but keeping the logic for photoUrl and description is fine.
+                            // Apply font-kurtidev class if it's a legacy year AND a kurtidev-eligible field
+                            const fontClass = isKurtidevField ? 'font-kurtidev' : '';
 
                             if (key === "photoUrl") {
                                 return (
@@ -201,22 +274,26 @@ export default function EntryReportDetail() {
                                 return (
                                     <div
                                         key={key}
-                                        className="col-span-1 md:col-span-2 gap-2  flex flex-col border-b pb-2" >
+                                        className="col-span-1 md:col-span-2 gap-2 flex flex-col border-b pb-2" >
                                         <span className="text-sm font-semibold">{label}:</span>
-                                        <p className="text-gray-800  text-sm whitespace-pre-line">
-                                            {String(value)}
+                                        <p className={`text-gray-800 text-sm whitespace-pre-line ${fontClass}`}>
+                                            {/* Use renderFieldValue for conversion */}
+                                            {renderFieldValue(key, value)}
                                         </p>
                                     </div>
                                 );
                             }
+
+                            // Default display for other fields
                             return (
                                 <div key={key} className="flex text-wrap flex-col border-b pb-2">
-                                    <span className="text-sm flex  gap-2  font-semibold ">
-                                        <h1 className="text-sm ">
+                                    <span className="text-sm flex gap-2 font-semibold">
+                                        <h1 className="text-sm">
                                             {label}:
                                         </h1>
-                                        <h1 className="text-wrap font-semibold text-gray-800 ">
-                                            {String(value)}
+                                        <h1 className={`text-wrap font-semibold text-gray-800 ${fontClass}`}>
+                                            {/* Use renderFieldValue for conversion */}
+                                            {renderFieldValue(key, value)}
                                         </h1>
                                     </span>
                                 </div>

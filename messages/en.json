@@ -69,7 +69,7 @@
             },
             "fields": {
                 "firNo": "FIR No",
-                "srNo": "Sr. No / Mud No.",
+                "srNo": "Sr. No /mad No.",
                 "caseProperty": "Case Property",
                 "gdNo": "GD No",
                 "gdDate": "GD Date",

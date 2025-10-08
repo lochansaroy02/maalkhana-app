@@ -49,7 +49,7 @@ export const GET = async (req: NextRequest) => {
                 wine: true,
             },
             where: {
-                userId: userId, // optional if filtering by user
+                userId: userId,
             },
         });
 

@@ -12,9 +12,8 @@ import { useEffect } from "react";
 
 const Page = () => {
     const { fetchTotalEntries, data, fetchAdminEntries } = useTotalEntriesStore();
-    const { user, } = useAuthStore();
+    const { user } = useAuthStore();
     const { userId } = useDistrictStore()
-
 
     useEffect(() => {
         if (user?.role === "policeStation") {
@@ -44,6 +43,7 @@ const Page = () => {
             icon: <Menu size={40} />,
             bgColour: "bg-cyan-500",
             value: data?.breakdown?.totalEntries || 0,
+            url: "/report/entry-report"
         },
         {
             title: t("totalMalkhanaEntry"),
@@ -79,6 +79,7 @@ const Page = () => {
             icon: <Megaphone size={40} />,
             bgColour: "bg-purple-500",
             value: data?.breakdown?.nilami || 0,
+            url: "/report/entry-report?reportType=nilami"
         },
         {
             title: t("totalDestroyedItems"),
@@ -94,14 +95,13 @@ const Page = () => {
             value: data?.breakdown?.totalReturn || 0,
             url: "/report/entry-report?reportType=return"
         },
-
-
-
         {
             title: t("totalWine"),
             icon: <Bomb size={40} />,
             bgColour: "bg-purple-700",
-            value: `${data?.breakdown?.totalWine?._sum?.wine || 0} ${t("unitKG")}`,
+
+            // I will fix it leter
+            value: `${0} ${t("unitKG")}`,
         },
         {
             title: t("totalCash"),
@@ -113,7 +113,7 @@ const Page = () => {
             title: t("totalYellowItem"),
             icon: <Banknote size={40} />,
             bgColour: "bg-yellow-500",
-            value: ` ₹${(data?.breakdown?.totalYellowItems._sum.yellowItemPrice || 0).toLocaleString('en-IN')}`,
+            value: ` ₹${(data?.breakdown?.totalYellowItems._sum.yellowItemPrice / 2 || 0).toLocaleString('en-IN')}`,
         },
     ];
 

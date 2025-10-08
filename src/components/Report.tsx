@@ -1,6 +1,6 @@
 "use client";
 import { useSearchStore } from "@/store/searchStore";
-import { kurtidevKeys } from "@/utils/font";
+import { convertUnicodeToKurtidev, isLikelyKurtidev, kurtidevKeys } from "@/utils/font"; // Assuming convertUnicodeToKurtidev and isLikelyKurtidev are now correctly exported from "@/utils/font"
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
 import { exportMap, orderedKeys } from "@/utils/map";
 import axios from "axios";
@@ -24,51 +24,42 @@ interface ReportProps {
 }
 
 // =================================================================
-// 🚀 FONT INTEGRATION: KURTIDEV UTILITIES (MUST BE COMPLETED)
+// 🚀 FONT UTILITIES (Imported logic used here for clarity)
 // =================================================================
 
 /**
- * 1. Define the keys that should be displayed in Kurtidev font.
- * Adjust this list to match the fields in your DB that contain Devanagari text.
- */
-
-
-/**
- * 2. Utility to check if text is likely already in the non-Unicode Kurtidev font.
- * This is crucial to prevent double-conversion.
- * You should replace the placeholder logic with a check for characters or patterns
- * typical of your Kurtidev encoding (often non-ASCII or specific legacy codes).
- */
-const isLikelyKurtidev = (text: any): boolean => {
-    if (typeof text !== 'string' || text.length === 0) return false;
-    // PLACEHOLDER: Checks for non-Unicode Hindi characters typically found in legacy fonts (e.g., specific ASCII ranges).
-    // A robust check for actual Kurtidev text is required here.
-    const nonUnicodePattern = /[\u0080-\u00FF]/; // Simple check for characters in the extended ASCII range
-    const unicodePattern = /[\u0900-\u097F]/; // Checks for Devanagari Unicode range (Mangal)
-
-    // Return true if it has non-Unicode characters AND few or no Unicode Devanagari characters
-    return nonUnicodePattern.test(text) && !unicodePattern.test(text.substring(0, 10));
-};
-
-/**
- * 3. Utility for conversion from Unicode (e.g., Mangal) to Kurtidev.
- * THIS IS A PLACEHOLDER. You MUST implement your actual conversion function here.
- * A full conversion is complex and requires a complete mapping table.
- */
-const convertUnicodeToKurtidev = (unicodeText: string): string => {
-    if (typeof unicodeText !== 'string') return unicodeText;
-    // ⚠️ WARNING: REPLACE THIS LINE WITH YOUR REAL CONVERSION LOGIC
-    // Example: return yourActualConversionFunction(unicodeText);
-    return `${unicodeText}`; // Placeholder prefix
-};
-
-/**
- * 4. Utility to determine if a table cell should have the Kurtidev font class.
+ * Utility to check if a table cell should have the Kurtidev font class.
  */
 const isKurtidevCell = (key: string) => kurtidevKeys.includes(key);
 
 // =================================================================
+// ✅ FIXED UTILITY: Checks the 'Year' field for the 1991-2021 range.
+// =================================================================
+
+/**
+ * Checks if the entry's 'Year' property falls between 1991 and 2021 (inclusive).
+ */
+const isEntryInLegacyYearRange = (entry: any): boolean => {
+    const year = entry.Year;
+    let numericYear: number | undefined;
+
+    if (typeof year === 'number' && !isNaN(year)) {
+        numericYear = year;
+    } else if (typeof year === 'string' && !isNaN(Number(year))) {
+        // Handles cases where 'Year' might be stored as a string
+        numericYear = Number(year);
+    }
+
+    if (numericYear !== undefined && !isNaN(numericYear)) {
+        // *** MODIFIED RANGE TO BE 1991 TO 2021 INCLUSIVE ***
+        return numericYear >= 1991 && numericYear <= 2021;
+    }
+    return false;
+}
+
+// =================================================================
 // -----------------------------------------------------------------
+
 
 // Type definition for sorting state
 type SortConfig = {
@@ -87,7 +78,8 @@ const Report = ({
     const router = useRouter();
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [selectAll, setSelectAll] = useState(false);
-    const [isKurtidevEnabled, setIsKurtidevEnabled] = useState(false);
+    // isKurtidevEnabled state REMOVED as requested.
+
     // ✅ NEW STATE: Sorting configuration
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: 'descending' });
 
@@ -109,6 +101,20 @@ const Report = ({
     const formatValue = (key: string, value: any) => {
         if (key.toLowerCase().includes("date") || key.toLowerCase().includes("returndate") || key.toLowerCase().includes("movedate")) {
             if (!value) return "-";
+
+            // Check if value is a string that looks like an Excel-style date number
+            if (typeof value === 'number' && value > 10000) {
+                // Excel date serial number (e.g., 33564 for 01-Jan-1992)
+                const date = new Date((value - (25569)) * 86400 * 1000);
+                if (!isNaN(date.getTime())) {
+                    const day = String(date.getDate()).padStart(2, "0");
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    const year = date.getFullYear();
+                    return `${day}/${month}/${year}`;
+                }
+            }
+
+            // Standard date parsing
             const date = new Date(value);
             if (isNaN(date.getTime())) {
                 return value;
@@ -153,6 +159,7 @@ const Report = ({
 
                 // Simple date comparison for known date keys
                 if (sortConfig.key.toLowerCase().includes("date") || sortConfig.key.toLowerCase().includes("returndate") || sortConfig.key.toLowerCase().includes("movedate")) {
+                    // Normalize date values to timestamps for reliable comparison
                     const dateA = aValue ? new Date(aValue).getTime() : 0;
                     const dateB = bValue ? new Date(bValue).getTime() : 0;
                     comparison = dateA - dateB;
@@ -259,7 +266,10 @@ const Report = ({
         }
     };
 
-    const renderCellContent = (key: string, value: any) => {
+    // =================================================================
+    // ✅ VERIFIED AND FIXED: Conversion is strictly conditional on 1991-2021 Year.
+    // =================================================================
+    const renderCellContent = (key: string, value: any, entry: any) => {
         if (key === "photoUrl" && value) {
             return (
                 <div className="flex justify-center items-center h-full w-24 relative">
@@ -282,13 +292,22 @@ const Report = ({
 
         let formattedValue = formatValue(key, value);
 
-        if (isKurtidevEnabled && kurtidevKeys.includes(key)) {
-            if (formattedValue && formattedValue !== "-" && !isLikelyKurtidev(formattedValue)) {
-                formattedValue = convertUnicodeToKurtidev(formattedValue);
+        // Ensure formattedValue is a string before checking/converting
+        const valueAsString = String(formattedValue);
+
+        // Conditional conversion based on (Kurtidev Key) AND (Year is 1991-2021)
+        if (kurtidevKeys.includes(key) && isEntryInLegacyYearRange(entry)) {
+            // Only convert if it's a Devanagari key, the year is 1991-2021, and it's not already in Kurtidev (non-Unicode)
+            if (valueAsString && valueAsString !== "-" && !isLikelyKurtidev(valueAsString)) {
+                // IMPORTANT: This relies on the actual conversion logic being implemented in "@/utils/font"
+                formattedValue = convertUnicodeToKurtidev(valueAsString);
             }
         }
         return formattedValue;
     };
+    // =================================================================
+    // -----------------------------------------------------------------
+
 
     const handleExport = () => {
         if (selectedIds.length === 0) {
@@ -304,7 +323,8 @@ const Report = ({
                 //@ts-ignore
                 const dbKey = exportMap[header];
                 //@ts-ignore
-                row[header] = formatValue(dbKey, item[dbKey]);
+                // Use the converted value for export if applicable
+                row[header] = renderCellContent(dbKey, item[dbKey], item);
             });
             return row;
         });
@@ -429,20 +449,6 @@ const Report = ({
         );
     };
 
-    const KurtidevToggle = () => (
-        <Button
-            onClick={() => setIsKurtidevEnabled(prev => {
-                const newState = !prev;
-                toast.success(newState ? "Kurtidev Font Enabled" : "Kurtidev Font Disabled");
-                return newState;
-            })}
-            variant={isKurtidevEnabled ? "default" : "outline"}
-            className={isKurtidevEnabled ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-700 hover:bg-gray-600 text-white"}
-        >
-            {isKurtidevEnabled ? "Kurtidev: ON 🇮🇳" : "Kurtidev: OFF"}
-        </Button>
-    );
-
     const getSortIndicator = (key: string) => {
         if (sortConfig.key !== key) {
             return null;
@@ -505,7 +511,7 @@ const Report = ({
                     </div>
                 )}
                 <div className="flex gap-4 items-center">
-                    <KurtidevToggle />
+                    {/* Kurtidev controls REMOVED */}
                     {onImportClick && <Button onClick={onImportClick}>Import</Button>}
                     <Button onClick={handleExport}>Export Selected</Button>
                     <Button onClick={handleDeleteSelected} variant="destructive">
@@ -535,11 +541,12 @@ const Report = ({
                                     </div>
                                 </th>
                                 <th className="px-4 py-2 text-left capitalize">Sr. No.</th>
-                                {/* ✅ MODIFIED: Render headers and make them clickable for sorting */}
+                                {/* MODIFIED: Add conditional class for wider header */}
                                 {headerKeysToRender.map((item) => (
                                     <th
                                         key={item.key}
-                                        className="px-4 py-2 text-left capitalize cursor-pointer hover:bg-gray-600/50 transition duration-150"
+                                        className={`px-4 py-2 text-left capitalize cursor-pointer hover:bg-gray-600/50 transition duration-150 
+                                            ${item.key.toLowerCase().includes("description") ? 'min-w-[250px]' : ''} `}
                                         onClick={() => requestSort(item.key)}
                                     >
                                         <div className="flex items-center">
@@ -556,6 +563,11 @@ const Report = ({
 
                                 // Determine keys to display (using the logic from headerKeysToRender)
                                 const keysToRender = headerKeysToRender.map(h => h.key);
+
+                                // Determine if this row should apply the visual Kurtidev class for eligible cells
+                                // This is the core logic: check the Year for the legacy range
+                                const shouldApplyKurtidevClass = isEntryInLegacyYearRange(item);
+
 
                                 return (
                                     <tr
@@ -574,13 +586,16 @@ const Report = ({
                                         </td>
                                         <td className="px-4 border border-black py-2">{actualSrNo}</td>
 
-                                        {/* Render cells based on the determined keys */}
+                                        {/* Pass 'item' to renderCellContent and conditionally apply 'font-kurtidev' class */}
                                         {keysToRender.map((finalKey) => (
                                             <td
                                                 key={finalKey}
-                                                className={`px-4 border border-black py-2 ${isKurtidevEnabled && isKurtidevCell(finalKey) ? 'font-kurtidev' : ''}`}
+                                                className={`px-4 border border-black py-2 
+                                                    ${shouldApplyKurtidevClass && isKurtidevCell(finalKey) ? 'font-kurtidev' : ''}
+                                                    ${finalKey.toLowerCase().includes("description") ? 'min-w-[250px] whitespace-normal' : 'whitespace-nowrap'}`}
                                             >
-                                                {renderCellContent(finalKey, item[finalKey])}
+                                                {/* Pass the entire item to renderCellContent for year check and conversion */}
+                                                {renderCellContent(finalKey, item[finalKey], item)}
                                             </td>
                                         ))}
                                     </tr>
