@@ -3,11 +3,12 @@ import { jsPDF } from "jspdf";
 
 /**
  * Generates a PDF document with barcodes arranged on A4 sheets.
- * The layout is designed to match standard A4 label paper (e.g., 40 labels per sheet).
+ * The layout is designed to match standa  rd A4 label paper (e.g., 40 labels per sheet).
  * @param {Array<Object>} entries - An array of objects, each containing data for a barcode.
+ * @param {string} [dbName] - The database name used in the barcode prefix if entry.dbName is missing.
  * @param {boolean} [drawGrid=true] - If true, draws a light gray border around each label for alignment.
  */
-export const generateBarcodePDF = async (entries: any, dbName: string | undefined, drawGrid = true,) => {
+export const generateBarcodePDF = async (entries: any, dbName: string, drawGrid = true,) => {
     // --- Page and Label Layout Configuration (A4 Dimensions: 210mm x 297mm) ---
     const LABELS_PER_ROW = 4;
     const LABELS_PER_COLUMN = 10;
@@ -48,9 +49,7 @@ export const generateBarcodePDF = async (entries: any, dbName: string | undefine
         const labelX = PAGE_MARGIN_LEFT + col * (LABEL_WIDTH + HORIZONTAL_GAP);
         const labelY = PAGE_MARGIN_TOP + row * (LABEL_HEIGHT + VERTICAL_GAP);
 
-        // --- NEW: Draw Sticker Grid for Alignment ---
-        // This draws a thin, light gray border around each label area,
-        // matching the physical sticker sheet layout.
+        // --- Draw Sticker Grid for Alignment ---
         if (drawGrid) {
             doc.setLineWidth(0.1); // Set a very thin line
             doc.setDrawColor(200, 200, 200); // Set a light gray color for the grid
@@ -63,12 +62,16 @@ export const generateBarcodePDF = async (entries: any, dbName: string | undefine
         const barcodeY = srNoY + 2;
         const firNoY = barcodeY + BARCODE_HEIGHT + 4;
 
+        // 1. Print SrNo
         doc.text(String(entry.srNo || ''), labelX + LABEL_WIDTH / 2, srNoY, { align: 'center' });
 
-
+        // 2. Generate Canvas for Barcode Image
         const canvas = document.createElement("canvas");
+
+        // Use the original firNo for the unique barcode value
         const barcodeValue = `${entry.dbName || dbName}-${entry.firNo || ''}-${entry.srNo || ''}`;
-        console.log(dbName, entry.firNo, entry.srNo);
+        console.log("Generating barcode for:", barcodeValue);
+
         JsBarcode(canvas, barcodeValue, {
             format: "CODE128",
             width: 2,
@@ -79,7 +82,13 @@ export const generateBarcodePDF = async (entries: any, dbName: string | undefine
         const imageData = canvas.toDataURL("image/png");
         doc.addImage(imageData, "PNG", barcodeX, barcodeY, BARCODE_WIDTH, BARCODE_HEIGHT);
 
-        doc.text(String(entry.firNo || ''), labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });
+        // 3. Print FirNo with replacement logic
+        // If entry.firNo contains '@', replace it with '/' for display only.
+        const originalFirNo = String(entry.firNo || '');
+        const firNo1 = originalFirNo.replace(/@/g, '/');
+        const displayFirNo = firNo1.replace(/]/g, ',');
+
+        doc.text(displayFirNo, labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });
     }
 
     // --- Save the Final PDF ---

@@ -5,7 +5,8 @@ export const kurtidevKeys = [
     "firNo",
     "caseProperty",
     "gdDate",
-    "policeStation"
+    "policeStation",
+    "vadiName"
 ];
 
 /**

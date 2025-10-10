@@ -115,7 +115,6 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                                 newEntry[key] = null;
                             } else {
                                 const parsedInt = parseInt(valueStr, 10);
-                                // Ensure it's a valid, non-floating-point integer, otherwise set to null
                                 newEntry[key] = isNaN(parsedInt) || String(parsedInt) !== valueStr ? null : parsedInt;
                             }
 
@@ -136,7 +135,7 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                 });
 
                 // Now, send the FIXED data (which is an array) to the API
-                console.log(fixedData);
+                console.log(validatedData);
                 const isSuccess = await addMaalkhanaEntry(fixedData);
 
                 if (isSuccess) {

@@ -310,7 +310,6 @@ const Page = () => {
             if (existingId && String(formData.srNo) === originalSrNo) {
                 response = await updateMalkhanaEntry(existingId, fullData);
 
-
                 if (response) {
                     toast.success(t(`${baseKey}.toasts.updateSuccess`));
                 }
@@ -375,12 +374,12 @@ const Page = () => {
                             </div>
                         )}
                     </div>
-                    <div className={`w-full ml-6 gap-6 
+                    {/* <div className={`w-full ml-6 gap-6 
                         ${dropdownSelection === 'wine' ? "" : "hidden"} items-center`}>
                         <DropDown label={t(`${baseKey}.wineSection.typeLabel`)} selectedValue={wineType} options={wineTypeOptions} handleSelect={setWineType} />
-                    </div>
+                    </div> */}
                     <div className={`w-full ml-6 gap-6 ${dropdownSelection === 'wine' ? "flex" : "hidden"} items-center`}>
-                        <label className='text-blue-100'>{`Total ${wineType}`}</label>
+                        <label className='text-blue-100'>{`Total Explosive `}</label>
                         <Input type='number' value={wine} onChange={(e) => setWine(Number(e.target.value))} />
                     </div>
                     <div className={`w-3/4 ml-18 ${dropdownSelection === 'cash' ? "flex flex-col" : "hidden"}`}>
@@ -480,7 +479,7 @@ const Page = () => {
                             <label className='text-nowrap text-blue-100' htmlFor="photo">{t(`${baseKey}.photoUpload.label`)}</label>
                             <input ref={photoRef} className='text-blue-100 rounded-xl glass-effect px-2 py-1' id="photo" type='file' onChange={handlePhotoChange} />
                         </div>
-                        <div className='bg-green-400 flex size-1/4 flex-col gap-4 relative'>
+                        <div className=' flex size-1/4 flex-col gap-4 relative'>
                             {photoUrl && <Button onClick={() => {
                                 SetPhotoUrl("")
                                 if (photoRef.current) photoRef.current.value = '';

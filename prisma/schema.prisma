@@ -82,45 +82,50 @@ model SeizedVehicle {
 }
 
 model MalkhanaEntry {
-  id    String @id @default(uuid())
-  wine  Int?
-  srNo  Int?
-  gdNo  Int?
-  Year  Int?
-  cash  Int?
-  boxNo Int    @default(0)
+  id String @id @default(uuid())
 
+  firNo     String?
+  srNo      Int?
+  entryType String
+  gdNo      Int?
+  gdDate    String
+
+  underSection String
+  vadiName     String
+  accused      String
+  IOName       String
+  HM           String
+
+  policeStation String
+  Year          Int?
+  boxNo         Int    @default(0)
+  status        String
+  place         String
+  courtNo       String
+  courtName     String
+
+  wine            Int?
+  cash            Int?
+  wineType        String
   yellowItemPrice Int?
-
+  address String?
   // ... other fields unchanged
-  wineType         String
-  gdDate           String
-  underSection     String
-  policeStation    String
-  IOName           String
-  vadiName         String
-  HM               String
-  accused          String
-  firNo            String?
-  status           String
-  entryType        String
-  place            String
-  courtNo          String
-  courtName        String
-  createdAt        DateTime? @default(now())
-  updatedAt        DateTime? @updatedAt
-  districtId       String?
-  photoUrl         String    @default("")
-  userId           String?
-  address          String?
-  document         String?
-  fathersName      String?
-  isReturned       Boolean?  @default(false)
-  mobile           String?
-  moveDate         String?
-  movePurpose      String?
-  moveTrackingNo   String?
-  name             String?
+
+  createdAt      DateTime? @default(now())
+  updatedAt      DateTime? @updatedAt
+  districtId     String?
+  photoUrl       String    @default("")
+  userId         String?
+  document       String?
+  fathersName    String?
+  isReturned     Boolean?  @default(false)
+  mobile         String?
+  moveDate       String?
+  movePurpose    String?
+  moveTrackingNo String?
+  name           String?
+  description    String?
+
   photo            String?
   releaseItemName  String?
   returnBackFrom   String?
@@ -130,7 +135,6 @@ model MalkhanaEntry {
   receivedBy       String?
   receiverName     String?
   documentUrl      String?
-  description      String?
   isMovement       Boolean?  @default(false)
   isRelease        Boolean?  @default(false)
   dbName           String?

@@ -27,11 +27,12 @@ const Header = () => {
     // 💡 New state for online status
     const [isOnline, setIsOnline] = useState(true);
 
+
     const handleLogout = () => {
         logout();
-        router.push("/");
+        router.replace("/");
+        router.refresh(); // Refreshes the current route (server components too)
     };
-
     const getUserData = async () => {
         if (user?.role === "district") {
             const data = await getAllUsers(user?.id);
