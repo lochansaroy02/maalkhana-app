@@ -86,7 +86,8 @@ export const generateBarcodePDF = async (entries: any, dbName: string, drawGrid 
         // If entry.firNo contains '@', replace it with '/' for display only.
         const originalFirNo = String(entry.firNo || '');
         const firNo1 = originalFirNo.replace(/@/g, '/');
-        const displayFirNo = firNo1.replace(/]/g, ',');
+        const displayFirNo = firNo1.replace(/]/g, ',').replace(/&/g, '-')
+        
 
         doc.text(displayFirNo, labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });
     }
