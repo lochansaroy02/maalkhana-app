@@ -595,7 +595,6 @@ const Report = ({
                                                     ${shouldApplyKurtidevClass && isKurtidevCell(finalKey) ? 'font-kurtidev' : ''}
                                                     ${finalKey.toLowerCase().includes("description") ? 'min-w-[250px] whitespace-normal' : 'whitespace-nowrap'}`}
                                             >
-                                                {/* Pass the entire item to renderCellContent for year check and conversion */}
                                                 {renderCellContent(finalKey, item[finalKey], item)}
                                             </td>
                                         ))}

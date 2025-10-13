@@ -6,7 +6,7 @@ export const kurtidevKeys = [
     "caseProperty",
     "gdDate",
     "policeStation",
-    "underSection",
+    // "underSection",
     "vadiName"
 ];
 
@@ -41,7 +41,7 @@ export const isLikelyKurtidev = (text: any): boolean => {
 export const convertUnicodeToKurtidev = (unicodeText: string): string => {
     if (typeof unicodeText !== 'string') return unicodeText;
     // ⚠️ WARNING: REPLACE THE NEXT LINE WITH YOUR REAL UNICODE-TO-KRUTI-DEV-010 LOGIC
-    // Example: return yourActualConversionFunction(unicodeText);
+    // return yourActualConversionFunction(unicodeText);
     return unicodeText; // Placeholder - currently returns the original Unicode text
 };
 
@@ -73,7 +73,8 @@ export const kurtidevToUnicode = (krutiText: string): string => {
     unicodeText = unicodeText.replace(/þ/g, "घ्");
 
     // --- Halant (Virama) and Special Consonants (High Priority) ---
-    unicodeText = unicodeText.replace(/V/g, "्"); // Virama/Halant
+    // unicodeText = unicodeText.replace(/V/g, "्");
+    unicodeText = unicodeText.replace(/\//g, "ध");// Virama/Halant
     unicodeText = unicodeText.replace(/\*/g, "त्र");
     unicodeText = unicodeText.replace(/}/g, "ज्ञ");
     unicodeText = unicodeText.replace(/Z/g, "ज़");

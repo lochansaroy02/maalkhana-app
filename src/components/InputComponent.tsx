@@ -11,6 +11,7 @@ interface InputProps {
     className?: string;
     setInput?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     type?: "text" | "password" | string;
+    inputClass?: string,
     // 1. Add the optional 'disabled' prop
     disabled?: boolean;
 }
@@ -24,6 +25,7 @@ const InputComponent = ({
     id,
     // 2. Destructure the new 'disabled' prop
     disabled,
+    inputClass
 }: InputProps) => {
     return (
         <div className={cn("flex flex-col", className)}>
@@ -34,7 +36,7 @@ const InputComponent = ({
                 id={id}
                 type={type}
                 placeholder={setInput ? `Enter ${label}` : ""}
-                className="text-blue-100 placeholder:text-blue-200/50"
+                className={`${inputClass}  text-blue-100 placeholder:text-blue-200/50`}
                 value={typeof value === "boolean" ? String(value) : value ?? ""}
                 onChange={setInput}
                 readOnly={!setInput}

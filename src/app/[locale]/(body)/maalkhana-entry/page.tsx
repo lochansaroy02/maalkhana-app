@@ -1,5 +1,6 @@
 "use client";
 import InputComponent from '@/components/InputComponent';
+
 import { Button } from '@/components/ui/button';
 import DatePicker from '@/components/ui/datePicker';
 import DropDown from '@/components/ui/DropDown';
@@ -7,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
+import { convertUnicodeToKurtidev, kurtidevKeys } from '@/utils/font';
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
 import { Mic, Trash } from 'lucide-react';
+
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
@@ -168,10 +171,20 @@ const Page = () => {
     };
 
     const handleInputChange = (field: keyof typeof formData, value: string) => {
+        let finalValue = value;
+
+        // 🎯 CORE LOGIC HERE: Check if the field requires KrutiDev conversion
+        if (kurtidevKeys.includes(field)) {
+            // 1. Convert the Unicode input string to the KrutiDev character sequence
+            finalValue = convertUnicodeToKurtidev(value);
+
+            // 2. IMPORTANT: If the conversion is incomplete (like your placeholder), 
+            // the user will see unreadable characters if the Kruti Dev font isn't applied.
+        }
         if (['srNo', 'gdNo', 'Year', 'boxNo'].includes(field)) {
-            setFormData(prev => ({ ...prev, [field]: value === '' ? '' : Number(value) }));
+            setFormData(prev => ({ ...prev, [field]: finalValue === '' ? '' : Number(finalValue) }));
         } else {
-            setFormData(prev => ({ ...prev, [field]: value }));
+            setFormData(prev => ({ ...prev, [field]: finalValue }));
         }
     };
 
@@ -455,16 +468,25 @@ const Page = () => {
                         if (field.type === 'date') {
                             return <DatePicker key={field.name} label={field.label} date={dateFields[field.name as keyof typeof dateFields]} setDate={(date) => handleDateChange(field.name, date)} />;
                         }
+                        const isKurtidevField = kurtidevKeys.includes(field.name);
                         return (
                             <div key={field.name}>
-                                {field.name === 'firNo' ? (
-                                    <div className='flex items-end justify-between'>
-                                        <InputComponent className='w-3/4' label={field.label} value={formData.firNo} setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)} />
-                                        <Button type="button" className="h-10 lg:text-base bg-blue text-white" onClick={handleGetByFir}>{t(`${baseKey}.buttons.fetchData`)}</Button>
-                                    </div>
-                                ) : (
-                                    <InputComponent label={field.label} type={field.type} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)} />
-                                )}
+                                {
+
+                                    field.name === 'firNo' ? (
+                                        <div className='flex items-end justify-between'>
+                                            <InputComponent
+                                                className='w-3/4'
+                                                label={field.label}
+                                                value={formData.firNo}
+                                                setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)}
+                                                inputClass={isKurtidevField ? 'font-kurtidev' : ''}
+                                            />
+                                            <Button type="button" className="h-10 lg:text-base bg-blue text-white" onClick={handleGetByFir}>{t(`${baseKey}.buttons.fetchData`)}</Button>
+                                        </div>
+                                    ) : (
+                                        <InputComponent label={field.label} type={field.type} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)} />
+                                    )}
                             </div>
                         );
                     })}
