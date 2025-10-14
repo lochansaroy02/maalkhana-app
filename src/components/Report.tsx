@@ -1,4 +1,5 @@
 "use client";
+import { useAuthStore } from "@/store/authStore";
 import { useSearchStore } from "@/store/searchStore";
 import { convertUnicodeToKurtidev, isLikelyKurtidev, kurtidevKeys } from "@/utils/font"; // Assuming convertUnicodeToKurtidev and isLikelyKurtidev are now correctly exported from "@/utils/font"
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
@@ -82,10 +83,11 @@ const Report = ({
 
     // ✅ NEW STATE: Sorting configuration
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: 'descending' });
-
+    const { user } = useAuthStore();
     // --- PAGINATION STATES ---
+    // MODIFIED: Default entriesPerPage from 25 to 20
     const [currentPage, setCurrentPage] = useState(1);
-    const [entriesPerPage, setEntriesPerPage] = useState(25);
+    const [entriesPerPage, setEntriesPerPage] = useState(20);
     // -------------------------
 
     const { setYear, year } = useSearchStore();
@@ -95,7 +97,6 @@ const Report = ({
         const year = 1990 + i;
         return { value: String(year), label: String(year) };
     }).reverse();
-
 
     // --- UTILITIES ---
 
@@ -242,8 +243,8 @@ const Report = ({
             return;
         }
         let dbName = pathName.includes("entry-report") ? "m" : "s";
-
-        await generateBarcodePDF(selectedData, dbName);
+        console.log(selectedData);
+        await generateBarcodePDF(selectedData, dbName, year, user?.policeStation,);
     };
 
     const handleDoubleClick = (item: any) => {
@@ -297,6 +298,8 @@ const Report = ({
         const valueAsString = String(formattedValue);
 
         // Conditional conversion based on (Kurtidev Key) AND (Year is 1991-2021)
+
+        //@ts-ignore
         if (kurtidevKeys.includes(key) && isEntryInLegacyYearRange(entry)) {
             // Only convert if it's a Devanagari key, the year is 1991-2021, and it's not already in Kurtidev (non-Unicode)
             if (valueAsString && valueAsString !== "-" && !isLikelyKurtidev(valueAsString)) {
@@ -367,6 +370,10 @@ const Report = ({
     const renderPaginationControls = () => {
         if (totalPages <= 1) return null;
 
+        // MODIFIED: Pagination options to [20, 40, 60, 80, 100]
+        const ENTRIES_PER_PAGE_OPTIONS = [20, 40, 60, 80, 100];
+        // END MODIFIED
+
         const pageNumbers = [];
         const maxPagesToShow = 5;
 
@@ -393,7 +400,8 @@ const Report = ({
                         }}
                         className="p-1 border bg-gray-700 text-white rounded text-sm"
                     >
-                        {[25, 50, 100, 200, 500].map(num => (
+                        {/* MODIFIED: Use new entries per page options */}
+                        {ENTRIES_PER_PAGE_OPTIONS.map(num => (
                             <option key={num} value={num}>{num}</option>
                         ))}
                     </select>
@@ -616,4 +624,4 @@ const Report = ({
     );
 };
 
-export default Report;
+export default Report;  

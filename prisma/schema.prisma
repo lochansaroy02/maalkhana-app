@@ -98,7 +98,7 @@ model MalkhanaEntry {
 
   policeStation String
   Year          Int?
-  boxNo         Int    @default(0)
+  boxNo         Int?
   status        String
   place         String
   courtNo       String
@@ -108,7 +108,7 @@ model MalkhanaEntry {
   cash            Int?
   wineType        String
   yellowItemPrice Int?
-  address String?
+  address         String?
   // ... other fields unchanged
 
   createdAt      DateTime? @default(now())

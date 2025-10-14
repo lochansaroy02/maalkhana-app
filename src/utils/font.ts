@@ -1,13 +1,14 @@
 // src/utils/font.ts
 
 export const kurtidevKeys = [
-    "description",
-    "firNo",
-    "caseProperty",
-    "gdDate",
-    "policeStation",
-    // "underSection",
-    "vadiName"
+    // "description",
+    // "firNo",
+    // "caseProperty",
+    // "gdDate",
+    // "policeStation",
+    // // "underSection",
+    // "vadiName"
+    "boxNo"
 ];
 
 /**

@@ -8,7 +8,15 @@ import { jsPDF } from "jspdf";
  * @param {string} [dbName] - The database name used in the barcode prefix if entry.dbName is missing.
  * @param {boolean} [drawGrid=true] - If true, draws a light gray border around each label for alignment.
  */
-export const generateBarcodePDF = async (entries: any, dbName: string, drawGrid = true,) => {
+export const generateBarcodePDF = async (
+    entries: any,
+    dbName: string,
+    year: {
+        from: string,
+        to: string
+    },
+    policseStation: string | undefined
+) => {
     // --- Page and Label Layout Configuration (A4 Dimensions: 210mm x 297mm) ---
     const LABELS_PER_ROW = 4;
     const LABELS_PER_COLUMN = 10;
@@ -32,7 +40,7 @@ export const generateBarcodePDF = async (entries: any, dbName: string, drawGrid 
     });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-
+    let fileName;
     // --- Barcode Generation Loop ---
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
@@ -50,11 +58,11 @@ export const generateBarcodePDF = async (entries: any, dbName: string, drawGrid 
         const labelY = PAGE_MARGIN_TOP + row * (LABEL_HEIGHT + VERTICAL_GAP);
 
         // --- Draw Sticker Grid for Alignment ---
-        if (drawGrid) {
-            doc.setLineWidth(0.1); // Set a very thin line
-            doc.setDrawColor(200, 200, 200); // Set a light gray color for the grid
-            doc.rect(labelX, labelY, LABEL_WIDTH, LABEL_HEIGHT); // Draw the rectangle
-        }
+
+        doc.setLineWidth(0.1); // Set a very thin line
+        doc.setDrawColor(200, 200, 200); // Set a light gray color for the grid
+        doc.rect(labelX, labelY, LABEL_WIDTH, LABEL_HEIGHT); // Draw the rectangle
+
 
         // --- Place Content within the Label ---
         const barcodeX = labelX + (LABEL_WIDTH - BARCODE_WIDTH) / 2;
@@ -87,11 +95,19 @@ export const generateBarcodePDF = async (entries: any, dbName: string, drawGrid 
         const originalFirNo = String(entry.firNo || '');
         const firNo1 = originalFirNo.replace(/@/g, '/');
         const displayFirNo = firNo1.replace(/]/g, ',').replace(/&/g, '-')
-        
-
+        let finalDisplayName = displayFirNo
         doc.text(displayFirNo, labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });
     }
 
+
+    //  this is for non chatra thana 
+
+    if (year.to) {
+        fileName = `${policseStation} -${year.from}-${year.to}.pdf`
+    } else {
+        fileName = `${policseStation} -${year.from}.pdf`
+    }
+
+    doc.save(fileName);
     // --- Save the Final PDF ---
-    doc.save("barcodes-with-grid.pdf");
 };

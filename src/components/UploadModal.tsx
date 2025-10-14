@@ -45,7 +45,7 @@ interface UploadModalProps {
 // };
 // // Your provided map for mapping Excel headers to database keys
 const exportMap = {
-    "क्र0सं0": "srNo",
+    "माल सं0": "srNo",
     "मु0अ0सं0 (FIR No)": "firNo",
     "जीडी न0": "gdNo",
     "जीडी दिनांक": "gdDate",
@@ -183,7 +183,6 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                     return newEntry; // Return the new entry with all keys guaranteed
                 });
 
-                // Now, send the FIXED data (which is an array) to the API
 
                 const isSuccess = await addMaalkhanaEntry(fixedData);
 

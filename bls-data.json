@@ -1,0 +1,282 @@
+[
+    {
+        "policeStation": "कोतवाली शहर",
+        "name": "ANKIT KUMAR",
+        "mobileNo": "6396911602",
+        "password": "9454403163",
+        "email": "so-kotwalinagar.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "कोतवाली देहात",
+        "name": "RAVINDER KUMAR",
+        "mobileNo": "7505786614",
+        "password": "9454403164",
+        "email": "so-kotwalidehat.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "औरंगाबाद",
+        "name": "ARSHAD ALI",
+        "mobileNo": "9719473262",
+        "password": "9454403153",
+        "email": "so-aurangabad.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "अगौता",
+        "name": "JITENDRA KUMAR",
+        "mobileNo": "9690152207",
+        "password": "9454403150",
+        "email": "so-agota.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "महिला थाना",
+        "name": "MUKESH KUMAR",
+        "mobileNo": "9027515100",
+        "password": "9454404584",
+        "email": "so-mahilathana.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "सिकन्द्राबाद",
+        "name": "MOHD. SHADAB",
+        "mobileNo": "8077689841",
+        "password": "9454403171",
+        "email": "so-shikandrabad.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "ककोड़",
+        "name": "DINESH KUMAR",
+        "mobileNo": "9410243460",
+        "password": "9454403387",
+        "email": "so-kakod.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "गुलावठी",
+        "name": "MANOJ KUMAR",
+        "mobileNo": "8273600895",
+        "password": "9454403158",
+        "email": "so-gulawti.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "चोला",
+        "name": "AWDESH PANWAR",
+        "mobileNo": "9458886514",
+        "password": "9454403176",
+        "email": "so-chola.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "स्याना",
+        "name": "PAWAN KUMAR",
+        "mobileNo": "9458710700",
+        "password": "9454403169",
+        "email": "so-syana.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "नरसैना",
+        "name": "PARVINDER SINGH",
+        "mobileNo": "8273360282",
+        "password": "9454403155",
+        "email": "so-narsena.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "खानपुर",
+        "name": "YATIN KUMAR",
+        "mobileNo": "7017774258",
+        "password": "9454403160",
+        "email": "so-khanpur.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "भवन बहादुर नगर",
+        "name": "PRAVEEN KUMAR",
+        "mobileNo": "7017956315",
+        "password": "9454403154",
+        "email": "so-bbnagar.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "खुर्जा नगर",
+        "name": "SADAM HUSAIN",
+        "mobileNo": "9368513334",
+        "password": "9454403162",
+        "email": "so-khurjanagar.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "खुर्जा देहात",
+        "name": "JAYPRAKASH SHARMA",
+        "mobileNo": "8726041009",
+        "password": "9454403161",
+        "email": "so-khurjadehat.bu@gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "अरनिया",
+        "name": "NARANDRA SINGH",
+        "mobileNo": "9456418338",
+        "password": "9454403152",
+        "email": "so-arniya.bu@gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "जहाँगीरपुर",
+        "name": "SATISH KUMAR",
+        "mobileNo": "8278266476",
+        "password": "9454403384",
+        "email": "so-jahangirpur.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "शिकारपुर",
+        "name": "FIROJ KHAN",
+        "mobileNo": "97609 91629",
+        "password": "9454403170",
+        "email": "so-shikarpur.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "पहासू",
+        "name": "CHARAN SINGH",
+        "mobileNo": "8868954118",
+        "password": "9454403166",
+        "email": "so-pahasu.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "अहमदगढ़",
+        "name": "KAMAL HASAN",
+        "mobileNo": "8077883178",
+        "password": "9454403149",
+        "email": "so-ahmadgarh.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "सलेमपुर",
+        "name": "SATISH MALIK",
+        "mobileNo": "8630104391",
+        "password": "9454403168",
+        "email": "so-salempur.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "अनूपशहर",
+        "name": "DEVENDRA KUMAR",
+        "mobileNo": "7011598330",
+        "password": "9454403151",
+        "email": "so-anoopshahr.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "जहाँगीराबाद",
+        "name": "ARVIND KUMAR",
+        "mobileNo": "8077953085",
+        "password": "9454403159",
+        "email": "so-jahangirabad.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "अहार",
+        "name": "SUSHIL KUMAR",
+        "mobileNo": "9719553305",
+        "password": "9454403148",
+        "email": "so-ahar.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "डिबाई",
+        "name": "GIRISH BABU",
+        "mobileNo": "9411692732",
+        "password": "9454403157",
+        "email": "so-dibai.bu@up.gov.in",
+        "rank": "SUB INSPECTOR",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "छतारी",
+        "name": "VIKAS TOMAR",
+        "mobileNo": "8700297212",
+        "password": "9454403156",
+        "email": "so-chatari.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "नरौरा",
+        "name": "MANOJ KUMAR",
+        "mobileNo": "8630273723",
+        "password": "9454403165",
+        "email": "so-narora.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    },
+    {
+        "policeStation": "साइबर क्राइम थाना",
+        "name": "PREM SINGH",
+        "mobileNo": "8126291611",
+        "password": "7839854892",
+        "email": "sho-cybercrime.bu@up.gov.in",
+        "rank": "HEAD CONSTABLE",
+        "districtId": "db2aeb9b-0f32-446d-a8e4-5bc309ed37d4",
+        "role": "user"
+    }
+]
