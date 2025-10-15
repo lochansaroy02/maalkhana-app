@@ -138,7 +138,6 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                     setLoading(false);
                     return;
                 }
-                console.log(validatedData);
                 // --- STEP 3: Coerce Types and Ensure All Fields are Present (Type Fixing) ---
                 const fixedData = validatedData.map((entry: any) => {
                     const newEntry: any = {};
@@ -183,7 +182,7 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                     return newEntry; // Return the new entry with all keys guaranteed
                 });
 
-
+                console.log(fixedData);
                 const isSuccess = await addMaalkhanaEntry(fixedData);
 
                 if (isSuccess) {

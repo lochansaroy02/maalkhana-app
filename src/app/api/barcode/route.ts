@@ -9,10 +9,11 @@ export async function GET(req: NextRequest) {
         const dbName = searchParams.get("dbName");
         const firNo = searchParams.get("firNo");
         const srNo = searchParams.get("srNo"); // Optional for initial fetch
+        const userId = searchParams.get("userId");
 
-        if (!dbName || !firNo) {
+        if (!dbName || !firNo || !userId) {
             return NextResponse.json(
-                { success: false, error: "Missing required parameters: dbName and firNo" },
+                { success: false, error: "Missing required parameters: userID , dbName and firNo" },
                 { status: 400 }
             );
         }
@@ -23,11 +24,17 @@ export async function GET(req: NextRequest) {
             case "m":
                 if (srNo) {
                     data = await prisma.malkhanaEntry.findFirst({
-                        where: { firNo: String(firNo), srNo: Number(srNo) },
+                        where: {
+                            firNo: String(firNo), srNo: Number(srNo),
+                            userId
+                        },
                     });
                 } else {
                     data = await prisma.malkhanaEntry.findMany({
-                        where: { firNo: String(firNo) },
+                        where: {
+                            firNo: String(firNo),
+                            userId: userId
+                        },
                         orderBy: { createdAt: "desc" }
                     });
                 }

@@ -85,7 +85,7 @@ model MalkhanaEntry {
   id String @id @default(uuid())
 
   firNo     String?
-  srNo      Int?
+  srNo      Int?    @default(1)
   entryType String
   gdNo      Int?
   gdDate    String

@@ -101,6 +101,7 @@ const Report = ({
     // --- UTILITIES ---
 
     const formatValue = (key: string, value: any) => {
+
         if (key.toLowerCase().includes("date") || key.toLowerCase().includes("returndate") || key.toLowerCase().includes("movedate")) {
             if (!value) return "-";
 
@@ -243,7 +244,6 @@ const Report = ({
             return;
         }
         let dbName = pathName.includes("entry-report") ? "m" : "s";
-        console.log(selectedData);
         await generateBarcodePDF(selectedData, dbName, year, user?.policeStation,);
     };
 
@@ -370,8 +370,7 @@ const Report = ({
     const renderPaginationControls = () => {
         if (totalPages <= 1) return null;
 
-        // MODIFIED: Pagination options to [20, 40, 60, 80, 100]
-        const ENTRIES_PER_PAGE_OPTIONS = [20, 40, 60, 80, 100];
+        const ENTRIES_PER_PAGE_OPTIONS = [20, 40, 60, 80, 100, 500];
         // END MODIFIED
 
         const pageNumbers = [];

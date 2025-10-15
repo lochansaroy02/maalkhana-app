@@ -237,6 +237,7 @@ export function validateAndMapExcelSchema(data: any[], schemaType: keyof typeof 
             }
         });
 
+
         // --- Post-processing for data types that need explicit conversion ---
         // Ensure you handle `null` values correctly when parsing strings to numbers.
         if (completeRow.cash != null && String(completeRow.cash).trim() !== "") {

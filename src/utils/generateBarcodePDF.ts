@@ -71,13 +71,14 @@ export const generateBarcodePDF = async (
         const firNoY = barcodeY + BARCODE_HEIGHT + 4;
 
         // 1. Print SrNo
+
         doc.text(String(entry.srNo || ''), labelX + LABEL_WIDTH / 2, srNoY, { align: 'center' });
 
         // 2. Generate Canvas for Barcode Image
         const canvas = document.createElement("canvas");
 
         // Use the original firNo for the unique barcode value
-        const barcodeValue = `${entry.dbName || dbName}-${entry.firNo || ''}-${entry.srNo || ''}`;
+        const barcodeValue = `${entry.dbName || dbName}-${entry.firNo || ''}-${entry.srNo || '1'}`;
         console.log("Generating barcode for:", barcodeValue);
 
         JsBarcode(canvas, barcodeValue, {
@@ -95,19 +96,17 @@ export const generateBarcodePDF = async (
         const originalFirNo = String(entry.firNo || '');
         const firNo1 = originalFirNo.replace(/@/g, '/');
         const displayFirNo = firNo1.replace(/]/g, ',').replace(/&/g, '-')
-        let finalDisplayName = displayFirNo
-        doc.text(displayFirNo, labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });
+        
+        let finalDisplayName = displayFirNo + "/" + entry.Year
+
+        doc.text(finalDisplayName, labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });
     }
 
 
     //  this is for non chatra thana 
 
-    if (year.to) {
-        fileName = `${policseStation} -${year.from}-${year.to}.pdf`
-    } else {
-        fileName = `${policseStation} -${year.from}.pdf`
-    }
 
+    fileName = `${policseStation}-barcodes.pdf`
     doc.save(fileName);
     // --- Save the Final PDF ---
 };
