@@ -78,7 +78,7 @@ export const generateBarcodePDF = async (
         const canvas = document.createElement("canvas");
 
         // Use the original firNo for the unique barcode value
-        const barcodeValue = `${entry.dbName || dbName}-${entry.firNo || ''}-${entry.srNo || '1'}`;
+        const barcodeValue = `${entry.dbName || dbName}-${entry.firNo || ''}-${entry.srNo || ''}`;
         console.log("Generating barcode for:", barcodeValue);
 
         JsBarcode(canvas, barcodeValue, {
@@ -96,7 +96,7 @@ export const generateBarcodePDF = async (
         const originalFirNo = String(entry.firNo || '');
         const firNo1 = originalFirNo.replace(/@/g, '/');
         const displayFirNo = firNo1.replace(/]/g, ',').replace(/&/g, '-')
-        
+
         let finalDisplayName = displayFirNo + "/" + entry.Year
 
         doc.text(finalDisplayName, labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });

@@ -10,6 +10,7 @@ export const GET = async (req: NextRequest) => {
     const userId = searchParams.get("userId");
 
 
+
     try {
         const data = await prisma.malkhanaEntry.findMany({
             where: {

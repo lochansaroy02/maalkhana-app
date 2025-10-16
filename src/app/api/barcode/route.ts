@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
 
         const dbName = searchParams.get("dbName");
         const firNo = searchParams.get("firNo");
-        const srNo = searchParams.get("srNo"); // Optional for initial fetch
+        const srNo = searchParams.get("srNo");
         const userId = searchParams.get("userId");
 
         if (!dbName || !firNo || !userId) {
@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
 
         switch (dbName) {
             case "m":
-                if (srNo) {
-                    data = await prisma.malkhanaEntry.findFirst({
+                if (srNo && srNo.length > 0) {
+                    data = await prisma.malkhanaEntry.findMany({
                         where: {
                             firNo: String(firNo), srNo: Number(srNo),
                             userId
