@@ -5,7 +5,7 @@ import { convertUnicodeToKurtidev, isLikelyKurtidev, kurtidevKeys } from "@/util
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
 import { exportMap, orderedKeys } from "@/utils/map";
 import axios from "axios";
-import { ChevronDown, ChevronUp } from "lucide-react"; // Import for sort icons
+import { Barcode, ChevronDown, ChevronUp, Download, Trash, Upload } from "lucide-react"; // Import for sort icons
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -31,6 +31,7 @@ interface ReportProps {
 /**
  * Utility to check if a table cell should have the Kurtidev font class.
  */
+//@ts-ignore
 const isKurtidevCell = (key: string) => kurtidevKeys.includes(key);
 
 // =================================================================
@@ -261,7 +262,7 @@ const Report = ({
             }
         });
         sessionStorage.setItem("visibleReportFields", JSON.stringify(sortedVisibleKeys));
-        if (heading === "Maalkhana Data") {
+        if (heading === "Malkhana Data") {
             router.push(`/report/entry-report/${item.id}`);
         } else if (heading === "Seized Vehicles Report") {
             router.push(`/report/siezed-report/${item.id}`);
@@ -370,7 +371,7 @@ const Report = ({
     const renderPaginationControls = () => {
         if (totalPages <= 1) return null;
 
-        const ENTRIES_PER_PAGE_OPTIONS = [20, 40, 60, 80, 100, 500, 1000];
+        const ENTRIES_PER_PAGE_OPTIONS = [20, 40, 60, 80, 100, 500, 1000, 2000];
         // END MODIFIED
 
         const pageNumbers = [];
@@ -467,6 +468,10 @@ const Report = ({
         return <ChevronDown className="w-4 h-4 ml-1" />;
     };
 
+    const handleClick = (item: any) => {
+        console.log(item);
+    }
+
     // Determine the keys to display in the header
     const headerKeysToRender = useMemo(() => {
         // Find the actual database key for each exportable header
@@ -520,14 +525,20 @@ const Report = ({
                 )}
                 <div className="flex gap-4 items-center">
                     {/* Kurtidev controls REMOVED */}
-                    {onImportClick && <Button onClick={onImportClick}>Import</Button>}
-                    <Button onClick={handleExport}>Export Selected</Button>
+                    {onImportClick && <Button onClick={onImportClick}>
+                        <Download />
+                        Import</Button>}
+                    <Button onClick={handleExport}>
+                        <Upload />
+                        Export</Button>
                     <Button onClick={handleDeleteSelected} variant="destructive">
-                        Delete Selected
+                        <Trash />
+                        Delete
                     </Button>
                     {selectedIds.length > 0 && (
                         <Button onClick={handleGenerateBarcodePDF} className="bg-green-600 text-white hover:bg-green-700">
-                            Generate Barcode
+                            <Barcode />
+                            Barcode
                         </Button>
                     )}
                 </div>
@@ -580,6 +591,7 @@ const Report = ({
                                 return (
                                     <tr
                                         onDoubleClick={() => handleDoubleClick(item)}
+                                        onClick={() => handleClick(item)}
                                         key={item.id}
                                         className="text-sm cursor-pointer hover:bg-gray-300"
                                     >

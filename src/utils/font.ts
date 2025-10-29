@@ -2,13 +2,15 @@
 
 export const kurtidevKeys = [
     // "description",
-    // "firNo",
+    // "entryType",
+    // // "firNo",
     // "caseProperty",
     // "gdDate",
+    // "IOName",
     // "policeStation",
-    // // "underSection",
-    // "vadiName"
-    "boxNo"
+    // "underSection",
+    // "vadiName",
+    // "boxNo"
 ];
 
 /**

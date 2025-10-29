@@ -4,7 +4,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useBackupStore } from "@/store/backupStore";
 import { useDistrictStore } from "@/store/districtStore";
 import { useSidebarStore } from "@/store/sidebarStore";
-import { Loader2, Menu } from "lucide-react";
+import { DatabaseBackup, Loader2, LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -136,7 +136,7 @@ const Header = () => {
                     />
                 </div>
 
-                <div className="flex w-1/2 gap-4 px-2 items-center">
+                <div className="flex w-1/2 gap-4 px-2  items-center">
                     {user?.role === 'district' && (
                         <DropDown
                             selectValueLabel="Select Police station"
@@ -150,12 +150,12 @@ const Header = () => {
                     )}
                     <div className="w-1/2">
                         <select
-                            className="rounded-lg w-full glass-effect text-blue-100  px-2 py-1"
+                            className="rounded-lg w-fit glass-effect text-blue-100  px-2 py-1"
                             onChange={(e) => handleLocaleChange(e.target.value)}
                             defaultValue={pathname.split("/")[1] || "en"}
                         >
 
-                            <option className=" bg-blue " value="en">English</option>
+                            <option className=" bg-blue " value="en">english</option>
                             <option className=" bg-blue " value="hi">हिंदी</option>
                         </select>
                     </div>
@@ -164,6 +164,7 @@ const Header = () => {
                         className="bg-blue-500 hover:bg-blue-600 cursor-pointer"
                     >
                         {isLoggedIn ? "Logout" : "Login"}
+                        <LogOut />
                     </Button>
 
                     {isLoggedIn && user?.id && (
@@ -176,6 +177,7 @@ const Header = () => {
 
                     <div>
                         <Button onClick={handleBackup} disabled={isBackingUp}>
+                            <DatabaseBackup />
                             {isBackingUp ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

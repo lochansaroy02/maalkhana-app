@@ -101,7 +101,7 @@ const Page = () => {
             bgColour: "bg-purple-700",
 
             // I will fix it leter
-            value: `${0} ${t("unitLtr")}`,
+            value: `${data?.breakdown?.totalWine._sum.wine || 0} ${t("unitLtr")}`,
         },
 
         // {

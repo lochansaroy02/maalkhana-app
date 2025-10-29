@@ -18,7 +18,7 @@ interface UploadModalProps {
     onSuccess: (message: string) => void;
     addEntry: (data: any) => Promise<void>;
 }
-// // Your provided map for mapping Excel headers to database keys
+// Your provided map for mapping Excel headers to database keys
 // const exportMap = {
 //     "SR. No.": "srNo",
 //     "FIR No.": "firNo",
@@ -44,11 +44,16 @@ interface UploadModalProps {
 //     "HM": "HM",
 // };
 // // Your provided map for mapping Excel headers to database keys
+
 const exportMap = {
-    "माल सं0": "srNo",
+    "नकद (case)": "cash",
+    "शराब (wine)": "wine",
+    "शराब का प्रकार (wine type)": "wineType",
+    "क्र0सं0": "srNo",
     "मु0अ0सं0 (FIR No)": "firNo",
     "जीडी न0": "gdNo",
     "जीडी दिनांक": "gdDate",
+    "HM/दाखिल कर्ता का नाम": "HM",
     "धारा": "underSection",
     "विवरण": "description",
     "case property": "caseProperty",
@@ -63,11 +68,35 @@ const exportMap = {
     "बोक्स न0": "boxNo",
     "कोर्ट सं0": "courtNo",
     "कोर्ट का नाम": "courtName",
-    "नकद (case)": "cash",
-    "शराब (wine)": "wine",
-    "शराब का प्रकार (wine type)": "wineType",
-    "HM/दाखिल कर्ता का नाम": "HM",
+
 };
+
+
+// const exportMap = {
+//     "cash": "cash",
+//     "wine": "wine",
+//     "wine type": "wineType",
+//     "srNo": "srNo",
+//     "fir no": "firNo",
+//     "gd no": "gdNo",
+//     "gd date": "gdDate",
+//     "hm": "HM",
+//     "under section": "underSection",
+//     "description": "description",
+//     "case property": "caseProperty",
+//     "police station": "policeStation",
+//     "year": "Year",
+//     "ioName": "IOName",
+//     "vadiName": "vadiName",
+//     "accused": "accused",
+//     "status": "status",
+//     "entry type": "entryType",
+//     "place": "place",
+//     "box no": "boxNo",
+//     "court no": "courtNo",
+//     "court name": "courtName",
+
+// };
 
 const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: UploadModalProps) => {
 
@@ -179,19 +208,17 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                         }
                     }
 
-                    return newEntry; // Return the new entry with all keys guaranteed
+                    return newEntry;
                 });
 
                 console.log(fixedData);
                 const isSuccess = await addMaalkhanaEntry(fixedData);
-
                 if (isSuccess) {
                     onSuccess("✅ Data imported successfully");
                     onClose();
                 } else {
                     setError("❌ Failed to import data. Check server logs.");
                 }
-
             } catch (err: any) {
                 console.error("Error processing file:", err);
                 setError(`❌ Failed to process the Excel file. Please ensure it's in the correct format.`);
@@ -213,19 +240,20 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
 
     return (
         <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
-            <div className="bg-blue p-6 relative rounded w-[200%] max-w-md">
+            <div className="bg-blue  p-6 relative rounded w-[200%] max-w-md">
                 <h2 className="text-lg text-blue-100 font-bold mb-4">Import Excel - {schemaType}</h2>
                 <div className="p-4 ">
                     <input ref={fileInputRef} type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4 text-blue-100/70 border border-dotted border-blue-100 px-4 py-2 rounded-xl" />
                     <Button onClick={handleClearFile} className="border border-white">Clear File</Button>
-                </div>
-
-                {loading && <p className="text-blue-500">Importing...</p>}
-                {error && <p className="text-red-500  whitespace-pre-wrap">{error}</p>}
-                <div className="flex top-56 right-56  absolute justify-end gap-2 mt-4">
-                    <Button className=" flex rounded-full bg-red-700 hover:bg-red-500 items-center justify-center " onClick={onClose}><X size={12} /></Button>
+                    <div className="flex top-0 right-2  absolute justify-end gap-2 mt-4">
+                        <Button className=" flex rounded-full cursor-pointer bg-red-700 hover:bg-red-500 items-center justify-center " onClick={onClose}><X size={12} /></Button>
+                    </div>
                 </div>
             </div>
+
+            {loading && <p className="text-blue-500">Importing...</p>}
+            {error && <p className="text-red-500  whitespace-pre-wrap">{error}</p>}
+
         </div>
     );
 };

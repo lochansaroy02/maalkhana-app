@@ -2,7 +2,7 @@
 "use client";
 
 import Report from "@/components/Report";
-import { Checkbox } from "@/components/ui/checkbox";
+import { MultiSelectDropdown } from "@/components/ui/MultiSelectDropdown";
 import UploadModal from "@/components/UploadModal";
 import { useAuthStore } from "@/store/authStore";
 import { useDistrictStore } from "@/store/districtStore";
@@ -46,11 +46,24 @@ interface MaalkhanaEntry {
     returnBackFrom?: string;
 }
 
-const casePropertyOptions = [
-    "malkhana Entry", "FSL", "Kurki", "Other Entry", "Cash Entry", "Wine/Daru", "Unclaimed Entry",
-    "Yellow Item"
-];
+const statusOptions = [
+    { label: 'Distroy', value: 'destroy' },
+    { label: 'Nilami', value: 'nilami' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'On court', value: 'onCourt' },
+    { label: 'Other', value: 'other' },
 
+];
+const entryTypeOptions = [
+    { label: 'malkhana Entry', value: 'malkhana' },
+    { label: 'FSL', value: 'fsl' },
+    { label: 'Kurki', value: 'kurki' },
+    { label: 'Wine/Daru', value: 'wine' },
+    { label: 'Cash Entry', value: 'cash' },
+    { label: 'Unclaimed', value: 'unclaimed' },
+
+
+];
 // Define a type for the report data and headers
 type ReportData = {
     data: any[];
@@ -66,6 +79,7 @@ const Page = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
 
+    const [selectedFrameworks, setSelectedFrameworks] = useState<string[]>([]);
 
     const searchParams = useSearchParams();
 
@@ -110,7 +124,6 @@ const Page = () => {
         // Apply filters based on the report type and selected case property
         const applyFilters = () => {
             let dataToShow = [...entries];
-            console.log(dataToShow);
             // Filter based on reportType
             switch (reportType) {
                 case "movement":
@@ -184,13 +197,26 @@ const Page = () => {
         }
     };
 
+
     return (
         <>
             {/* Filter Section */}
             <div className="p-4 mx-2 glass-effect">
                 <div className="flex flex-wrap gap-4 items-center">
-                    <h1 className="text-lg font-semibold text-white">Filter by Entry Type:</h1>
-                    {casePropertyOptions.map((property) => (
+                    <h1 className="text-lg font-semibold text-white">Filter:</h1>
+                    <MultiSelectDropdown
+                        label="Entry Type"
+                        options={entryTypeOptions}
+                        selectedValues={selectedFrameworks}
+                        onChange={setSelectedFrameworks}
+                    />
+                    <MultiSelectDropdown
+                        label="Status"
+                        options={statusOptions}
+                        selectedValues={selectedFrameworks}
+                        onChange={setSelectedFrameworks}
+                    />
+                    {/* {casePropertyOptions.map((property) => (
                         <div key={property} className="flex items-center space-x-2">
                             <Checkbox
                                 id={`checkbox-${property}`}
@@ -201,7 +227,7 @@ const Page = () => {
                             />
                             <label htmlFor={`checkbox-${property}`} className="text-blue-100 capitalize cursor-pointer">{property}</label>
                         </div>
-                    ))}
+                    ))} */}
                 </div>
             </div>
 
