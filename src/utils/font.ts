@@ -7,6 +7,7 @@ export const kurtidevKeys = [
     // "caseProperty",
     // "gdDate",
     // "IOName",
+    "isRelease"
     // "policeStation",
     // "underSection",
     // "vadiName",
