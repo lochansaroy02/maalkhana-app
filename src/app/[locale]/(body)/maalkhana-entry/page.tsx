@@ -174,6 +174,7 @@ const Page = () => {
         let finalValue = value;
 
         // 🎯 CORE LOGIC HERE: Check if the field requires KrutiDev conversion
+        //@ts-ignore
         if (kurtidevKeys.includes(field)) {
             // 1. Convert the Unicode input string to the KrutiDev character sequence
             finalValue = convertUnicodeToKurtidev(value);
@@ -468,6 +469,7 @@ const Page = () => {
                         if (field.type === 'date') {
                             return <DatePicker key={field.name} label={field.label} date={dateFields[field.name as keyof typeof dateFields]} setDate={(date) => handleDateChange(field.name, date)} />;
                         }
+                        //@ts-ignore
                         const isKurtidevField = kurtidevKeys.includes(field.name);
                         return (
                             <div key={field.name}>
