@@ -41,10 +41,12 @@ export const generateBarcodePDF = async (
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     let fileName;
+    let count = 0;
     // --- Barcode Generation Loop ---
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
 
+        count++;
         if (i > 0 && i % LABELS_PER_PAGE === 0) {
             doc.addPage();
         }
@@ -107,6 +109,7 @@ export const generateBarcodePDF = async (
     //  this is for non chatra thana 
 
 
+    console.log(`total barcodes generated : ${count}`);
     fileName = `${policseStation}-barcodes.pdf`
     doc.save(fileName);
     // --- Save the Final PDF ---

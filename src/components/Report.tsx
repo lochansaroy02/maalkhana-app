@@ -94,8 +94,8 @@ const Report = ({
     const { setYear, year } = useSearchStore();
     const currentYear = new Date().getFullYear();
 
-    const yearOptions = Array.from({ length: (currentYear) - 1990 + 1 }, (_, i) => {
-        const year = 1990 + i;
+    const yearOptions = Array.from({ length: (currentYear) - 1980 + 1 }, (_, i) => {
+        const year = 1980 + i;
         return { value: String(year), label: String(year) };
     }).reverse();
 

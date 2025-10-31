@@ -15,8 +15,8 @@ interface UploadModalProps {
     schemaType: keyof typeof expectedSchemas;
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: (message: string) => void;
     addEntry: (data: any) => Promise<void>;
+    onSuccess: (message: string) => void;
 }
 // Your provided map for mapping Excel headers to database keys
 // const exportMap = {
@@ -45,32 +45,33 @@ interface UploadModalProps {
 // };
 // // Your provided map for mapping Excel headers to database keys
 
+
+
 const exportMap = {
-    "नकद (case)": "cash",
-    "शराब (wine)": "wine",
-    "शराब का प्रकार (wine type)": "wineType",
-    "क्र0सं0": "srNo",
-    "मु0अ0सं0 (FIR No)": "firNo",
-    "जीडी न0": "gdNo",
-    "जीडी दिनांक": "gdDate",
-    "HM/दाखिल कर्ता का नाम": "HM",
-    "धारा": "underSection",
-    "विवरण": "description",
+    "cash": "cash",
+    "wine": "wine",
+    "wine type": "wineType",
+    "srNo": "srNo",
+    "fir no": "firNo",
+    "gd no": "gdNo",
+    "gd date": "gdDate",
+    "under section": "underSection",
+    "एचएम/ दाखिल कर्ता का नाम": "HM",
+    "description": "description",
     "case property": "caseProperty",
-    "थाना": "policeStation",
-    "वर्ष": "Year",
+    "police station": "policeStation",
+    "year": "Year",
     "विवेचक का नाम": "IOName",
     "वादी का नाम": "vadiName",
-    "अभियुक्त": "accused",
-    "अभियोग की स्थिति (STATUS)": "status",
-    "दाखिल मालखाना (ENTRY TYPE)": "entryType",
-    "स्थान": "place",
-    "बोक्स न0": "boxNo",
-    "कोर्ट सं0": "courtNo",
-    "कोर्ट का नाम": "courtName",
+    "accused": "accused",
+    "status": "status",
+    "entry type": "entryType",
+    "place": "place",
+    "box no": "boxNo",
+    "court no": "courtNo",
+    "court name": "courtName",
 
 };
-
 
 // const exportMap = {
 //     "cash": "cash",
