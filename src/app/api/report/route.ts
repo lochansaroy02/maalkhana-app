@@ -56,21 +56,25 @@ export const GET = async (req: NextRequest) => {
         const releaseCountVehicle = await prisma.malkhanaEntry.count({
             where: {
                 isRelease: true,
+                userId: userId
             }
         })
         const isMovementVehical = await prisma.malkhanaEntry.count({
             where: {
                 isMovement: true,
+                userId: userId
             }
         })
         const releaseCountMalkhana = await prisma.seizedVehicle.count({
             where: {
                 isRelease: true,
+                userId: userId
             }
         })
         const isMovementMalkhana = await prisma.seizedVehicle.count({
             where: {
                 isMovement: true,
+                userId: userId
             },
         })
 
@@ -118,7 +122,6 @@ export const GET = async (req: NextRequest) => {
             breakdown: {
 
                 totalEntries: totalEntries,
-
                 entry: malkhanaEntryCount,
                 totalReturn: returnedVehicleCount + returnedMalkhanaCount,
                 movement: totalMovement,

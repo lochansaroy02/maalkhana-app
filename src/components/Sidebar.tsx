@@ -4,6 +4,7 @@ import Logo from '@/assets/Logo';
 import Spycore from '@/assets/Spycore';
 import { useAuthStore } from '@/store/authStore';
 import { useSidebarStore } from '@/store/sidebarStore';
+import { Barcode, Bus, Clipboard, LayoutDashboard, Package, PackageOpen, UploadIcon, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
@@ -17,17 +18,17 @@ const Sidebar = () => {
 
     const sidebarData = useMemo(() => {
         const baseRoutes = [
-            { name: t("dashboard"), link: "/dashboard" },
-            { name: t("malkhana"), link: "/maalkhana-entry" },
-            { name: t("vehicles"), link: "/seized-vehical" },
-            { name: t("movement"), link: "/movement" },
-            { name: t("release"), link: "/release" },
-            { name: t("barcode"), link: "/barcode" },
-            { name: t("report"), link: "/report" },
+            { name: t("dashboard"), link: "/dashboard", icon: <LayoutDashboard size={16} /> },
+            { name: t("malkhana"), link: "/maalkhana-entry", icon: < Package size={16} /> },
+            { name: t("vehicles"), link: "/seized-vehical", icon: <Bus size={16} /> },
+            { name: t("movement"), link: "/movement", icon: <UploadIcon size={16} /> },
+            { name: t("release"), link: "/release", icon: <PackageOpen size={16} /> },
+            { name: t("barcode"), link: "/barcode", icon: <Barcode size={16} /> },
+            { name: t("report"), link: "/report", icon: <Clipboard size={16} /> },
         ];
 
         if (user?.role === 'district') {
-            return [...baseRoutes, { name: "Users", link: "/users" }];
+            return [...baseRoutes, { name: "Users", link: "/users", icon: <Users size={16} /> }];
         }
         return baseRoutes;
     }, [user, t]);
@@ -54,15 +55,20 @@ const Sidebar = () => {
                                     }}
                                     className={`${isActive ? "bg-maroon" : "glass-effect"} cursor-pointer py-2 px-4 transition-all ease-in-out rounded-lg`}
                                 >
-                                    <h1 className='text-sm text-blue-100'>{item.name}</h1>
+                                    <div className='flex items-center gap-1'>
+                                        <span className='text-blue-100/80 '>
+                                            {item.icon}
+                                        </span>
+                                        <h1 className='text-sm text-blue-100'>{item.name}</h1>
+                                    </div>
                                 </div>
                             );
                         })}
                     </div>
-                    <div className='lg:p-2 items-center flex flex-col justify-center mb-2 rounded-xl border border-white/20 bg-blue'>
+                    <div className='lg:p-2 items-center flex flex-col justify-center mb-2 rounded-xl  border-white/20 bg-blue'>
                         <Spycore />
-                        <h1 className='text-blue-100 text-xl'>Helpline</h1>
-                        <h2 className='text-blue-100'>+917500064949</h2>
+                        <h1 className='text-blue-100 text-sm'>Helpline</h1>
+                        <h2 className='text-blue-100 text-sm'>+917500064949</h2>
                     </div>
                 </div>
             </div>

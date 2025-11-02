@@ -115,6 +115,7 @@
                 "updateError": "Data not updated",
                 "addSuccess": "Data Added",
                 "firNotFound": "FIR not found",
+                "newEntryWithNewSrNo": "New Entry with new srNo",
                 "photoUploadSuccess": "Photo uploaded successfully",
                 "photoUploadError": "Failed to upload photo",
                 "printError": "Please fill in the form or fetch data before printing."

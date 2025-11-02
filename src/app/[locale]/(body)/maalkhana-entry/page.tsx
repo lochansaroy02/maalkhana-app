@@ -20,6 +20,26 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 import 'regenerator-runtime/runtime';
 
+// Define a type for formData to better manage number/string types
+interface FormData {
+    firNo: string;
+    // Allow srNo to be a string (from input) or number (from store)
+    srNo: string | number;
+    gdNo: string | number;
+    caseProperty: string;
+    underSection: string;
+    Year: number;
+    policeStation: string;
+    IOName: string;
+    vadiName: string;
+    HM: string;
+    accused: string;
+    place: string;
+    boxNo: number;
+    courtNo: string;
+    courtName: string;
+}
+
 const Page = () => {
     // --- Speech Recognition Setup ---
     const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
@@ -47,6 +67,7 @@ const Page = () => {
     const [isReturned, setIsReturned] = useState(false);
     const [isRelease, setIsRelease] = useState(false);
     const [existingId, setExistingId] = useState<string>("");
+    // Store originalSrNo as string for strict comparison with form input
     const [originalSrNo, setOriginalSrNo] = useState<string>("");
     const [yellowItemPrice, setYellowItemPrice] = useState<number>(0);
 
@@ -56,10 +77,10 @@ const Page = () => {
 
     const [selectedSrNo, setSelectedSrNo] = useState<string>('');
 
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<FormData>({
         firNo: '',
-        srNo: '',
-        gdNo: '',
+        srNo: '', // Kept as string for input component compatibility
+        gdNo: '', // Kept as string for input component compatibility
         caseProperty: '',
         underSection: '',
         Year: 2025,
@@ -97,8 +118,6 @@ const Page = () => {
     };
 
 
-
-
     const entryOptionKeys = ["malkhana", "fsl", "kurki", "cash", "wine", "unclaimed", "other", "yellowItem"];
     const entryOptions = entryOptionKeys.map(key => ({
         value: key,
@@ -118,10 +137,14 @@ const Page = () => {
 
     const populateForm = (data: any) => {
         if (!data) return;
+
         setExistingId(data.id || "");
-        setOriginalSrNo(data.srNo || "");
+        // Store originalSrNo as a string for comparison with string-based form input
+        setOriginalSrNo(data.srNo ? String(data.srNo) : "");
         setFormData({
             firNo: data.firNo || '',
+            // FIX: Ensure srNo from the fetched data is correctly cast to a number before storing.
+            // Keeping it as a string here for compatibility with the InputComponent, but storing the actual value.
             srNo: data.srNo ? String(data.srNo) : '',
             underSection: data.underSection || '',
             caseProperty: data.caseProperty || '',
@@ -137,17 +160,25 @@ const Page = () => {
             courtNo: data.courtNo || '',
             courtName: data.courtName || '',
         });
+
         setStatus(data.status || '');
         setYellowItemPrice(data.yellowItemPrice || 0);
         setWine(data.wine || 0);
         setCash(data.cash || 0);
         setWineType(data.wineType || '');
-        const entryTypeKey = data.entryTypeKey || '';
-        setCurrentEntryType(data.entryType)
+
+        // FIX: Determine the correct dropdown key from the fetched entryType
+        const fetchedEntryType = data.entryType || '';
+        const entryTypeKey = entryOptionKeys.find(key => key === fetchedEntryType) || (fetchedEntryType ? 'other' : '');
+
+        setCurrentEntryType(fetchedEntryType);
         setDropdownSelection(entryTypeKey);
+
         if (entryTypeKey === 'other') {
-            setEntryType(data.entryType);
+            // If it's 'other', set the custom text description as 'entryType'
+            setEntryType(fetchedEntryType);
         } else {
+            // Otherwise, clear the custom text field
             setEntryType('');
         }
 
@@ -162,35 +193,43 @@ const Page = () => {
             populateForm(currentEntry)
         }
     }, [currentEntry])
-    // populateForm(currentEntry)
+
     const photoRef = useRef<HTMLInputElement>(null);
 
-    const clearForm = () => {
-        setFormData({
-            firNo: '', srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: 2025, policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: 0, courtNo: '', courtName: ''
-        });
-        setExistingId("");
-        setOriginalSrNo("");
+    // FIX 1: New function to clear most fields *except* firNo and ID/SRNo trackers temporarily.
+    const clearSpecificFields = () => {
+        setFormData(prev => ({
+            ...prev,
+            srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: 2025, policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: 0, courtNo: '', courtName: ''
+        }));
         setStatus(''); setWine(0); setCash(0); setWineType(''); setYellowItemPrice(0); setDropdownSelection(''); setEntryType(''); setDescription('');
         setDateFields({ gdDate: new Date() });
         SetPhotoUrl("");
         setFirData([]);
         setSelectedSrNo('');
         if (photoRef.current) photoRef.current.value = '';
+        setExistingId(""); // Clear IDs in specific clear as well, to be safe before population
+        setOriginalSrNo("");
     };
 
-    const handleInputChange = (field: keyof typeof formData, value: string) => {
+    // FIX 2: Original clearForm for a full reset.
+    const clearForm = () => {
+        clearSpecificFields();
+        setFormData(prev => ({ ...prev, firNo: '' })); // Clear firNo only on full form clear
+    };
+
+    const handleInputChange = (field: keyof FormData, value: string) => {
         let finalValue = value;
 
         // 🎯 CORE LOGIC HERE: Check if the field requires KrutiDev conversion
         if (kurtidevKeys.includes(field)) {
             // 1. Convert the Unicode input string to the KrutiDev character sequence
             finalValue = convertUnicodeToKurtidev(value);
-
-            // 2. IMPORTANT: If the conversion is incomplete (like your placeholder), 
-            // the user will see unreadable characters if the Kruti Dev font isn't applied.
         }
+
+        // This existing logic correctly converts numeric fields from string input to number/empty string
         if (['srNo', 'gdNo', 'Year', 'boxNo'].includes(field)) {
+            // Using Number(finalValue) allows '0' to be valid, but handles empty string gracefully.
             setFormData(prev => ({ ...prev, [field]: finalValue === '' ? '' : Number(finalValue) }));
         } else {
             setFormData(prev => ({ ...prev, [field]: finalValue }));
@@ -219,12 +258,18 @@ const Page = () => {
             toast.error(t(`${baseKey}.toasts.enterFirNo`));
             return;
         }
+
+        const currentFirNo = formData.firNo; // Preserve FIR No
         setSelectedSrNo('');
-        clearForm(); // Note: This will clear firNo, so we re-set it.
-        setFormData(prev => ({ ...prev, firNo: formData.firNo }));
+
+        // FIX 3: Use clearSpecificFields to clear everything *except* firNo logic
+        clearSpecificFields();
+
+        // Re-set FIR No after clearing the form (as clearSpecificFields resets formData too)
+        setFormData(prev => ({ ...prev, firNo: currentFirNo }));
 
         try {
-            const response = await getByFIR(formData.firNo, user?.id);
+            const response = await getByFIR(currentFirNo, user?.id);
             if (response?.success && response.data && response.data.length > 0) {
                 const dataArray = Array.isArray(response.data) ? response.data : [response.data];
                 setFirData(dataArray);
@@ -232,7 +277,7 @@ const Page = () => {
                     populateForm(dataArray[0]);
                     setSelectedSrNo(String(dataArray[0].srNo));
                 } else {
-                    toast.success(t(`${baseKey}.toasts.multipleEntriesFound`));
+                    toast.success(`multiple Entries Found`);
                 }
             } else {
                 setFirData([]);
@@ -243,6 +288,9 @@ const Page = () => {
             toast.error(t(`${baseKey}.toasts.fetchError`));
         }
     };
+
+    console.log(`ID: ${existingId}, Original SR No: ${originalSrNo}, Current SR No: ${formData.srNo} `);
+
 
     const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -273,11 +321,13 @@ const Page = () => {
         window.open('/details', '_blank');
     };
 
+
+
     const handleSave = async () => {
         if (loading) return;
         setLoading(true);
 
-        const requiredFields: { key: string, value: any }[] = [
+        const requiredFields: { key: keyof FormData | 'gdDate', value: any }[] = [
             { key: 'caseProperty', value: formData.caseProperty },
             { key: 'gdNo', value: formData.gdNo },
             { key: 'gdDate', value: dateFields.gdDate },
@@ -285,13 +335,19 @@ const Page = () => {
             { key: 'policeStation', value: formData.policeStation },
         ];
 
+
+
         if (dropdownSelection !== 'unclaimed') {
             requiredFields.push({ key: 'firNo', value: formData.firNo });
         }
 
+        const fieldKeyMap: { [key: string]: string } = {
+            firNo: 'firNo', srNo: 'srNo', caseProperty: 'caseProperty', gdNo: 'gdNo', gdDate: 'gdDate', Year: 'year', policeStation: 'policeStation', IOName: 'ioName', vadiName: 'vadiName', status: 'status', HM: 'hm', accused: 'accused', underSection: 'underSection', description: 'description', place: 'place', boxNo: 'boxNo', courtNo: 'courtNo', courtName: 'courtName'
+        };
+
         const emptyFields = requiredFields
             .filter(field => !field.value && field.value !== 0)
-            .map(field => t(`${baseKey}.fields.${fieldKeyMap[field.key]}` || field.key));
+            .map(field => t(`${baseKey}.fields.${fieldKeyMap[field.key as string]}` || field.key));
 
         if (emptyFields.length > 0) {
             toast.error(`${t('validation.fillRequiredFields')}: ${emptyFields.join(', ')}`);
@@ -308,9 +364,13 @@ const Page = () => {
         try {
             const finalStatus = status === 'other' ? otherStatus : status;
 
-            // --- FIX IS HERE ---
+            // FIX: Explicitly ensure srNo is a Number for the backend payload
+            const currentSrNo = formData.srNo ? Number(formData.srNo) : 0;
+
             const fullData = {
                 ...formData,
+                // FIX: Use the confirmed number value for the payload
+                srNo: currentSrNo,
                 status: finalStatus,
                 wine: Number(wine),
                 cash: Number(cash),
@@ -322,6 +382,7 @@ const Page = () => {
                 photoUrl,
                 description,
                 yellowItemPrice: Number(yellowItemPrice),
+                gdNo: formData.gdNo ? Number(formData.gdNo) : 0, // Ensure gdNo is also a number
                 gdDate: dateFields.gdDate && !isNaN(dateFields.gdDate.getTime())
                     ? dateFields.gdDate.toISOString() : "",
                 isRelease, isReturned
@@ -329,19 +390,23 @@ const Page = () => {
 
             let response;
 
-            if (existingId && String(formData.srNo) === originalSrNo) {
+            // This logic is now correctly guarded by the existingId and originalSrNo state
+            if (String(currentSrNo) === originalSrNo && existingId) {
+                // UPDATE: existingId is present and SR No is unchanged
                 response = await updateMalkhanaEntry(existingId, fullData);
 
                 if (response) {
-                    toast.success(t(`${baseKey}.toasts.updateSuccess`));
+                    toast.success("Updated Entry");
                 }
-            } else if (existingId && String(formData.srNo) !== originalSrNo) {
-                // This logic implies creating a new entry if SrNo changes for an existing record
+            } else if (String(currentSrNo) !== originalSrNo || !existingId) {
+                // CREATE NEW: existingId is present but SR No changed (implying a new entry) 
+                // OR CREATE NEW: No existingId (brand new entry)
                 response = await addMaalkhanaEntry(fullData);
                 if (response) {
                     toast.success(t(`${baseKey}.toasts.newEntryWithNewSrNo`));
                 }
             } else {
+                // CREATE NEW: No existingId (brand new entry) - Fallback for clarity
                 response = await addMaalkhanaEntry(fullData);
                 if (response) {
                     toast.success("entry added with new SR No ");
@@ -444,7 +509,7 @@ const Page = () => {
                                     </div>
                                 );
                             } else {
-                                return <InputComponent key={field.name} label={field.label} type={field.type} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)} />;
+                                return <InputComponent key={field.name} label={field.label} type={field.type} value={formData[field.name as keyof FormData]} setInput={(e) => handleInputChange(field.name as keyof FormData, e.target.value)} />;
                             }
                         }
 
@@ -488,13 +553,13 @@ const Page = () => {
                                                 className='w-3/4'
                                                 label={field.label}
                                                 value={formData.firNo}
-                                                setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)}
+                                                setInput={(e) => handleInputChange(field.name as keyof FormData, e.target.value)}
                                                 inputClass={isKurtidevField ? 'font-kurtidev' : ''}
                                             />
                                             <Button type="button" className="h-10 lg:text-base bg-blue text-white" onClick={handleGetByFir}>{t(`${baseKey}.buttons.fetchData`)}</Button>
                                         </div>
                                     ) : (
-                                        <InputComponent label={field.label} type={field.type} value={formData[field.name as keyof typeof formData]} setInput={(e) => handleInputChange(field.name as keyof typeof formData, e.target.value)} />
+                                        <InputComponent label={field.label} type={field.type} value={formData[field.name as keyof FormData]} setInput={(e) => handleInputChange(field.name as keyof FormData, e.target.value)} />
                                     )}
                             </div>
                         );

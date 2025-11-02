@@ -28,7 +28,7 @@ const Page = () => {
             }
         }
     }, [user?.id, fetchTotalEntries, userId]);
-
+    let movementvalue = data?.breakdown?.movement < 0 ? 0 : data?.breakdown?.movement
     const t = useTranslations("Dashboard");
     const reportItems = [
         {
@@ -56,7 +56,7 @@ const Page = () => {
             title: t("malkhanaMovement"),
             icon: <User size={40} />,
             bgColour: "bg-orange-500",
-            value: data?.breakdown?.movement || 0,
+            value: movementvalue || 0,
             url: "/report/entry-report?reportType=movement"
         },
         {

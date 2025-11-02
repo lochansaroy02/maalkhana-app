@@ -32,13 +32,13 @@ const Page: React.FC = () => {
     // State for Search and Search Results
     const [type, setType] = useState<string>("");
     const [searchFirNo, setSearchFirNo] = useState("");
-    console.log(searchFirNo);
     const [searchSrNo, setSearchSrNo] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
 
     // State for Form Data
     const [isReturned, setIsReturned] = useState(false);
+    const [isMovement, setIsMovement] = useState(false);
     const [returnBackFrom, setReturnBackFrom] = useState("");
     const [caseProperty, setCaseProperty] = useState("");
     const [formData, setFormData] = useState<Partial<MovementEntry>>({
@@ -67,7 +67,10 @@ const Page: React.FC = () => {
         setExistingEntryId(id);
         setSelectedResultId(id);
         setFormData({
-            srNo: entryData.srNo ?? "", name: entryData.name ?? "", firNo: entryData.firNo ?? "", underSection: entryData.underSection ?? "", takenOutBy: entryData.takenOutBy ?? "", moveTrackingNo: entryData.moveTrackingNo ?? "", movePurpose: entryData.movePurpose ?? "", receivedBy: entryData.receivedBy ?? "",
+            srNo: entryData.srNo ?? "",
+            name: entryData.name ?? "", firNo: entryData.firNo ?? "",
+            underSection: entryData.underSection ?? "", takenOutBy: entryData.takenOutBy ?? "",
+            moveTrackingNo: entryData.moveTrackingNo ?? "", movePurpose: entryData.movePurpose ?? "", receivedBy: entryData.receivedBy ?? "",
         });
         setCaseProperty(entryData.caseProperty ?? "");
         setReturnBackFrom(entryData.returnBackFrom ?? "");
@@ -140,7 +143,11 @@ const Page: React.FC = () => {
         try {
             const photoUrl = photoRef.current?.files?.[0] ? await uploadToCloudinary(photoRef.current.files[0]) : undefined;
             const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudinary(documentRef.current.files[0]) : undefined;
-
+            if (isReturned) {
+                setIsMovement(false)
+            } else {
+                setIsMovement(true)
+            }
             const fullData = {
                 ...formData, moveDate: dateFields.moveDate.toISOString(), returnDate: dateFields.returnDate.toISOString(), returnBackFrom, documentUrl, photoUrl, isReturned, caseProperty, isMovement: true,
             };
