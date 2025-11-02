@@ -1,6 +1,7 @@
 // pages/Page.tsx (The Report Page component)
 "use client";
 
+import InputComponent from "@/components/InputComponent";
 import Report from "@/components/Report";
 import { MultiSelectDropdown } from "@/components/ui/MultiSelectDropdown";
 import UploadModal from "@/components/UploadModal";
@@ -66,9 +67,14 @@ const entryTypeOptions = [
 ];
 // Define a type for the report data and headers
 type ReportData = {
-    data: any[];
+    data: MaalkhanaEntry[]; // Use MaalkhanaEntry[] for type safety
     headers: string[];
 };
+
+// Define the fields to be included in the keyword search
+const SEARCHABLE_FIELDS: (keyof MaalkhanaEntry)[] = [
+    "firNo", "srNo", "description", "entryType", "policeStation", "caseProperty", "vadiName"
+];
 
 const Page = () => {
     const { reportType, setReportType } = useOpenStore();
@@ -77,11 +83,17 @@ const Page = () => {
     const { entries, fetchMaalkhanaEntry, addMaalkhanaEntry } = useMaalkhanaStore();
     const { year, searchData } = useSearchStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
+    // const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null); // Kept for reference but not used in the current filter logic
 
-    const [selectedFrameworks, setSelectedFrameworks] = useState<string[]>([]);
+    // Updated state for dropdown filters
+    const [selectedEntryTypes, setSelectedEntryTypes] = useState<string[]>([]);
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
 
     const searchParams = useSearchParams();
+
+    // State for the keyword search input
+    const [keyword, setKeyword] = useState<string>('');
+
 
     // Set initial report type from URL on component mount
     useEffect(() => {
@@ -101,95 +113,100 @@ const Page = () => {
         }
     }, [user?.id, fetchMaalkhanaEntry, userId, user?.role]);
 
-    // Helper function to create a new object with only specified fields
-    const selectFields = (entries: MaalkhanaEntry[], fields: string[]) => {
-        return entries.map((entry) => {
-            const newEntryObject: { [key: string]: any } = {};
-            fields.forEach(field => {
-                if (entry[field as keyof MaalkhanaEntry] !== undefined) {
-                    newEntryObject[field] = entry[field as keyof MaalkhanaEntry];
-                }
-            });
-            return newEntryObject;
-        });
-    };
-
-
     // Define all report-related logic within a useMemo hook for performance
     const reportContent: ReportData = useMemo(() => {
-        //@ts-ignore
         let filteredData: MaalkhanaEntry[] = [...entries];
         let headers: string[] = [];
 
-        // Apply filters based on the report type and selected case property
-        const applyFilters = () => {
-            let dataToShow = [...entries];
-            // Filter based on reportType
-            switch (reportType) {
-                case "movement":
-                    dataToShow = entries.filter(entry => entry.isMovement);
-                    headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"];
-                    break;
-                case "release":
-                    dataToShow = entries.filter(entry => entry.isRelease);
-                    console.log(dataToShow);
-                    headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Court Name", "Court No", "Box No", "Release Date", "Release Item Name", "Father's Name", "Address", "Receiver Name"];
-                    break;
-                case "destroy":
-                    dataToShow = entries.filter(entry => entry.status?.toLowerCase() === 'destroy');
-                    headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
-                    break;
-                case "return":
-                    dataToShow = entries.filter(entry => entry?.isReturned);
-                    headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
-                    break;
-                case "nilami":
-                    dataToShow = entries.filter(entry => entry.status?.toLowerCase() === 'nilami');
-                    headers = ["FIR No", "Sr No", "status", "Return Date", "Received By", "Return Back From", "Is Returned"];
-                    break;
-                default:
-                    dataToShow = entries;
+        // Determine base data and headers based on reportType
+        switch (reportType) {
+            case "movement":
+                filteredData = entries.filter(entry => entry.isMovement);
+                headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"];
+                break;
+            case "release":
+                filteredData = entries.filter(entry => entry.isRelease);
+                headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Court Name", "Court No", "Box No", "Release Date", "Release Item Name", "Father's Name", "Address", "Receiver Name"];
+                break;
+            case "destroy":
+                filteredData = entries.filter(entry => entry.status?.toLowerCase() === 'destroy');
+                headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
+                break;
+            case "return":
+                filteredData = entries.filter(entry => entry?.isReturned);
+                headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
+                break;
+            case "nilami":
+                // NOTE: The original code for 'nilami' had headers that seemed more related to 'return'. Using general headers here.
+                filteredData = entries.filter(entry => entry.status?.toLowerCase() === 'nilami');
+                headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
+                break;
+            default:
+                filteredData = entries;
+                headers = ["FIR No", "Sr No", "Entry Type", "underSection", "Description", "Case Property", "GD No", "GD Date", "Year", "Police Station", "HM", "Vadi Name", "IOName", "box No", "court No", "court Name"];
+                break;
+        }
 
-                    headers = ["FIR No", "Sr No", "Entry Type", "underSection", "Description", "Case Property", "GD No", "GD Date", "Year", "Police Station", "HM", "Vadi Name", "IOName", "box No", "court No", "court Name"];
-                    break;
-            }
+        // --- Apply Filters: Year, Entry Type, Status, and Keyword Search ---
 
-            // Further filter by selected case property
-            if (selectedCaseProperty) {
-                dataToShow = dataToShow.filter(item => item.entryType?.toLowerCase() === selectedCaseProperty.toLowerCase());
-            }
+        // 1. Apply year filter (as in original code)
+        if (year?.from || year?.to) {
+            const fromYear = year.from ? parseInt(year.from, 10) : null;
+            const toYear = year.to ? parseInt(year.to, 10) : null;
+            filteredData = filteredData.filter(item => {
+                const entryYear = item.Year ? parseInt(item.Year) : null;
+                if (!entryYear) return false;
+                if (fromYear && !toYear) {
+                    return entryYear === fromYear;
+                }
+                if (fromYear && toYear) {
+                    return entryYear >= fromYear && entryYear <= toYear;
+                }
+                if (!fromYear && toYear) {
+                    return entryYear <= toYear;
+                }
+                return true;
+            });
+        }
 
-            // Apply year filter
-            if (year?.from || year?.to) {
-                const fromYear = year.from ? parseInt(year.from, 10) : null;
-                const toYear = year.to ? parseInt(year.to, 10) : null;
-                dataToShow = dataToShow.filter(item => {
-                    const entryYear = item.Year ? parseInt(item.Year) : null;
-                    if (!entryYear) return false;
-                    if (fromYear && !toYear) {
-                        return entryYear === fromYear;
-                    }
-                    if (fromYear && toYear) {
-                        return entryYear >= fromYear && entryYear <= toYear;
-                    }
-                    if (!fromYear && toYear) {
-                        return entryYear <= toYear;
-                    }
-                    return true;
+        // 2. Filter by selected Entry Types (Dropdown 1)
+        if (selectedEntryTypes.length > 0) {
+            const selectedValuesLower = selectedEntryTypes.map(v => v.toLowerCase());
+            filteredData = filteredData.filter(item =>
+                item.entryType && selectedValuesLower.includes(item.entryType.toLowerCase())
+            );
+        }
+
+        // 3. Filter by selected Statuses (Dropdown 2)
+        if (selectedStatuses.length > 0) {
+            const selectedValuesLower = selectedStatuses.map(v => v.toLowerCase());
+            filteredData = filteredData.filter(item =>
+                item.status && selectedValuesLower.includes(item.status.toLowerCase())
+            );
+        }
+
+        // 4. Apply Keyword Search
+        const lowerCaseKeyword = keyword.trim().toLowerCase();
+        if (lowerCaseKeyword.length > 0) {
+            filteredData = filteredData.filter(entry => {
+                // Check if the keyword matches any of the searchable fields
+                return SEARCHABLE_FIELDS.some(field => {
+                    const value = entry[field as keyof MaalkhanaEntry];
+                    return value && String(value).toLowerCase().includes(lowerCaseKeyword);
                 });
-            }
+            });
+        }
 
-            // Apply search filter if searchData is available
-            if (searchData.length > 0) {
-                // Assuming searchData is already filtered and formatted correctly
-                return { data: searchData, headers: headers };
-            }
+        // 5. Apply searchData filter (overrides all other filters if present)
+        if (searchData.length > 0) {
+            // Assuming searchData is already filtered and formatted correctly
+            // NOTE: searchData is an array of 'any', so a type assertion is needed here.
+            return { data: searchData as MaalkhanaEntry[], headers: headers };
+        }
 
-            return { data: dataToShow, headers: headers };
-        };
+        return { data: filteredData, headers: headers };
+    }, [reportType, entries, year, searchData, selectedEntryTypes, selectedStatuses, keyword]);
 
-        return applyFilters();
-    }, [reportType, selectedCaseProperty, entries, year, searchData]);
 
     const handleImportSuccess = () => {
         if (user?.id) {
@@ -200,47 +217,48 @@ const Page = () => {
 
     return (
         <>
-            {/* Filter Section */}
             <div className="p-4 mx-2 glass-effect">
                 <div className="flex flex-wrap gap-4 items-center">
                     <h1 className="text-lg font-semibold text-white">Filter:</h1>
+
+                    {/* Entry Type Filter */}
                     <MultiSelectDropdown
                         label="Entry Type"
                         options={entryTypeOptions}
-                        selectedValues={selectedFrameworks}
-                        onChange={setSelectedFrameworks}
+                        selectedValues={selectedEntryTypes}
+                        onChange={setSelectedEntryTypes} // Correctly sets selectedEntryTypes
                     />
+
+                    {/* Status Filter */}
                     <MultiSelectDropdown
                         label="Status"
                         options={statusOptions}
-                        selectedValues={selectedFrameworks}
-                        onChange={setSelectedFrameworks}
+                        selectedValues={selectedStatuses}
+                        onChange={setSelectedStatuses} // Correctly sets selectedStatuses
                     />
-                    {/* {casePropertyOptions.map((property) => (
-                        <div key={property} className="flex items-center space-x-2">
-                            <Checkbox
-                                id={`checkbox-${property}`}
-                                checked={selectedCaseProperty?.toLowerCase() === property.toLowerCase()}
-                                onCheckedChange={(checked) =>
-                                    setSelectedCaseProperty(checked ? property : null)
-                                }
-                            />
-                            <label htmlFor={`checkbox-${property}`} className="text-blue-100 capitalize cursor-pointer">{property}</label>
-                        </div>
-                    ))} */}
+
+                    {/* Keyword Search Input */}
+                    <div className="flex gap-4 ">
+                        <InputComponent
+                            id="search"
+                            //@ts-ignore
+                            placeholder={`Search: ${SEARCHABLE_FIELDS.join(', ')}`}
+                            value={keyword}
+                            // Updates the keyword state on change, which triggers the useMemo hook
+                            setInput={(e: React.ChangeEvent<HTMLInputElement>) => setKeyword(e.target.value)}
+                        />
+                    </div>
                 </div>
             </div>
 
             <Report
                 data={reportContent.data}
-                //@ts-ignore
                 headers={reportContent.headers}
                 onImportClick={() => setIsModalOpen(true)}
-                heading="Maalkhana Data"
+                heading="Malkhana Data"
                 detailsPathPrefix="/report/entry-report"
             />
 
-            {/* Upload Modal */}
             <UploadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

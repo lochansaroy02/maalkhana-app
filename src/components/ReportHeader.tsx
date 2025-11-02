@@ -4,10 +4,8 @@ import { useAuthStore } from "@/store/authStore";
 import { useSearchStore } from "@/store/searchStore";
 import { useOpenStore } from "@/store/store";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import InputComponent from "./InputComponent";
+import { useEffect } from "react";
 import DropDown from "./ui/DropDown";
-import { Button } from "./ui/button";
 const ReportHeader = () => {
     const { setDbName, dbName, getSearchResult, } = useSearchStore()
     const { reportType, setReportType } = useOpenStore();
@@ -17,7 +15,7 @@ const ReportHeader = () => {
     const path = usePathname();
 
 
-    const [keyword, setKeyword] = useState<any>([])
+
 
 
     const data = [
@@ -44,15 +42,7 @@ const ReportHeader = () => {
     }));
 
 
-    const handleSearch = async () => {
-        try {
-            const data = await getSearchResult(keyword, user?.id)
 
-        } catch (error) {
-
-        }
-
-    }
     return (
         <div className="py-1 justify-start flex h-14">
             <div className="flex gap-8 px-4 h-full items-center">
@@ -80,12 +70,6 @@ const ReportHeader = () => {
                     />
                 </div>
 
-                <div className="flex gap-4 ">
-                    <InputComponent id="search"
-                        value={keyword}
-                        setInput={(e) => setKeyword(e.target.value)} />
-                    <Button onClick={handleSearch}>Search</Button>
-                </div>
 
 
             </div>

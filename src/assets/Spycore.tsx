@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 const Spycore = () => {
     return (
-        <Image className="w-64" src={logo} alt='No image' />
+        <Image className="w-54" src={logo} alt='No image' />
     )
 }
 

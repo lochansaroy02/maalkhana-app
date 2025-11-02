@@ -8,7 +8,7 @@ import { useOpenStore } from '@/store/store';
 import React, { Suspense, useEffect } from 'react'; // Import useEffect
 
 import Modal from '@/components/Modal';
-import { X } from 'lucide-react';
+import { Loader, X } from 'lucide-react';
 const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
 
     const { isOpen, setIsOpen } = useOpenStore();
@@ -46,7 +46,12 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
             <ReportHeader />
 
             <Suspense fallback={
-                <div className='h-screen'>Loading...</div>}>
+                <div className='h-screen flex items-center justify-center'>
+                    <span className='animate-spin'><Loader /></span>
+                    <h1 className='text-xl text-blue-100'>
+                        Loading...
+                    </h1>
+                </div>}>
                 {children}
             </Suspense>
 

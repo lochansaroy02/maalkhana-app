@@ -20,8 +20,8 @@ const Sidebar = () => {
             { name: t("dashboard"), link: "/dashboard" },
             { name: t("malkhana"), link: "/maalkhana-entry" },
             { name: t("vehicles"), link: "/seized-vehical" },
-            { name: t("movement"), link: "/maalkhana-movement" },
-            { name: t("release"), link: "/maalkhana-release" },
+            { name: t("movement"), link: "/movement" },
+            { name: t("release"), link: "/release" },
             { name: t("barcode"), link: "/barcode" },
             { name: t("report"), link: "/report" },
         ];

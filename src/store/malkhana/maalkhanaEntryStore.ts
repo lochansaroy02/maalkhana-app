@@ -36,6 +36,8 @@ type MaalkhanaEntry = {
 type MaalkhanaStore = {
     entry: MaalkhanaEntry;
     entries: MaalkhanaEntry[];
+    currentEntry: null,
+    setCurrentEntry: (data: any) => void,
     setField: (field: keyof MaalkhanaEntry, value: string) => void;
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
@@ -80,6 +82,12 @@ const initialState: MaalkhanaEntry = {
 export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
     entry: { ...initialState },
     entries: [],
+    currentEntry: null,
+    setCurrentEntry: (data: any) => {
+        set({
+            currentEntry: data
+        })
+    },
 
     setField: (field, value) =>
         set(state => ({

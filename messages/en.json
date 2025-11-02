@@ -15,8 +15,8 @@
         "dashboard": "Dashboard",
         "malkhana": "Malkhana Entry",
         "vehicles": "Seized vehicles",
-        "movement": "Malkhana movement",
-        "release": "Malkhana release",
+        "movement": "movement",
+        "release": "release",
         "barcode": "Barcode",
         "report": "Report"
     },
@@ -48,7 +48,7 @@
                     "fsl": "FSL",
                     "kurki": "Kurki",
                     "cash": "Cash Entry",
-                    "wine": "Explosive",
+                    "wine": "Wine",
                     "unclaimed": "Unclaimed Entry",
                     "other": "Other Entry",
                     "yellowItem": "Yellow Item"
@@ -238,7 +238,7 @@
         }
     },
     "maalkhanaReleaseForm": {
-        "title": "Maalkhana Release",
+        "title": "Malkhana Release",
         "labels": {
             "selectType": "1. Select Type to Release From:",
             "firNo": "FIR No.",

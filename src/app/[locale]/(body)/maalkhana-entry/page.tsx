@@ -30,7 +30,7 @@ const Page = () => {
     const baseKey = 'malkhanaEntryForm';
 
     const { user } = useAuthStore();
-    const { addMaalkhanaEntry, updateMalkhanaEntry, getByFIR } = useMaalkhanaStore();
+    const { addMaalkhanaEntry, updateMalkhanaEntry, getByFIR, currentEntry } = useMaalkhanaStore();
 
     const [firData, setFirData] = useState<any[]>([]);
     const [photoUrl, SetPhotoUrl] = useState("");
@@ -97,6 +97,8 @@ const Page = () => {
     };
 
 
+
+
     const entryOptionKeys = ["malkhana", "fsl", "kurki", "cash", "wine", "unclaimed", "other", "yellowItem"];
     const entryOptions = entryOptionKeys.map(key => ({
         value: key,
@@ -154,6 +156,13 @@ const Page = () => {
         SetPhotoUrl(data.photoUrl || "");
     };
 
+
+    useEffect(() => {
+        if (currentEntry) {
+            populateForm(currentEntry)
+        }
+    }, [currentEntry])
+    // populateForm(currentEntry)
     const photoRef = useRef<HTMLInputElement>(null);
 
     const clearForm = () => {
@@ -387,12 +396,12 @@ const Page = () => {
                             </div>
                         )}
                     </div>
-                    {/* <div className={`w-full ml-6 gap-6 
+                    <div className={`w-full ml-6 gap-6 
                         ${dropdownSelection === 'wine' ? "" : "hidden"} items-center`}>
                         <DropDown label={t(`${baseKey}.wineSection.typeLabel`)} selectedValue={wineType} options={wineTypeOptions} handleSelect={setWineType} />
-                    </div> */}
+                    </div>
                     <div className={`w-full ml-6 gap-6 ${dropdownSelection === 'wine' ? "flex" : "hidden"} items-center`}>
-                        <label className='text-blue-100'>{`Total Explosive `}</label>
+                        <label className='text-blue-100'>{`Total ${wineType} `}</label>
                         <Input type='number' value={wine} onChange={(e) => setWine(Number(e.target.value))} />
                     </div>
                     <div className={`w-3/4 ml-18 ${dropdownSelection === 'cash' ? "flex flex-col" : "hidden"}`}>

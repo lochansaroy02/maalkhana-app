@@ -122,6 +122,7 @@ export const GET = async (req: NextRequest) => {
                 entry: malkhanaEntryCount,
                 totalReturn: returnedVehicleCount + returnedMalkhanaCount,
                 movement: totalMovement,
+                malkhanaMovement: isMovementMalkhana,
                 release: totalRelease,
                 siezed: seizedVehicleCount,
                 destroy: destroyCount,

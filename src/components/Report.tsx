@@ -1,5 +1,6 @@
 "use client";
 import { useAuthStore } from "@/store/authStore";
+import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
 import { useSearchStore } from "@/store/searchStore";
 import { convertUnicodeToKurtidev, isLikelyKurtidev, kurtidevKeys } from "@/utils/font"; // Assuming convertUnicodeToKurtidev and isLikelyKurtidev are now correctly exported from "@/utils/font"
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
@@ -78,10 +79,11 @@ const Report = ({
     headers,
 }: ReportProps) => {
     const router = useRouter();
+    
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [selectAll, setSelectAll] = useState(false);
     // isKurtidevEnabled state REMOVED as requested.
-
+    const { setCurrentEntry } = useMaalkhanaStore()
     // ✅ NEW STATE: Sorting configuration
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: 'descending' });
     const { user } = useAuthStore();
@@ -249,6 +251,17 @@ const Report = ({
     };
 
     const handleDoubleClick = (item: any) => {
+        setCurrentEntry(item)
+        if (heading === "Malkhana Data") {
+
+            router.push(`/maalkhana-entry`);
+        } else if (heading === "Seized Vehicles Report") {
+            router.push(`/report/siezed-report/${item.id}`);
+        }
+
+    };
+
+    const handleClick = (item: any) => {
         const allKeys = Object.keys(item).filter((key) => !excluded.includes(key));
         const sortedVisibleKeys: any[] = [];
         orderedKeys.forEach((key) => {
@@ -267,7 +280,7 @@ const Report = ({
         } else if (heading === "Seized Vehicles Report") {
             router.push(`/report/siezed-report/${item.id}`);
         }
-    };
+    }
 
     // =================================================================
     // ✅ VERIFIED AND FIXED: Conversion is strictly conditional on 1991-2021 Year.
@@ -468,9 +481,6 @@ const Report = ({
         return <ChevronDown className="w-4 h-4 ml-1" />;
     };
 
-    const handleClick = (item: any) => {
-        console.log(item);
-    }
 
     // Determine the keys to display in the header
     const headerKeysToRender = useMemo(() => {
@@ -524,6 +534,7 @@ const Report = ({
                     </div>
                 )}
                 <div className="flex gap-4 items-center">
+
                     {/* Kurtidev controls REMOVED */}
                     {onImportClick && <Button onClick={onImportClick}>
                         <Download />

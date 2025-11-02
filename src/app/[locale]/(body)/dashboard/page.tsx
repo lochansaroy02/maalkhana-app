@@ -49,7 +49,7 @@ const Page = () => {
             title: t("totalMalkhanaEntry"),
             icon: <User size={40} />,
             bgColour: "bg-red-500",
-            value: data?.breakdown?.entry || 0,
+            value: data?.breakdown?.entry - data?.breakdown?.movement - data?.breakdown?.release || 0,
             url: "/report/entry-report"
         },
         {
@@ -104,22 +104,22 @@ const Page = () => {
             value: `${data?.breakdown?.totalWine._sum.wine || 0} ${t("unitLtr")}`,
         },
 
-        // {
-        //     title: t("totalDesiWine"),
-        //     icon: <Wine size={40} />,
-        //     bgColour: "bg-purple-700",
+        {
+            title: t("totalDesiWine"),
+            icon: <Wine size={40} />,
+            bgColour: "bg-purple-700",
 
-        //     // I will fix it leter
-        //     value: `${data?.desi?._sum.wine || 0} ${t("unitLtr")}`,
-        // },
-        // {
-        //     title: t("totalEnglishWine"),
-        //     icon: <Wine size={40} />,
-        //     bgColour: "bg-amber-700",
+            // I will fix it leter
+            value: `${data?.desi?._sum.wine || 0} ${t("unitLtr")}`,
+        },
+        {
+            title: t("totalEnglishWine"),
+            icon: <Wine size={40} />,
+            bgColour: "bg-amber-700",
 
-        //     // I will fix it leter
-        //     value: `${data?.angrezi?._sum.wine || 0} ${t("unitLtr")}`,
-        // },
+            // I will fix it leter
+            value: `${data?.angrezi?._sum.wine || 0} ${t("unitLtr")}`,
+        },
         {
             title: t("totalCash"),
             icon: <Banknote size={40} />,
