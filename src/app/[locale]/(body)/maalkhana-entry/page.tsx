@@ -71,8 +71,9 @@ const Page = () => {
     const [originalSrNo, setOriginalSrNo] = useState<string>("");
     const [yellowItemPrice, setYellowItemPrice] = useState<number>(0);
 
+    // FIX 1: Initialize gdDate to 'undefined' so it doesn't default to the current date.
     const [dateFields, setDateFields] = useState<{ gdDate?: Date }>({
-        gdDate: new Date(),
+        gdDate: undefined,
     });
 
     const [selectedSrNo, setSelectedSrNo] = useState<string>('');
@@ -143,7 +144,6 @@ const Page = () => {
         setOriginalSrNo(data.srNo ? String(data.srNo) : "");
         setFormData({
             firNo: data.firNo || '',
-            // FIX: Ensure srNo from the fetched data is correctly cast to a number before storing.
             // Keeping it as a string here for compatibility with the InputComponent, but storing the actual value.
             srNo: data.srNo ? String(data.srNo) : '',
             underSection: data.underSection || '',
@@ -167,7 +167,7 @@ const Page = () => {
         setCash(data.cash || 0);
         setWineType(data.wineType || '');
 
-        // FIX: Determine the correct dropdown key from the fetched entryType
+        // Determine the correct dropdown key from the fetched entryType
         const fetchedEntryType = data.entryType || '';
         const entryTypeKey = entryOptionKeys.find(key => key === fetchedEntryType) || (fetchedEntryType ? 'other' : '');
 
@@ -183,7 +183,10 @@ const Page = () => {
         }
 
         setDescription(data.description || '');
-        setDateFields({ gdDate: data.gdDate ? new Date(data.gdDate) : new Date() });
+        // FIX 2: Only create a Date object if gdDate exists, otherwise set to 'undefined'
+        setDateFields({
+            gdDate: data.gdDate ? new Date(data.gdDate) : undefined
+        });
         SetPhotoUrl(data.photoUrl || "");
     };
 
@@ -196,14 +199,15 @@ const Page = () => {
 
     const photoRef = useRef<HTMLInputElement>(null);
 
-    // FIX 1: New function to clear most fields *except* firNo and ID/SRNo trackers temporarily.
+    // FIX 3: New function to clear most fields *except* firNo and ID/SRNo trackers temporarily.
     const clearSpecificFields = () => {
         setFormData(prev => ({
             ...prev,
             srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: 2025, policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: 0, courtNo: '', courtName: ''
         }));
         setStatus(''); setWine(0); setCash(0); setWineType(''); setYellowItemPrice(0); setDropdownSelection(''); setEntryType(''); setDescription('');
-        setDateFields({ gdDate: new Date() });
+        // FIX 3 (cont.): Clear gdDate to undefined
+        setDateFields({ gdDate: undefined });
         SetPhotoUrl("");
         setFirData([]);
         setSelectedSrNo('');
@@ -212,7 +216,7 @@ const Page = () => {
         setOriginalSrNo("");
     };
 
-    // FIX 2: Original clearForm for a full reset.
+    // FIX 4: Original clearForm for a full reset.
     const clearForm = () => {
         clearSpecificFields();
         setFormData(prev => ({ ...prev, firNo: '' })); // Clear firNo only on full form clear
@@ -262,7 +266,7 @@ const Page = () => {
         const currentFirNo = formData.firNo; // Preserve FIR No
         setSelectedSrNo('');
 
-        // FIX 3: Use clearSpecificFields to clear everything *except* firNo logic
+        // Use clearSpecificFields to clear everything *except* firNo logic
         clearSpecificFields();
 
         // Re-set FIR No after clearing the form (as clearSpecificFields resets formData too)
@@ -330,7 +334,8 @@ const Page = () => {
         const requiredFields: { key: keyof FormData | 'gdDate', value: any }[] = [
             { key: 'caseProperty', value: formData.caseProperty },
             { key: 'gdNo', value: formData.gdNo },
-            { key: 'gdDate', value: dateFields.gdDate },
+            // FIX: gdDate is now optional. We only check if it is required if the entry is NOT "unclaimed"
+            // We check for its validity in the final payload
             { key: 'Year', value: formData.Year },
             { key: 'policeStation', value: formData.policeStation },
         ];
@@ -340,6 +345,12 @@ const Page = () => {
         if (dropdownSelection !== 'unclaimed') {
             requiredFields.push({ key: 'firNo', value: formData.firNo });
         }
+
+        // Add gdDate requirement if not unclaimed AND not defined
+        if (dropdownSelection !== 'unclaimed' && !dateFields.gdDate) {
+            requiredFields.push({ key: 'gdDate', value: dateFields.gdDate });
+        }
+
 
         const fieldKeyMap: { [key: string]: string } = {
             firNo: 'firNo', srNo: 'srNo', caseProperty: 'caseProperty', gdNo: 'gdNo', gdDate: 'gdDate', Year: 'year', policeStation: 'policeStation', IOName: 'ioName', vadiName: 'vadiName', status: 'status', HM: 'hm', accused: 'accused', underSection: 'underSection', description: 'description', place: 'place', boxNo: 'boxNo', courtNo: 'courtNo', courtName: 'courtName'
@@ -364,27 +375,28 @@ const Page = () => {
         try {
             const finalStatus = status === 'other' ? otherStatus : status;
 
-            // FIX: Explicitly ensure srNo is a Number for the backend payload
+            // Explicitly ensure srNo is a Number for the backend payload
             const currentSrNo = formData.srNo ? Number(formData.srNo) : 0;
 
             const fullData = {
                 ...formData,
-                // FIX: Use the confirmed number value for the payload
+                // Use the confirmed number value for the payload
                 srNo: currentSrNo,
                 status: finalStatus,
                 wine: Number(wine),
                 cash: Number(cash),
                 wineType,
                 // If 'other' is selected, use the text from the 'entryType' state.
-                // Otherwise, use the value from the dropdown selection directly (e.g., "malkhana", "fsl").
                 entryType: dropdownSelection === 'other' ? entryType : dropdownSelection,
                 userId: user?.id,
                 photoUrl,
                 description,
                 yellowItemPrice: Number(yellowItemPrice),
                 gdNo: formData.gdNo ? Number(formData.gdNo) : 0, // Ensure gdNo is also a number
-                gdDate: dateFields.gdDate && !isNaN(dateFields.gdDate.getTime())
-                    ? dateFields.gdDate.toISOString() : "",
+                // FIX 5: CRUCIAL - Only send gdDate if it is a valid Date object (not undefined)
+                gdDate: dateFields.gdDate instanceof Date && !isNaN(dateFields.gdDate.getTime())
+                    ? dateFields.gdDate.toISOString()
+                    : null, // Send null if the date is not set, preventing it from defaulting to current date
                 isRelease, isReturned
             };
 

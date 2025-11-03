@@ -15,7 +15,8 @@ export const generateBarcodePDF = async (
         from: string,
         to: string
     },
-    policseStation: string | undefined
+    policseStation: string | undefined,
+    firNo?: string
 ) => {
     // --- Page and Label Layout Configuration (A4 Dimensions: 210mm x 297mm) ---
     const LABELS_PER_ROW = 4;

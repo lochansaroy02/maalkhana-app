@@ -1,106 +1,223 @@
 "use client";
+import InputComponent from "@/components/InputComponent";
+import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/store/authStore";
+import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
+import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
+import { useState } from "react";
 
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import BarcodeScanner from "./(data)/BarcodeScanner";
-import ScannerDisplay from "./(data)/ScannerDisplay";
+// Helper Component for Checkbox Row (Optional, but cleaner)
+const CheckboxRow = ({ item, isSelected, onToggle }: {
+    item: any, isSelected: any, onToggle: any
+}) => (
+    <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-white hover:bg-gray-50">
+        <label htmlFor={`item-${item.id}`} className=" flex flex-col justify-between cursor-pointer">
 
-// Define a type for the data returned from the barcode scan
-export interface BarcodeResult {
-    dbName: string;
-    firNo: string;
-    srNo: string;
-}
+            <span className="font-medium text-gray-800">
+                FIR No: <span className="font-bold">{item.firNo}</span>
+            </span>
+            <span className="text-sm text-gray-500">
+                Sr No: <span className="font-bold">{item.srNo || 'N/A'}</span>
+            </span>
+        </label>
+        <input
+            type="checkbox"
+            id={`item-${item.id}`}
+            checked={isSelected}
+            onChange={() => onToggle(item)}
+            className="w-4 h-4 text-maroon bg-gray-100 border-gray-300 rounded focus:ring-maroon"
+        />
+    </div>
+);
 
-export default function App() {
+
+const page = () => {
+    const [searchQuery, setSearchQuery] = useState("")
+
+    // Main array for items added to the barcode generation list
+    const [data, setData] = useState<any[]>([])
+    const { user } = useAuthStore()
+    const { getByFIR } = useMaalkhanaStore()
+
+    // State to hold multiple search results for selection
+    const [multipleResults, setMultipleResults] = useState<any[]>([])
+    // State to track which items are checked by the user
+    const [selectedItems, setSelectedItems] = useState<any[]>([])
 
 
-    const [isScanning, setIsScanning] = useState<boolean>(false);
-    const [scanResult, setScanResult] = useState<BarcodeResult | null>(null);
-    const [scanError, setScanError] = useState<string | null>(null);
+    const handleToggleSelect = (itemToToggle: any) => {
+        // Use a unique ID or a combination of properties for identification
+        const itemId = itemToToggle.id || `${itemToToggle.firNo}-${itemToToggle.srNo}`;
 
-    // This function handles a successful scan result
+        setSelectedItems(prevSelected => {
+            // Check if the item is already selected
+            const isSelected = prevSelected.some(item => (item.id || `${item.firNo}-${item.srNo}`) === itemId);
 
-    const router = useRouter()
-    const handleScanSuccess = (decodedText: string) => {
-        try {
-            const parts = decodedText.split('-');
-            if (parts.length === 3) {
-                const [dbName, firNo, srNo] = parts;
-                setScanResult({ dbName, firNo, srNo });
-                setScanError(null);
-                setIsScanning(false);
+            if (isSelected) {
+                // Remove item
+                return prevSelected.filter(item => (item.id || `${item.firNo}-${item.srNo}`) !== itemId);
             } else {
-                setScanError("Invalid barcode format. Expected 'dbname-firNo-srNo'.");
-                setIsScanning(false);
+                // Add item
+                return [...prevSelected, itemToToggle];
             }
-        } catch (err) {
-            setScanError("Failed to process scanned data.");
-            setIsScanning(false);
+        });
+    }
+
+    const handleAddSelected = () => {
+        if (selectedItems.length > 0) {
+            // 1. Add selected items to the main data array
+            // Check for duplicates before adding
+            const newItems = selectedItems.filter(sItem =>
+                !data.some(dItem => (dItem.id || `${dItem.firNo}-${dItem.srNo}`) === (sItem.id || `${sItem.firNo}-${sItem.srNo}`))
+            );
+
+            setData((prev: any[]) => [...prev, ...newItems]);
+
+            // 2. Reset the selection process
+            setMultipleResults([]);
+            setSelectedItems([]);
         }
-    };
+    }
 
-    // This function handles any errors during the scan
-    const handleScanError = (errorMessage: string) => {
-        setScanError(errorMessage);
-        setIsScanning(false);
-    };
 
-    // Resets the state to start a new scan
-    const resetScanner = () => {
-        setScanResult(null);
-        setScanError(null);
-        setIsScanning(true);
-    };
+    const handleGet = async () => {
+        // Clear previous results/selection states when a new search starts
+        setMultipleResults([]);
+        setSelectedItems([]);
 
+        try {
+            const response = await getByFIR(searchQuery, user?.id)
+            const responseData = response.data
+
+            if (Array.isArray(responseData) && responseData.length > 0) {
+                if (response.success) {
+                    if (responseData.length === 1) {
+                        // Case 1: Only one result, add directly to main data
+                        // Check for duplicates first!
+                        const sItem = responseData[0];
+                        const itemId = sItem.id || `${sItem.firNo}-${sItem.srNo}`;
+
+                        const isDuplicate = data.some(dItem => (dItem.id || `${dItem.firNo}-${dItem.srNo}`) === itemId);
+
+                        if (!isDuplicate) {
+                            setData((prev: any[]) => [...prev, ...responseData])
+                        }
+                        setSearchQuery("")
+
+                    } else {
+                        // Case 2: Multiple results, show selection screen
+                        setMultipleResults(responseData);
+                        setSearchQuery(searchQuery); // Keep FIR No for context if needed
+                    }
+                }
+            } else {
+                console.log("No data found or data structure is unexpected.");
+            }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }
+
+    // Console log for debugging
+    // console.log("Main Data:", data);
+    // console.log("Multiple Results:", multipleResults);
+    // console.log("Selected Items:", selectedItems);
+
+
+
+
+    const handleGenerateBarcodes = async () => {
+        console.log(data);
+
+        const year = {
+            from: "",
+            to: ""
+        }
+        await generateBarcodePDF(data, "m", year, user?.policeStation,);
+
+    }
     return (
-        <div className="bg-blue glass-effect min-h-screen font-sans text-gray-800 p-4 sm:p-8 flex flex-col items-center">
-            <div className="max-w-4xl w-full bg-blue rounded-xl shadow-2xl p-6 sm:p-8 transition-all duration-300 transform scale-95 hover:scale-100">
-                <header className="text-center mb-8">
-                    <h1 className="text-3xl sm:text-4xl font-extrabold text-blue-200">Maalkhana Asset Manager</h1>
-                </header>
-                <main className="space-y-8">
-                    <section className="  p-6 rounded-xl shadow-lg">
+        <div className='h-screen w-full glass-effect flex flex-col items-center'>
+            <div className='bg-maroon w-full py-4 border border-gray-400 rounded-t-xl flex justify-center'>
+                <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Generate Barcodes</h1>
+            </div>
 
-                        {isScanning ? (
-                            <div>
-                                <BarcodeScanner onScanSuccess={handleScanSuccess} onScanError={handleScanError} />
-                                <button
-                                    onClick={() => setIsScanning(false)}
-                                    className="mt-4 w-full bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition duration-300"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="text-center">
-                                {scanResult && <ScannerDisplay result={scanResult} />}
-                                {scanError && (
-                                    <div className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md mb-4">
-                                        <h3 className="font-bold text-lg">Scan Error</h3>
-                                        <p>{scanError}</p>
-                                    </div>
-                                )}
-                                <div className='flex items-center gap-4 '>
+            <div className='w-3/4 flex pt-8 flex-col items-center'>
 
-                                    <button
-                                        onClick={() => { router.push("/barcode/generate/single") }}
-                                        className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out transform hover:scale-105"
-                                    >
-                                        Generate barcodes
-                                    </button>
-                                    <button
-                                        onClick={resetScanner}
-                                        className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out transform hover:scale-105"
-                                    >
-                                        {scanResult ? 'Scan Another Item' : 'Start Camera Scan'}
-                                    </button>
-                                </div>
+                <div id='inputbox and button' className="flex gap-2 items-center">
+                    <InputComponent
+                        isLabel={false}
+                        value={searchQuery}
+                        label=" firNo"
+                        setInput={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <Button onClick={handleGet} >Search and Add</Button>
+                </div>
+
+                {/* AREA FOR MULTIPLE SELECTION */}
+                {multipleResults.length > 0 && (
+                    <div id="selection-area" className="mt-6 p-4 border border-blue-100/20 rounded-lg w-full max-w-md bg-blue">
+                        <h2 className="text-lg font-semibold  text-blue-100 mb-3">
+                            Multiple Entries Found for
+                            <span className="font-bold">{searchQuery}</span>
+                        </h2>
+                        <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-md">
+                            {multipleResults.map((item, index) => (
+                                <CheckboxRow
+                                    key={item.id || index}
+                                    item={item}
+                                    isSelected={selectedItems.some(sItem => (sItem.id || `${sItem.firNo}-${sItem.srNo}`) === (item.id || `${item.firNo}-${item.srNo}`))}
+                                    onToggle={handleToggleSelect}
+                                />
+                            ))}
+                        </div>
+                        <Button
+                            onClick={handleAddSelected}
+                            disabled={selectedItems.length === 0}
+                            className="w-full mt-3 bg-maroon text-white hover:bg-red-700"
+                        >
+                            Add Selected Items ({selectedItems.length})
+                        </Button>
+                    </div>
+                )}
+
+                {/* LIST OF ADDED ITEMS */}
+                <h3 className="mt-8 text-xl font-semibold text-gray-700">
+                    Items for Barcode Generation ({data.length})
+                </h3>
+                <div id='row area' className="mt-2 w-full max-w-md border border-gray-300 rounded-md glass-effect shadow-md">
+                    {data.length > 0 ? (
+                        data.map((item: any, index: number) => (
+                            // Ensure key is unique
+                            <div key={item.id || index} className="p-3 border-b border-gray-100 flex justify-between items-center last:border-b-0">
+                                <span className="text-blue-100 font-medium">
+                                    FIR: <span className="font-bold">{item.firNo}</span>
+                                </span>
+                                <span className="text-sm text-blue-200">
+                                    Sr No: {item.srNo || 'N/A'}
+                                </span>
                             </div>
-                        )}
-                    </section>
-                </main>
+                        ))
+                    ) : (
+                        <p className="p-4 text-center text-blue-100 italic">
+                            No items added yet. Search by FIR No to begin.
+                        </p>
+                    )}
+                </div>
+
+
+                <div id='button area' className="mt-6">
+                    <Button
+                        onClick={handleGenerateBarcodes}
+                        disabled={data.length === 0}
+                        className="bg-green-600 hover:bg-green-700"
+                    >
+                        Generate Barcodes for {data.length} Items
+                    </Button>
+                </div>
             </div>
         </div>
-    );
+    )
 }
+
+export default page

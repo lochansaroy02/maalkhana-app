@@ -32,7 +32,7 @@ export function MultiSelectDropdown({
     const selectedCount = selectedValues.length;
     const triggerText = selectedCount > 0
         ? `${selectedCount} selected`
-        : `Select ${label}`;
+        : ` ${label}`;
 
     const handleCheckedChange = (checked: boolean, value: string) => {
         if (checked) {
@@ -47,13 +47,13 @@ export function MultiSelectDropdown({
     return (
         <DropdownMenu >
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-[200px] bg-blue  text-blue-100text-wrap glass-effect  justify-between">
+                <Button variant="outline" className="w-[150px] bg-blue  text-blue-100 text-sm text-wrap glass-effect  justify-between">
                     {triggerText}
                     <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-[200px] bg-blue text-blue-100">
-                <DropdownMenuLabel>{label}</DropdownMenuLabel>
+            <DropdownMenuContent className="w-[150px] bg-blue text-xs text-blue-100">
+                <DropdownMenuLabel className='text-sm'>{label}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {options.map((option) => (
                     <DropdownMenuCheckboxItem

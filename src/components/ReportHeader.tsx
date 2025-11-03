@@ -5,11 +5,9 @@ import { useSearchStore } from "@/store/searchStore";
 import { useOpenStore } from "@/store/store";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import DropDown from "./ui/DropDown";
 const ReportHeader = () => {
     const { setDbName, dbName, getSearchResult, } = useSearchStore()
-    const { reportType, setReportType } = useOpenStore();
-
+ 
     const { user } = useAuthStore()
     const router = useRouter();
     const path = usePathname();
@@ -36,39 +34,24 @@ const ReportHeader = () => {
 
 
 
-    const reportTypeOptions = ["All", "movement", "release", "destroy", "return", "nilami"].map(item => ({
-        value: item,
-        label: item.charAt(0).toUpperCase() + item.slice(1) // Capitalize first letter for better display
-    }));
-
+ 
 
 
     return (
-        <div className="py-1 justify-start flex h-14">
-            <div className="flex gap-8 px-4 h-full items-center">
+        <div className="py-1 justify-center flex h-14">
+            <div className="flex px-4 gap-4  h-full  items-center">
                 {data.map((item, index) => {
-                    // ✅ FIX: Check if the current path ends with the item's link.
-                    // This correctly handles locale prefixes like '/hi' or '/en'.
                     const isActive = path.endsWith(item.link);
-
                     return (
                         <div
                             key={index}
                             onClick={() => router.push(item.link)}
-                            className={`${isActive ? "bg-maroon" : "glass-effect"} px-4 py-2 cursor-pointer flex items-center text-white rounded-xl`}
+                            className={`${isActive ? "bg-maroon" : ""}  px-4 py-2 cursor-pointer flex items-center text-white rounded-xl  ease-in transition-all `}
                         >
                             {item.name}
                         </div>
                     );
                 })}
-
-                <div>
-                    <DropDown
-                        selectedValue={reportType}
-                        handleSelect={setReportType}
-                        options={reportTypeOptions}
-                    />
-                </div>
 
 
 

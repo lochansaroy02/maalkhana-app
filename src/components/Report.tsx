@@ -79,7 +79,7 @@ const Report = ({
     headers,
 }: ReportProps) => {
     const router = useRouter();
-    
+
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [selectAll, setSelectAll] = useState(false);
     // isKurtidevEnabled state REMOVED as requested.
