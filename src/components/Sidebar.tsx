@@ -4,7 +4,7 @@ import Logo from '@/assets/Logo';
 import Spycore from '@/assets/Spycore';
 import { useAuthStore } from '@/store/authStore';
 import { useSidebarStore } from '@/store/sidebarStore';
-import { Barcode, Bus, Clipboard, LayoutDashboard, Package, PackageOpen, UploadIcon, Users } from 'lucide-react';
+import { Barcode, Bus, Clipboard, LayoutDashboard, Package, PackageOpen, Shredder, UploadIcon, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
@@ -23,6 +23,7 @@ const Sidebar = () => {
             { name: t("vehicles"), link: "/seized-vehical", icon: <Bus size={16} /> },
             { name: t("movement"), link: "/movement", icon: <UploadIcon size={16} /> },
             { name: t("release"), link: "/release", icon: <PackageOpen size={16} /> },
+            { name: t("destroy"), link: "/destroy", icon: <Shredder size={16} /> },
             { name: t("barcode"), link: "/barcode", icon: <Barcode size={16} /> },
             { name: t("report"), link: "/report", icon: <Clipboard size={16} /> },
         ];
@@ -39,7 +40,7 @@ const Sidebar = () => {
                 <div className='flex justify-center'>
                     <Logo width={100} height={100} />
                 </div>
-                <div className='flex flex-col justify-between   h-full lg:gap-10 gap-6'>
+                <div className='flex flex-col justify-between   h-full lg:gap-4 gap-6'>
                     <div className='gap-2 flex flex-col'>
                         {sidebarData.map((item, index) => {
                             if (!item) return null;
@@ -66,9 +67,11 @@ const Sidebar = () => {
                         })}
                     </div>
                     <div className='lg:p-2 items-center flex flex-col justify-center mb-2 rounded-xl  border-white/20 bg-blue'>
-                        <Spycore />
-                        <h1 className='text-blue-100 text-sm'>Helpline</h1>
-                        <h2 className='text-blue-100 text-sm'>+917500064949</h2>
+                        <div className='w-3/4 flex flex-col justify-center items-center'>
+                            <Spycore />
+                            <h1 className='text-blue-100 text-sm'>Helpline</h1>
+                            <h2 className='text-blue-100 text-sm'>+917500064949</h2>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -94,7 +94,6 @@ export const GET = async (req: NextRequest) => {
         const data = await prisma.malkhanaEntry.findMany({
             where: { firNo },
             select: {
-
                 id: true,
                 srNo: true,
             }

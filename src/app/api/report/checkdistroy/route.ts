@@ -18,15 +18,12 @@ export const GET = async (req: NextRequest) => {
 
 
 
-        const totalDistroy = await prisma.malkhanaEntry.findMany({
+        const totalDistroy = await prisma.malkhanaEntry.count({
             where: {
-                firNo: "188/23",
+                isDestroy: true,
                 userId
             }
         })
-
-
-
 
         // ✅ FIXED: The response object now uses the correct keys expected by the frontend.
         return NextResponse.json({

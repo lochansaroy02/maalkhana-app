@@ -44,6 +44,7 @@ interface MaalkhanaEntry {
     isReturned?: boolean;
     returnDate?: string;
     receivedBy?: string;
+    isDestroy?: boolean,
     returnBackFrom?: string;
 }
 
@@ -178,6 +179,8 @@ const Page = () => {
                             return entry.isReturned === true;
                         case "destroy":
                             return entry.status?.toLowerCase() === 'destroy';
+                        case "destroy":
+                            return entry.isDestroy === true;
                         case "nilami":
                             return entry.status?.toLowerCase() === 'nilami';
                         default:

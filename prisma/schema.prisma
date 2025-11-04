@@ -128,6 +128,7 @@ model MalkhanaEntry {
 
   photo            String?
   releaseItemName  String?
+  releaseOrderedBy String?
   returnBackFrom   String?
   returnDate       DateTime?
   takenOutBy       String?
@@ -138,6 +139,12 @@ model MalkhanaEntry {
   isMovement       Boolean?  @default(false)
   isRelease        Boolean?  @default(false)
   dbName           String?
-  releaseOrderedBy String?
-  User             User?     @relation(fields: [userId], references: [id])
+
+  // distroy  (new fields)
+  isDestroy        Boolean?
+  destroyOrderedBy String?
+  destroyDate      DateTime?
+  destroyPurpose   String?
+
+  User User? @relation(fields: [userId], references: [id])
 }

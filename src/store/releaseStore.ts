@@ -7,7 +7,6 @@ import { useSeizedVehicleStore } from './siezed-vehical/seizeStore';
 
 type ReleaseStore = {
     fetchByFIR: (userId: string | undefined, type: string, firNo?: string, srNo?: string) => Promise<any | null>;
-
     updateReleaseEntry: (id: string, type: string, updatedData: any) => Promise<boolean>;
 
 };

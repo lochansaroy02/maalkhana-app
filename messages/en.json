@@ -17,6 +17,7 @@
         "vehicles": "Seized vehicles",
         "movement": "movement",
         "release": "release",
+        "destroy": "Destroy",
         "barcode": "Barcode",
         "report": "Report"
     },
@@ -282,6 +283,50 @@
             "noRecordSelected": "Please fetch a valid record before saving.",
             "updateSuccess": "Data updated successfully!",
             "saveError": "An error occurred during save."
+        }
+    },
+    "maalkhanaDestroyForm": {
+        "title": "Malkhana Entry Destruction",
+        "labels": {
+            "selectType": "1. Select Type to Destroy:",
+            "firNo": "FIR No.",
+            "orSrNo": "OR Sr. No / Mal No.",
+            "multipleRecords": "Multiple Records Found. Please Select One:",
+            "enterDetails": "3. Enter Destruction Details",
+            "caseProperty": "Case Property",
+            "underSection": "Under Section",
+            "policeStation": "Police Station",
+            "destroyOrderedBy": "Ordered By (Court/Authority)",
+            "destroyPurpose": "Purpose of Destruction",
+            "uploadPhoto": "Upload Destruction Photo Evidence",
+            "uploadDocument": "Upload Destruction Order Document"
+        },
+        "buttons": {
+            "fetchRecord": "2. Fetch Record",
+            "saveAndDestroy": "4. Confirm & Destroy Entry",
+            "clearForm": "Clear Form"
+        },
+        "options": {
+            "type": {
+                "malkhana": "malkhana",
+                "seizedVehicle": "seized vehicle"
+            }
+        },
+        "placeholders": {
+            "srNo": "SR: {srNo}"
+        },
+        "toasts": {
+            "selectType": "Please select a type first.",
+            "enterFirOrSr": "Please enter an FIR No. or Sr. No.",
+            "recordsFound": "{count} records found.",
+            "fetchSuccess": "Record fetched successfully.",
+            "noRecord": "No matching record found.",
+            "fetchFailed": "Failed to fetch record.",
+            "noRecordSelected": "Please fetch and select a record first.",
+            "enterOrderer": "Please enter the ordering authority.",
+            "enterPurpose": "Please enter the purpose of destruction.",
+            "updateSuccess": "Malkhana entry successfully marked as destroyed.",
+            "saveError": "Failed to save destruction details."
         }
     }
 }
