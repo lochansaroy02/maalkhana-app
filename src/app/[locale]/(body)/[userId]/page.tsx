@@ -1,10 +1,8 @@
 "use client";
 
 import InputComponent from '@/components/InputComponent';
-import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/authStore';
 import axios from 'axios'; // 1. Import axios
-import { Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
@@ -94,12 +92,13 @@ const UserProfilePage = () => {
 
 
     return (
-        <div className="h-screen mx-auto mt-8 ">
-            <div className="flex justify-center py-4 border  border-white/50 rounded-xl bg-maroon">
+        <div className="h-screen mx-auto glass-effect  ">
+
+            <div className="flex justify-center py-4 border  border-white/50 rounded-t-xl bg-maroon">
                 <h1 className="text-textColor text-2xl text-blue-100 font-bold">User Profile</h1>
             </div>
 
-            <div className='flex flex-col md:flex-row gap-8 glass-effect p-6 rounded-lg'>
+            <div className='flex flex-col md:flex-row gap-8  p-6 '>
                 <div className='p-6 flex-1'>
                     <p className="text-gray-400 mb-6">Manage your account details here.</p>
                     <div className="glass-effect text-blue-100 p-4 rounded-lg mb-8">

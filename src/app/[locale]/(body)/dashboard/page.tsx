@@ -14,7 +14,6 @@ const Page = () => {
     const { fetchTotalEntries, data, fetchAdminEntries } = useTotalEntriesStore();
     const { user } = useAuthStore();
     const { userId } = useDistrictStore()
-
     useEffect(() => {
         if (user?.role === "policeStation") {
             if (user?.id) {
@@ -28,6 +27,8 @@ const Page = () => {
             }
         }
     }, [user?.id, fetchTotalEntries, userId]);
+    let totalEntry = data?.breakdown?.entry - data?.breakdown?.movement - data?.breakdown?.release
+        - data?.breakdown?.destroy
     let movementvalue = data?.breakdown?.movement < 0 ? 0 : data?.breakdown?.movement
     const t = useTranslations("Dashboard");
     const reportItems = [
@@ -49,7 +50,7 @@ const Page = () => {
             title: t("totalMalkhanaEntry"),
             icon: <User size={40} />,
             bgColour: "bg-red-500",
-            value: data?.breakdown?.entry - data?.breakdown?.movement - data?.breakdown?.release || 0,
+            value: totalEntry || 0,
             url: "/report/entry-report"
         },
         {
