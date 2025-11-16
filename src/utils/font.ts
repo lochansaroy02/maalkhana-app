@@ -1,13 +1,13 @@
 // src/utils/font.ts
 
-export const kurtidevKeys = [
+export const kurtidevKeys: any = [
     // "description",
     // "entryType",
-    // // "firNo",
+    // "firNo",
     // "caseProperty",
     // "gdDate",
     // "IOName",
-    "isRelease"
+    // "isRelease"
     // "policeStation",
     // "underSection",
     // "vadiName",

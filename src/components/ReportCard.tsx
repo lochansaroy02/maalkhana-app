@@ -23,7 +23,7 @@ const ReportCard = ({ data, bgColour, icon, title, url }: CardProps) => {
     }
     return (
         <div onClick={handleClick} className="cursor-pointer">
-            <div className={`${bgColour} px-4 py-4 gap-2  lg:h-32 lg:w-64   rounded-lg   flex flex-col `}>
+            <div className={`${bgColour} px-4 py-4 gap-2  lg:h-32 lg:w-60   rounded-lg   flex flex-col `}>
                 <div className=" flex  gap-2  items-center ">
                     <h1 className="text-lg w-3/4  text-balance    text-neutral-100  ">{title}</h1>
                     <span className="text-neutral-50">

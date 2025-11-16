@@ -15,7 +15,7 @@ const Page = () => {
 
 
     useEffect(() => {
-        if (user?.role === "district")  
+        if (user?.role === "district")
             getUsers(user?.id);
     }, [user?.id]);
 

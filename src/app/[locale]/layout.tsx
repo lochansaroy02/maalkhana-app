@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 
 export const metadata: Metadata = {
-  title: "Malkhana App",
+  title: "Digital Malkhana",
 
   description: "District-wise Property Seizure App",
 };

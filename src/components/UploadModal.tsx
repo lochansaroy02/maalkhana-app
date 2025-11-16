@@ -3,8 +3,7 @@
 import { expectedSchemas } from "@/constants/schemas";
 import { useAuthStore } from "@/store/authStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
-// 🚨 This is where the logic for handling missing/empty columns must reside.
-// It should map missing Excel headers to 'null' or skip non-required fields.
+import { mirzapur } from "@/utils/headerMap";
 import { validateAndMapExcelSchema } from "@/utils/validateSchemas";
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
@@ -15,120 +14,95 @@ interface UploadModalProps {
     schemaType: keyof typeof expectedSchemas;
     isOpen: boolean;
     onClose: () => void;
-    addEntry: (data: any) => Promise<void>;
+    addEntry: (data: any) => Promise<void>; // Retained for signature, though not used in this specific implementation
     onSuccess: (message: string) => void;
 }
-// Your provided map for mapping Excel headers to database keys
-// const exportMap = {
-//     "SR. No.": "srNo",
-//     "FIR No.": "firNo",
-//     "GD No.": "gdNo",
-//     "GD Date": "gdDate",
-//     "Under Section": "underSection",
-//     "Description": "description",
-//     "Case Property": "caseProperty",
-//     "Police Station": "policeStation",
-//     "Year": "Year",
-//     "IO Name": "IOName",
-//     "Vadi Name": "vadiName",
-//     "Accused": "accused",
-//     "Status": "status",
-//     "Entry Type": "entryType",
-//     "Place": "place",
-//     "Box No.": "boxNo",
-//     "Court No.": "courtNo",
-//     "Court Name": "courtName",
-//     "Cash": "cash",
-//     "Wine": "wine",
-//     "Wine Type": "wineType",
-//     "HM": "HM",
-// };
-// // Your provided map for mapping Excel headers to database keys
+
+// ✅ Convert Excel date (serial / dd-mm-yy / mm/dd/yyyy / Date string)
+function parseExcelDate(value: any) {
+    if (!value) return "";
+
+    // 1️⃣ Excel serial number
+    if (typeof value === "number") {
+        // Assuming XLSX is available in the scope
+        // This line uses a library function, which is fine if the environment supports it
+        return XLSX.SSF.format("yyyy-mm-dd", value);
+    }
+
+    // Check for string values that need parsing
+    if (typeof value === "string") {
+
+        // 2️⃣-A dd.mm.yy or dd.mm.yyyy → yyyy-mm-dd
+        if (value.includes(".")) {
+            const parts = value.split(".").map((x) => x.trim());
+            // Check for 3 parts (day, month, year)
+            if (parts.length === 3) {
+                const [dd, mm, yy] = parts;
+                if (dd && mm && yy) {
+                    // Handle 2-digit year (e.g., 24 -> 2024)
+                    const fullYear = yy.length === 2 ? `20${yy}` : yy;
+                    // Format as yyyy-mm-dd
+                    return `${fullYear}-${mm}-${dd}`;
+                }
+            }
+        }
+
+        // 2️⃣-B dd-mm-yy → yyyy-mm-dd (Original logic)
+        if (value.includes("-")) {
+            const [dd, mm, yy] = value.split("-").map((x) => x.trim());
+
+            if (dd && mm && yy) {
+                const fullYear = yy.length === 2 ? `20${yy}` : yy;
+                return `${fullYear}-${mm}-${dd}`;
+            }
+        }
+    }
 
 
+    // 3️⃣ Normal date string (e.g., "2024-01-03" or other standard formats)
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+        return d.toISOString().split("T")[0];
+    }
 
-const exportMap = {
-    "cash": "cash",
-    "wine": "wine",
-    "wine type": "wineType",
-    "srNo": "srNo",
-    "fir no": "firNo",
-    "gd no": "gdNo",
-    "gd date": "gdDate",
-    "under section": "underSection",
-    "एचएम/ दाखिल कर्ता का नाम": "HM",
-    "description": "description",
-    "case property": "caseProperty",
-    "police station": "policeStation",
-    "year": "Year",
-    "विवेचक का नाम": "IOName",
-    "वादी का नाम": "vadiName",
-    "accused": "accused",
-    "status": "status",
-    "entry type": "entryType",
-    "place": "place",
-    "box no": "boxNo",
-    "court no": "courtNo",
-    "court name": "courtName",
+    return "";
+}
+const exportMap = mirzapur;
 
-};
+const UploadModal = ({
+    schemaType,
+    isOpen,
+    onClose,
+    onSuccess,
+}: UploadModalProps) => {
+    const { user } = useAuthStore();
+    const { addMaalkhanaEntry } = useMaalkhanaStore();
 
-// const exportMap = {
-//     "cash": "cash",
-//     "wine": "wine",
-//     "wine type": "wineType",
-//     "srNo": "srNo",
-//     "fir no": "firNo",
-//     "gd no": "gdNo",
-//     "gd date": "gdDate",
-//     "hm": "HM",
-//     "under section": "underSection",
-//     "description": "description",
-//     "case property": "caseProperty",
-//     "police station": "policeStation",
-//     "year": "Year",
-//     "ioName": "IOName",
-//     "vadiName": "vadiName",
-//     "accused": "accused",
-//     "status": "status",
-//     "entry type": "entryType",
-//     "place": "place",
-//     "box no": "boxNo",
-//     "court no": "courtNo",
-//     "court name": "courtName",
-
-// };
-
-const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: UploadModalProps) => {
-
-    const { user } = useAuthStore()
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // ⭐ NEW STATE: To hold the data before final submission
+    const [uploadedData, setUploadedData] = useState<any[] | null>(null);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { addMaalkhanaEntry } = useMaalkhanaStore()
 
-    // 1. Define fields that MUST be integers (Int or Null)
     const integerFields = ["srNo", "gdNo", "boxNo", "Year", "cash", "wine"];
-    // 2. Get ALL possible database keys from your export map to ensure no argument is missing
     const allDatabaseKeys = Object.values(exportMap);
-
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        setLoading(true);
         setError("");
+        setLoading(true);
+        setUploadedData(null); // Clear previous data
 
         const reader = new FileReader();
+
         reader.onload = async (evt) => {
             try {
-                const bstr = evt.target?.result;
-                const workbook = XLSX.read(bstr, { type: "binary" });
-                const sheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-
-                // Get the raw JSON data from the Excel sheet (keys are original headers)
+                const workbook = XLSX.read(evt.target?.result, { type: "binary" });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const rawJsonData: any[] = XLSX.utils.sheet_to_json(sheet);
 
                 if (rawJsonData.length === 0) {
@@ -137,16 +111,16 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                     return;
                 }
 
-                // --- STEP 1: Map Excel Headers to Database Keys ---
-                const excelToDbKeyMap: Record<string, string> = exportMap;
+                // ⭐ STEP 1: Map Excel headers → DB keys
                 const mappedData = rawJsonData.map((row) => {
                     const newRow: any = {};
-                    for (const excelHeader in row) {
-                        // Trim whitespace from the Excel header for robust matching
-                        const cleanedHeader = excelHeader.trim();
-                        const dbKey = excelToDbKeyMap[cleanedHeader];
 
-                        // Map the value if the header is recognized
+                    for (const excelHeader in row) {
+                        const cleaned = excelHeader.trim();
+
+                        // @ts-ignore
+                        const dbKey = exportMap[cleaned];
+
                         if (dbKey) {
                             newRow[dbKey] = row[excelHeader];
                         }
@@ -154,366 +128,204 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: Uploa
                     return newRow;
                 });
 
-                console.log(mappedData);
-
-                // --- STEP 2: Validate Schema (using mapped keys) ---
-                // The validateAndMapExcelSchema is assumed to run validation and potentially 
-                // fill in other required fields. We pass the data with mapped keys.
-                // NOTE: If validateAndMapExcelSchema is a simple validator, you can pass mappedData directly.
-                // If it relies on a specific schema for MalkhanaEntry, we keep it here.
-                const { error, data: validatedData } = validateAndMapExcelSchema(mappedData, "MalkhanaEntry", user?.id);
+                // ⭐ STEP 2: Validate schema
+                const { error, data: validatedData } = validateAndMapExcelSchema(
+                    mappedData,
+                    "MalkhanaEntry",
+                    user?.id
+                );
 
                 if (error) {
                     setError(error);
                     setLoading(false);
                     return;
                 }
-                // --- STEP 3: Coerce Types and Ensure All Fields are Present (Type Fixing) ---
+
+                // ⭐ STEP 3: Final data cleanup
                 const fixedData = validatedData.map((entry: any) => {
                     const newEntry: any = {};
-                    if (user?.id) {
-                        newEntry.userId = user.id;
-                    }
 
-                    // Iterate over ALL possible database keys to ensure every field is present (or null/empty string)
+                    if (user?.id) newEntry.userId = user.id;
+
                     for (const key of allDatabaseKeys) {
-                        const rawValue = entry[key];
+                        let rawValue = entry[key];
 
-                        if (integerFields.includes(key)) {
-                            // --- Logic for Integer Fields (Int or Null) ---
-                            const valueStr = rawValue != null ? String(rawValue).trim() : "";
-
-                            if (valueStr === "") {
-                                newEntry[key] = null; // Set to null for missing integers
-                            } else {
-                                const parsedInt = parseInt(valueStr, 10);
-
-                                // Robust check: isNaN OR if string representation of parsed int doesn't match original string
-                                if (isNaN(parsedInt) || String(parsedInt) !== valueStr) {
-                                    newEntry[key] = null;
-                                } else {
-                                    newEntry[key] = parsedInt;
-                                }
-                            }
-
-                        } else {
-                            // --- Logic for String Fields (String or Empty String) ---
-                            if (rawValue == null || String(rawValue).trim() === "") {
-                                // Explicitly set missing/empty string fields to empty string ("") 
-                                // as per your example JSON for fields like 'firNo'.
-                                newEntry[key] = "";
-                            } else {
-                                // Ensure it is explicitly a string and trim whitespace
-                                newEntry[key] = String(rawValue).trim();
-                            }
+                        // Handle gdDate specifically
+                        if (key === "gdDate") {
+                            newEntry[key] = parseExcelDate(rawValue);
+                            continue;
                         }
+
+                        // Integer fields
+                        if (integerFields.includes(key)) {
+                            const str = rawValue ? String(rawValue).trim() : "";
+                            const parsed = parseInt(str, 10);
+                            newEntry[key] =
+                                !str || isNaN(parsed) || String(parsed) !== str
+                                    ? null
+                                    : parsed;
+                            continue;
+                        }
+
+                        // String fields
+                        newEntry[key] = rawValue ? String(rawValue).trim() : "";
                     }
 
                     return newEntry;
                 });
 
-                console.log(fixedData);
-                const isSuccess = await addMaalkhanaEntry(fixedData);
-                if (isSuccess) {
-                    onSuccess("✅ Data imported successfully");
-                    onClose();
-                } else {
-                    setError("❌ Failed to import data. Check server logs.");
-                }
-            } catch (err: any) {
-                console.error("Error processing file:", err);
-                setError(`❌ Failed to process the Excel file. Please ensure it's in the correct format.`);
+                // ⭐ NEW: Store the cleaned data and show the confirmation modal
+                setUploadedData(fixedData);
+                // Note: Loading is set to false in finally block, but we keep it true
+                // until the user confirms or cancels the submission.
+
+            } catch (err) {
+                console.error(err);
+                setError("❌ Failed to process Excel file.");
             } finally {
                 setLoading(false);
             }
         };
+
         reader.readAsBinaryString(file);
     };
 
     const handleClearFile = () => {
         if (fileInputRef.current) {
-            fileInputRef.current.value = '';
+            fileInputRef.current.value = "";
             setError("");
+            setUploadedData(null); // Clear data on file clear
+        }
+    };
+
+    // ⭐ NEW FUNCTION: Handles the final API submission
+    const handleConfirmUpload = async () => {
+        if (!uploadedData || uploadedData.length === 0) return;
+
+        setLoading(true);
+        setError("");
+
+        try {
+            // ⭐ STEP 4: Submit to backend
+            const isSuccess = await addMaalkhanaEntry(uploadedData);
+
+            if (isSuccess) {
+                onSuccess("✅ Data imported successfully!");
+                onClose();
+            } else {
+                setError("❌ Failed to import data.");
+            }
+        } catch (err) {
+            console.error(err);
+            setError("❌ An unexpected error occurred during submission.");
+        } finally {
+            setLoading(false);
+            setUploadedData(null); // Clear data after submission attempt
+        }
+    };
+
+    const handleCancelUpload = () => {
+        setUploadedData(null); // Close confirmation modal
+        setLoading(false);
+        // Optionally clear the file input as well
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
         }
     };
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
-            <div className="bg-blue  p-6 relative rounded w-[200%] max-w-md">
-                <h2 className="text-lg text-blue-100 font-bold mb-4">Import Excel - {schemaType}</h2>
-                <div className="p-4 ">
-                    <input ref={fileInputRef} type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4 text-blue-100/70 border border-dotted border-blue-100 px-4 py-2 rounded-xl" />
-                    <Button onClick={handleClearFile} className="border border-white">Clear File</Button>
-                    <div className="flex top-0 right-2  absolute justify-end gap-2 mt-4">
-                        <Button className=" flex rounded-full cursor-pointer bg-red-700 hover:bg-red-500 items-center justify-center " onClick={onClose}><X size={12} /></Button>
+    // --- Confirmation Modal Display ---
+    if (uploadedData) {
+        return (
+            <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
+                <div className="bg-white p-6 relative rounded w-full max-w-xl max-h-[80vh] overflow-y-auto">
+                    <h2 className="text-xl text-black font-bold mb-4">
+                        Confirm Data Import
+                    </h2>
+                    <p className="text-gray-700 mb-4">
+                        A total of **{uploadedData.length}** records are ready to be imported. Please review the first few records:
+                    </p>
+
+                    {/* Display first 3 records for review */}
+                    <div className="bg-gray-100 p-3 rounded-lg text-xs font-mono max-h-40 overflow-y-auto mb-4">
+                        {uploadedData.slice(0, 3).map((item, index) => (
+                            <pre key={index} className="mb-2 p-1 border-b border-gray-300 last:border-b-0 overflow-x-auto">
+                                {JSON.stringify(item, null, 2)}
+                            </pre>
+                        ))}
+                        {uploadedData.length > 3 && (
+                            <p className="text-center text-gray-500 mt-2">
+                                ... and {uploadedData.length - 3} more records.
+                            </p>
+                        )}
                     </div>
+
+                    <div className="flex justify-end space-x-3">
+                        <Button
+                            onClick={handleCancelUpload}
+                            disabled={loading}
+                            className="bg-gray-500 hover:bg-gray-600 text-white"
+                        >
+                            No, Cancel
+                        </Button>
+                        <Button
+                            onClick={handleConfirmUpload}
+                            disabled={loading}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                            {loading ? "Importing..." : "Yes, Import Data"}
+                        </Button>
+                    </div>
+
+                    {error && <p className="text-red-500 whitespace-pre-wrap mt-4">{error}</p>}
                 </div>
             </div>
+        );
+    }
 
-            {loading && <p className="text-blue-500">Importing...</p>}
-            {error && <p className="text-red-500  whitespace-pre-wrap">{error}</p>}
+    // --- Initial File Upload Modal Display ---
+    return (
+        <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
+            <div className="bg-white p-6 relative rounded w-full max-w-md">
+                <h2 className="text-xl text-black font-bold mb-4">
+                    Import Excel - {schemaType}
+                </h2>
 
+                <div className="p-4 border border-gray-300 rounded-lg">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".xlsx, .xls"
+                        onChange={handleFileUpload}
+                        className="mb-4 text-black border border-dotted border-gray-400 px-4 py-2 rounded-xl w-full"
+                        disabled={loading}
+                    />
+                    <div className="flex justify-end space-x-3">
+                        <Button
+                            onClick={handleClearFile}
+                            disabled={loading}
+                            className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                        >
+                            Clear File
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="absolute top-0 right-2 mt-4">
+                    <Button
+                        className="rounded-full bg-red-700 hover:bg-red-500 p-2"
+                        onClick={onClose}
+                    >
+                        <X size={16} className="text-white" />
+                    </Button>
+                </div>
+
+                {loading && <p className="text-blue-500 mt-4">Processing file...</p>}
+                {error && <p className="text-red-500 whitespace-pre-wrap mt-4">{error}</p>}
+            </div>
         </div>
     );
 };
 
 export default UploadModal;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// "use client";
-
-// import { expectedSchemas } from "@/constants/schemas";
-// import { useAuthStore } from "@/store/authStore";
-// import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
-// // 🚨 This is where the logic for handling missing/empty columns must reside.
-// // It should map missing Excel headers to 'null' or skip non-required fields.
-// import { validateAndMapExcelSchema } from "@/utils/validateSchemas";
-// import { X } from "lucide-react";
-// import { useRef, useState } from "react";
-// import * as XLSX from "xlsx";
-// import { Button } from "./ui/button";
-
-// interface UploadModalProps {
-//     schemaType: keyof typeof expectedSchemas;
-//     isOpen: boolean;
-//     onClose: () => void;
-//     onSuccess: (message: string) => void;
-//     addEntry: (data: any) => Promise<void>;
-// }
-
-// // Your provided map for mapping Excel headers to database keys
-// const exportMap = {
-//     "SR. No.": "srNo",
-//     "FIR No.": "firNo",
-//     "GD No.": "gdNo",
-//     "GD Date": "gdDate",
-//     "Under Section": "underSection",
-//     "Description": "description",
-//     "Case Property": "caseProperty",
-//     "Police Station": "policeStation",
-//     "Year": "Year",
-//     "IO Name": "IOName",
-//     "Vadi Name": "vadiName",
-//     "Accused": "accused",
-//     "Status": "status",
-//     "Entry Type": "entryType",
-//     "Place": "place",
-//     "Box No.": "boxNo",
-//     "Court No.": "courtNo",
-//     "Court Name": "courtName",
-//     "Cash": "cash",
-//     "Wine": "wine",
-//     "Wine Type": "wineType",
-//     "HM": "HM",
-// };
-
-// const UploadModal = ({ schemaType, isOpen, onClose, onSuccess, addEntry }: UploadModalProps) => {
-
-//     const { user } = useAuthStore()
-//     const [error, setError] = useState("");
-//     const [loading, setLoading] = useState(false);
-//     const fileInputRef = useRef<HTMLInputElement>(null);
-//     const { addMaalkhanaEntry } = useMaalkhanaStore()
-
-
-
-
-
-//     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-//         const file = e.target.files?.[0];
-//         if (!file) return;
-
-//         setLoading(true);
-//         setError("");
-
-//         const reader = new FileReader();
-//         reader.onload = async (evt) => {
-//             try {
-//                 const bstr = evt.target?.result;
-//                 const workbook = XLSX.read(bstr, { type: "binary" });
-//                 const sheetName = workbook.SheetNames[0];
-//                 const sheet = workbook.Sheets[sheetName];
-
-//                 // Get the raw JSON data from the Excel sheet
-//                 const jsonData: any[] = XLSX.utils.sheet_to_json(sheet);
-
-//                 if (jsonData.length === 0) {
-//                     setError("❌ The uploaded file is empty.");
-//                     setLoading(false);
-//                     return;
-//                 }
-
-//                 // Validate, map, and fill missing fields using our custom function
-//                 const { error, data: validatedData } = validateAndMapExcelSchema(jsonData, "MalkhanaEntry", user?.id);
-
-//                 if (error) {
-//                     setError(error);
-//                     setLoading(false);
-//                     return;
-//                 }
-
-//                 // 1. Define fields that MUST be integers (Int or Null)
-//                 // Includes previous fields and likely numeric ones (Cash, Wine)
-//                 const integerFields = ["srNo", "gdNo", "boxNo", "Year", "cash", "wine"];
-
-//                 // 2. Get ALL possible database keys from your export map to ensure no argument is missing
-//                 const allDatabaseKeys = Object.values(exportMap);
-
-//                 const fixedData = validatedData.map((entry: any) => {
-//                     const newEntry: any = {};
-//                     if (user?.id) {
-//                         newEntry.userId = user.id;
-//                     }
-//                     // Iterate over ALL possible database keys to ensure every field is present (or null)
-//                     for (const key of allDatabaseKeys) {
-//                         // The value from the Excel data
-//                         const rawValue = entry[key];
-
-//                         if (integerFields.includes(key)) {
-//                             // --- Logic for Integer Fields (Int or Null) ---
-//                             const valueStr = rawValue != null ? String(rawValue).trim() : "";
-
-//                             if (valueStr === "") {
-//                                 newEntry[key] = null;
-//                             } else {
-//                                 const parsedInt = parseInt(valueStr, 10);
-//                                 newEntry[key] = isNaN(parsedInt) || String(parsedInt) !== valueStr ? null : parsedInt;
-//                             }
-
-//                         } else {
-//                             // --- Logic for String Fields (String or Null, including 'wineType', 'accused',a etc.) ---
-
-//                             if (rawValue == null || String(rawValue).trim() === "") {
-//                                 // Explicitly set missing/empty string fields to null 
-//                                 newEntry[key] = "";
-//                             } else {
-//                                 // Ensure it is explicitly a string and trim whitespace
-//                                 newEntry[key] = String(rawValue).trim();
-//                             }
-//                         }
-//                     }
-
-//                     return newEntry; // Return the new entry with all keys guaranteed
-//                 });
-
-//                 // Now, send the FIXED data (which is an array) to the API
-//                 console.log(validatedData);
-//                 const isSuccess = await addMaalkhanaEntry(fixedData);
-
-//                 if (isSuccess) {
-//                     onSuccess("✅ Data imported successfully");
-//                     onClose();
-//                 } else {
-//                     setError("❌ Failed to import data. Check server logs.");
-//                 }
-
-//             } catch (err: any) {
-//                 console.error("Error processing file:", err);
-//                 setError(`❌ Failed to process the Excel file. Please ensure it's in the correct format.`);
-//             } finally {
-//                 setLoading(false);
-//             }
-//         };
-//         reader.readAsBinaryString(file);
-//     };
-
-//     const handleClearFile = () => {
-//         if (fileInputRef.current) {
-//             fileInputRef.current.value = '';
-//             setError("");
-//         }
-//     };
-
-//     if (!isOpen) return null;
-
-//     return (
-//         <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
-//             <div className="bg-blue p-6 relative rounded w-[200%] max-w-md">
-//                 <h2 className="text-lg text-blue-100 font-bold mb-4">Import Excel - {schemaType}</h2>
-//                 <div className="p-4 ">
-//                     <input ref={fileInputRef} type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mb-4 text-blue-100/70 border border-dotted border-blue-100 px-4 py-2 rounded-xl" />
-//                     <Button onClick={handleClearFile} className="border border-white">Clear File</Button>
-//                 </div>
-
-//                 {loading && <p className="text-blue-500">Importing...</p>}
-//                 {error && <p className="text-red-500  whitespace-pre-wrap">{error}</p>}
-//                 <div className="flex top-56 right-56  absolute justify-end gap-2 mt-4">
-//                     <Button className=" flex rounded-full bg-red-700 hover:bg-red-500 items-center justify-center " onClick={onClose}><X size={12} /></Button>
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default UploadModal;

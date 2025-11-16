@@ -255,7 +255,7 @@ export default function EntryReportDetail() {
                             const isKurtidevField = isLegacyEntry && kurtidevKeys.includes(key);
 
                             // Apply font-kurtidev class if it's a legacy year AND a kurtidev-eligible field
-                            const fontClass = isKurtidevField ? 'font-kurtidev' : '';
+                            // const fontClass = isKurtidevField ? 'font-kurtidev' : '';
 
                             if (key === "photoUrl") {
                                 return (
@@ -276,7 +276,7 @@ export default function EntryReportDetail() {
                                         key={key}
                                         className="col-span-1 md:col-span-2 gap-2 flex flex-col border-b pb-2" >
                                         <span className="text-sm font-semibold">{label}:</span>
-                                        <p className={`text-gray-800 text-sm whitespace-pre-line ${fontClass}`}>
+                                        <p className={`text-gray-800 text-sm whitespace-pre-line `}>
                                             {/* Use renderFieldValue for conversion */}
                                             {renderFieldValue(key, value)}
                                         </p>
@@ -291,7 +291,7 @@ export default function EntryReportDetail() {
                                         <h1 className="text-sm">
                                             {label}:
                                         </h1>
-                                        <h1 className={`text-wrap font-semibold text-gray-800 ${fontClass}`}>
+                                        <h1 className={`text-wrap font-semibold text-gray-800`} >
                                             {/* Use renderFieldValue for conversion */}
                                             {renderFieldValue(key, value)}
                                         </h1>
