@@ -51,6 +51,34 @@ export const arniya = {
     "COURT NAME": "courtName",
 };
 
+export const bhadohi = {
+    "EntryType": "entryType",
+    "MudNo": "srNo",
+    "PoliceStation": "policeStation",
+    "FirNo": "firNo",
+    "EntryPerson": "HM",
+    "IoName": "IOName",
+    "GdNo": "gdNo",
+    "Description": "description",
+    "CaseProperty": "caseProperty",
+    "Year": "Year",
+    "Banam": "accused",
+    "Court": "courtName",
+    "Location": "place",
+    "UnderSectionOne": "underSection",
+    "Status": "status",
+
+    // missing fields
+
+    "GD DATE DD-MM-YY": "gdDate",
+    "VADI": "vadiName",
+    "BOX NO": "boxNo",
+    "COURT NO": "courtNo",
+    "CASH": "cash",
+    "WINE": "wine",
+    "WINE TYPE": "wineType",
+};
+
 
 
 export const mirzapur = {

@@ -3,7 +3,8 @@
 import { expectedSchemas } from "@/constants/schemas";
 import { useAuthStore } from "@/store/authStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
-import { mirzapur } from "@/utils/headerMap";
+import { arniya } from "@/utils/headerMap";
+import { parseExcelDate } from "@/utils/parseDate";
 import { validateAndMapExcelSchema } from "@/utils/validateSchemas";
 import { X } from "lucide-react";
 import { useRef, useState } from "react";
@@ -14,67 +15,15 @@ interface UploadModalProps {
     schemaType: keyof typeof expectedSchemas;
     isOpen: boolean;
     onClose: () => void;
-    addEntry: (data: any) => Promise<void>; // Retained for signature, though not used in this specific implementation
+    addEntry: (data: any) => Promise<void>;
     onSuccess: (message: string) => void;
 }
 
-// ✅ Convert Excel date (serial / dd-mm-yy / mm/dd/yyyy / Date string)
-function parseExcelDate(value: any) {
-    if (!value) return "";
-
-    // 1️⃣ Excel serial number
-    if (typeof value === "number") {
-        // Assuming XLSX is available in the scope
-        // This line uses a library function, which is fine if the environment supports it
-        return XLSX.SSF.format("yyyy-mm-dd", value);
-    }
-
-    // Check for string values that need parsing
-    if (typeof value === "string") {
-
-        // 2️⃣-A dd.mm.yy or dd.mm.yyyy → yyyy-mm-dd
-        if (value.includes(".")) {
-            const parts = value.split(".").map((x) => x.trim());
-            // Check for 3 parts (day, month, year)
-            if (parts.length === 3) {
-                const [dd, mm, yy] = parts;
-                if (dd && mm && yy) {
-                    // Handle 2-digit year (e.g., 24 -> 2024)
-                    const fullYear = yy.length === 2 ? `20${yy}` : yy;
-                    // Format as yyyy-mm-dd
-                    return `${fullYear}-${mm}-${dd}`;
-                }
-            }
-        }
-
-        // 2️⃣-B dd-mm-yy → yyyy-mm-dd (Original logic)
-        if (value.includes("-")) {
-            const [dd, mm, yy] = value.split("-").map((x) => x.trim());
-
-            if (dd && mm && yy) {
-                const fullYear = yy.length === 2 ? `20${yy}` : yy;
-                return `${fullYear}-${mm}-${dd}`;
-            }
-        }
-    }
+const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProps) => {
 
 
-    // 3️⃣ Normal date string (e.g., "2024-01-03" or other standard formats)
-    const d = new Date(value);
-    if (!isNaN(d.getTime())) {
-        return d.toISOString().split("T")[0];
-    }
+    const exportMap = arniya;
 
-    return "";
-}
-const exportMap = mirzapur;
-
-const UploadModal = ({
-    schemaType,
-    isOpen,
-    onClose,
-    onSuccess,
-}: UploadModalProps) => {
     const { user } = useAuthStore();
     const { addMaalkhanaEntry } = useMaalkhanaStore();
 

@@ -79,7 +79,7 @@ type ReportData = {
 
 // Define the fields to be included in the keyword search
 const SEARCHABLE_FIELDS: (keyof MaalkhanaEntry)[] = [
-    "firNo", "srNo", "description", "entryType", "policeStation", "caseProperty", "vadiName", "status"
+    "firNo", "srNo", "Year", "description", "entryType", "policeStation", "caseProperty", "vadiName", "status"
 ];
 
 // Map of dropdown value to potential Hindi values in the data (extend as needed)
