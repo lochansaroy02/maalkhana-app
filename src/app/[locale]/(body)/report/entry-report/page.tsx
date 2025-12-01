@@ -324,13 +324,6 @@ const Page = () => {
                 </div>
             </div>
 
-            <Report
-                data={reportContent.data}
-                headers={reportContent.headers}
-                onImportClick={() => setIsModalOpen(true)}
-                heading="Malkhana Data"
-                detailsPathPrefix="/report/entry-report"
-            />
 
             <UploadModal
                 isOpen={isModalOpen}
@@ -339,6 +332,14 @@ const Page = () => {
                 onSuccess={handleImportSuccess}
                 addEntry={addMaalkhanaEntry as any}
             />
+            <Report
+                data={reportContent.data}
+                headers={reportContent.headers}
+                onImportClick={() => setIsModalOpen(true)}
+                heading="Malkhana Data"
+                detailsPathPrefix="/report/entry-report"
+            />
+
         </>
     );
 };

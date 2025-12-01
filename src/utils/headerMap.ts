@@ -27,19 +27,17 @@ export const narora = {
 
 
 export const arniya = {
-    "CASH": "cash",
-    "WINE": "wine",
-    "WINE TYPE": "wineType",
+
     "SR NO": "srNo",
     "FIR NO": "firNo",
-    "GD N0": "gdNo",
-    "GD DATE DD-MM-YY": "gdDate",
     "UNDER SECTION": "underSection",
     "HM/दाखिल कर्ता का नाम": "HM",
     "DESCRIPTION": "description",
     "CASE PROPERTY": "caseProperty",
     "POLICE STATION": "policeStation",
     "YEAR": "Year",
+    "GD N0": "gdNo",
+    "GD DATE DD-MM-YY": "gdDate",
     "विवेचक का नाम": "IOName",
     "वादी का नाम": "vadiName",
     "ACCUSED": "accused",
@@ -49,28 +47,32 @@ export const arniya = {
     "BOX NO": "boxNo",
     "COURT NO": "courtNo",
     "COURT NAME": "courtName",
+
+    "CASH": "cash",
+    "WINE": "wine",
+    "WINE TYPE": "wineType",
 };
 
 export const bhadohi = {
+    "FirNo": "firNo",
     "EntryType": "entryType",
     "MudNo": "srNo",
     "PoliceStation": "policeStation",
-    "FirNo": "firNo",
     "EntryPerson": "HM",
     "IoName": "IOName",
     "GdNo": "gdNo",
     "Description": "description",
     "CaseProperty": "caseProperty",
     "Year": "Year",
-    "Banam": "accused",
+    "accused": "accused",
     "Court": "courtName",
     "Location": "place",
-    "UnderSectionOne": "underSection",
+    "Under Section": "underSection",
     "Status": "status",
 
     // missing fields
 
-    "GD DATE DD-MM-YY": "gdDate",
+    "GD DATE": "gdDate",
     "VADI": "vadiName",
     "BOX NO": "boxNo",
     "COURT NO": "courtNo",
@@ -83,7 +85,7 @@ export const bhadohi = {
 
 export const mirzapur = {
     "मु0अ0सं0 (FIR No)": "firNo",
-    "SR No": "srNo",
+    "SrNo": "srNo",
     "दाखिल मालखाना (ENTRY TYPE)": "entryType",
     "case property": "caseProperty",
     "धारा": "underSection",
@@ -95,7 +97,7 @@ export const mirzapur = {
     "विवेचक का नाम": "IOName",
     "HM/दाखिल कर्ता का नाम": "HM",
     "वादी का नाम": "vadiName",
-    "नकद (case)": "cash",
+    "नकद": "cash",
     "शराब (wine)": "wine",
     "शराब का प्रकार (wine type)": "wineType",
     "अभियुक्त Accused": "accused",
@@ -104,4 +106,29 @@ export const mirzapur = {
     "बोक्स न0": "boxNo",
     "court No": "courtNo",
     "कोर्ट का नाम": "courtName",
+}
+
+export const sikandrabad = {
+    "FIR No": "firNo",
+    "Sr No": "srNo",
+    "Entry Type": "entryType",
+    "Case Property": "caseProperty",
+    "Under Section": "underSection",
+    "Police Station": "policeStation",
+    "Year": "Year",
+    "GD No": "gdNo",
+    "GD Date": "gdDate",
+    "Description": "description",
+    "विवेचक का नाम": "IOName",
+    "hmName": "HM",
+    "वादी का नाम": "vadiName",
+    "नकद (case)": "cash",
+    "शराब (wine)": "wine",
+    "Wine Type": "wineType",
+    "Accused": "accused",
+    "Status": "status",
+    "Place": "place",
+    "Box No": "boxNo",
+    "Court No": "courtNo",
+    "Court Name": "courtName",
 }

@@ -131,7 +131,7 @@ const Header = () => {
                     </h1>
                     {/* 💡 Online Status Dot */}
                     <div
-                        className={`w-3 h-3 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-500'}`}
+                        className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-500'}`}
                         title={isOnline ? 'Online' : 'Offline'}
                     />
                 </div>

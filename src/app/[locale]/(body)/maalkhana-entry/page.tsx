@@ -505,25 +505,44 @@ const Page = () => {
 
                     {fields.map(field => {
                         if (field.name === 'firNo' && dropdownSelection === "unclaimed") return null;
+
+                        // --- CHANGED LOGIC START ---
                         if (field.name === 'srNo') {
-                            if (firData.length > 1) {
-                                return (
-                                    <div key="srNo-radios" className="col-span-2 flex flex-col gap-1">
-                                        <label className='text-blue-100'>{t(`${baseKey}.fields.selectSrNo`)}</label>
-                                        <div className="glass-effect p-3 rounded-md grid grid-cols-2 md:grid-cols-4 gap-3">
-                                            {firData.filter((item: any) => item && item.srNo).map((item: any) => (
-                                                <div key={item.id || item.srNo} className="flex items-center gap-2">
-                                                    <input type="radio" id={`srNo-${item.srNo}`} name="srNoSelection" className="form-radio h-4 w-4" checked={selectedSrNo === String(item.srNo)} onChange={() => handleSrNoSelectionChange(String(item.srNo))} />
-                                                    <label htmlFor={`srNo-${item.srNo}`} className="text-blue-100 cursor-pointer">{item.srNo}</label>
-                                                </div>
-                                            ))}
+                            return (
+                                <div key="srNo-container" className={firData.length > 1 ? "col-span-2 flex justify-between items-center  gap-4" : ""}>
+                                    {firData.length > 1 && (
+                                        <div className="gap-1 w-1/2">
+                                            <label className='text-blue-100'>{t(`${baseKey}.fields.selectSrNo`)}</label>
+                                            <div className="glass-effect w-full  p-3 rounded-md  flex   md:grid-cols-4 gap-3">
+                                                {firData.filter((item: any) => item && item.srNo).map((item: any) => (
+                                                    <div key={item.id || item.srNo} className="flex items-center bg-blue/20 px-4 py-2  rounded-xl gap-2">
+                                                        <input
+                                                            type="radio"
+                                                            id={`srNo-${item.srNo}`}
+                                                            name="srNoSelection"
+                                                            className="form-radio h-4 w-4"
+                                                            checked={selectedSrNo === String(item.srNo)}
+                                                            onChange={() => handleSrNoSelectionChange(String(item.srNo))}
+                                                        />
+                                                        <label htmlFor={`srNo-${item.srNo}`} className="text-blue-100 cursor-pointer">{item.srNo}</label>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
+                                    )}
+                                    <div className=' w-1/2'>
+
+                                        <InputComponent
+                                            label={field.label}
+                                            type={field.type}
+                                            value={formData.srNo}
+                                            setInput={(e) => handleInputChange('srNo', e.target.value)}
+                                        />
                                     </div>
-                                );
-                            } else {
-                                return <InputComponent key={field.name} label={field.label} type={field.type} value={formData[field.name as keyof FormData]} setInput={(e) => handleInputChange(field.name as keyof FormData, e.target.value)} />;
-                            }
+                                </div>
+                            );
                         }
+                        // --- CHANGED LOGIC END ---
 
                         if (field.type === 'dropdown') {
                             return <DropDown key={field.name} label={field.label} selectedValue={status} options={field.options || []} handleSelect={setStatus} />;

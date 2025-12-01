@@ -3,7 +3,7 @@
 import { expectedSchemas } from "@/constants/schemas";
 import { useAuthStore } from "@/store/authStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
-import { arniya } from "@/utils/headerMap";
+import { mirzapur } from "@/utils/headerMap";
 import { parseExcelDate } from "@/utils/parseDate";
 import { validateAndMapExcelSchema } from "@/utils/validateSchemas";
 import { X } from "lucide-react";
@@ -22,7 +22,7 @@ interface UploadModalProps {
 const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProps) => {
 
 
-    const exportMap = arniya;
+    const exportMap = mirzapur;
 
     const { user } = useAuthStore();
     const { addMaalkhanaEntry } = useMaalkhanaStore();
@@ -187,25 +187,30 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProp
     // --- Confirmation Modal Display ---
     if (uploadedData) {
         return (
-            <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
-                <div className="bg-white p-6 relative rounded w-full max-w-xl max-h-[80vh] overflow-y-auto">
-                    <h2 className="text-xl text-black font-bold mb-4">
+            <div className="fixed z-50 inset-0 bg-black/60  flex justify-center items-center">
+                <div className="bg-blue rounded-xl p-6 relative  w-full max-w-xl max-h-[80vh] overflow-y-auto">
+                    <h2 className="text-xl text-blue-100 font-bold mb-4">
                         Confirm Data Import
                     </h2>
-                    <p className="text-gray-700 mb-4">
-                        A total of **{uploadedData.length}** records are ready to be imported. Please review the first few records:
+                    <p className="text-blue-200 mb-4">
+                        A total of
+                        <span className="font-bold mx-2 ">
+
+                            {uploadedData.length}
+                        </span>
+                        records are ready to be imported. Please review the first few records:
                     </p>
 
                     {/* Display first 3 records for review */}
-                    <div className="bg-gray-100 p-3 rounded-lg text-xs font-mono max-h-40 overflow-y-auto mb-4">
-                        {uploadedData.slice(0, 3).map((item, index) => (
+                    <div className="bg-blue-100 p-3 rounded-lg text-xs font-mono max-h-60 overflow-y-auto mb-4">
+                        {uploadedData.slice(0, 10).map((item, index) => (
                             <pre key={index} className="mb-2 p-1 border-b border-gray-300 last:border-b-0 overflow-x-auto">
                                 {JSON.stringify(item, null, 2)}
                             </pre>
                         ))}
                         {uploadedData.length > 3 && (
                             <p className="text-center text-gray-500 mt-2">
-                                ... and {uploadedData.length - 3} more records.
+                                ... and {uploadedData.length - 10} more records.
                             </p>
                         )}
                     </div>
@@ -236,25 +241,25 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProp
     // --- Initial File Upload Modal Display ---
     return (
         <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
-            <div className="bg-white p-6 relative rounded w-full max-w-md">
-                <h2 className="text-xl text-black font-bold mb-4">
+            <div className="bg-blue p-6 relative rounded w-full max-w-md">
+                <h2 className="text-xl text-blue-100 font-bold mb-4">
                     Import Excel - {schemaType}
                 </h2>
 
-                <div className="p-4 border border-gray-300 rounded-lg">
+                <div className="p-4   rounded-lg">
                     <input
                         ref={fileInputRef}
                         type="file"
                         accept=".xlsx, .xls"
                         onChange={handleFileUpload}
-                        className="mb-4 text-black border border-dotted border-gray-400 px-4 py-2 rounded-xl w-full"
+                        className="mb-4 text-blue-200/90 border border-dotted border-gray-400/70 px-4 py-2 rounded-xl w-full"
                         disabled={loading}
                     />
                     <div className="flex justify-end space-x-3">
                         <Button
                             onClick={handleClearFile}
                             disabled={loading}
-                            className="bg-yellow-500 hover:bg-yellow-600 text-black"
+                            className=" border border-blue-100/70 cursor-pointer  text-blue-50"
                         >
                             Clear File
                         </Button>

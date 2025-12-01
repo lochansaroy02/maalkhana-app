@@ -242,9 +242,9 @@
     "maalkhanaReleaseForm": {
         "title": "Malkhana Release",
         "labels": {
-            "selectType": "1. Select Type to Release From:",
+            "selectType": "Select Type to Release From:",
             "firNo": "FIR No.",
-            "orSrNo": "OR Sr. No / Mal No.",
+            "orSrNo": "Sr. No / Mal No.",
             "multipleRecords": "Multiple Records Found. Please Select One:",
             "enterDetails": "3. Enter Release Details",
             "caseProperty": "Case Property",
@@ -259,8 +259,8 @@
             "uploadDocument": "Upload Document"
         },
         "buttons": {
-            "fetchRecord": "2. Fetch Record",
-            "saveAndRelease": "4. Save and Release",
+            "fetchRecord": "Fetch Record",
+            "saveAndRelease": "Release",
             "clearForm": "Clear Form",
             "fetching": "Fetching..."
         },

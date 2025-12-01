@@ -240,11 +240,11 @@
     "maalkhanaReleaseForm": {
         "title": "मालखाना रिहाई",
         "labels": {
-            "selectType": "१. रिहाई के लिए प्रकार चुनें:",
+            "selectType": "रिहाई के लिए प्रकार चुनें:",
             "firNo": "एफ.आई.आर. नंबर",
-            "orSrNo": "या सी.नं. / माल नं.",
+            "orSrNo": "सी.नं. / माल नं.",
             "multipleRecords": "एक से अधिक रिकॉर्ड मिले। कृपया एक चुनें:",
-            "enterDetails": "३. रिहाई का विवरण दर्ज करें",
+            "enterDetails": "रिहाई का विवरण दर्ज करें",
             "caseProperty": "केस संपत्ति",
             "underSection": "धारा के तहत",
             "releaseItemName": "रिहा की जाने वाली वस्तु का नाम",
@@ -257,8 +257,8 @@
             "uploadDocument": "दस्तावेज़ अपलोड करें"
         },
         "buttons": {
-            "fetchRecord": "२. रिकॉर्ड प्राप्त करें",
-            "saveAndRelease": "४. सहेजें और रिहा करें",
+            "fetchRecord": "रिकॉर्ड प्राप्त करें",
+            "saveAndRelease": "रिहा करें",
             "clearForm": "फॉर्म साफ़ करें",
             "fetching": "प्राप्त हो रहा है..."
         },
