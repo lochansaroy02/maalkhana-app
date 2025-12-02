@@ -1,28 +1,31 @@
 "use client"
 
-import { CalendarIcon } from "lucide-react"
-import * as React from "react"
+import { format } from "date-fns"; // Added for consistent date formatting
+import { CalendarIcon } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@/components/ui/popover";
 
-function formatDate(date: Date | undefined) {
+// Use date-fns for standard, reliable formatting
+function formatDateDisplay(date: Date | undefined) {
+    // If date is undefined or null, return an empty string immediately
     if (!date) {
         return ""
     }
-
-    return date.toLocaleDateString("en-US", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-    })
+    // Check for an invalid date object
+    if (isNaN(date.getTime())) {
+        return ""
+    }
+    // Format to match your placeholder style
+    return format(date, "MMMM dd, yyyy")
 }
 
 function isValidDate(date: Date | undefined) {
@@ -40,27 +43,61 @@ interface DateProps {
 
 const DatePicker = ({ date, setDate, label }: DateProps) => {
     const [open, setOpen] = React.useState(false)
+    // The calendar view state (month) is now derived from the 'date' prop
     const [month, setMonth] = React.useState<Date | undefined>(date)
-    const [value, setValue] = React.useState(formatDate(date))
+    // The text input state
+    const [value, setValue] = React.useState(formatDateDisplay(date))
+
+    // 🎯 CRITICAL FIX: Synchronize local state with the external 'date' prop
+    React.useEffect(() => {
+        // 1. Update the text input value
+        setValue(formatDateDisplay(date))
+
+        // 2. Update the calendar month view if a valid date is present
+        if (date && isValidDate(date)) {
+            setMonth(date)
+        } else {
+            // If date is cleared (undefined), reset the month view to nothing specific
+            // If you want it to default to the current month when cleared, you can set it to new Date() here.
+            // For now, let's keep it null/undefined to truly clear the state.
+            setMonth(undefined)
+        }
+    }, [date])
+
+    // Helper to handle both calendar select and manual input updates
+    const handleDateChange = (newDate: Date | undefined) => {
+        setDate(newDate)
+        setValue(formatDateDisplay(newDate))
+        setMonth(newDate) // Always update month when the date changes
+    }
 
     return (
         <div className="flex flex-col gap-2 ">
             <Label htmlFor="date" className=" text-wrap text-lg text-blue-100">
                 {label}
             </Label>
-            <div className="relative   flex gap-2">
+            <div className="relative flex gap-2">
                 <Input
                     id="date"
                     value={value}
                     placeholder="June 01, 2025"
                     className="text-blue-100 placeholder:text-blue-200 pr-10"
                     onChange={(e) => {
-                        const date = new Date(e.target.value)
-                        setValue(e.target.value)
-                        if (isValidDate(date)) {
-                            setDate(date)
-                            setMonth(date)
+                        const inputText = e.target.value
+                        setValue(inputText)
+
+                        // Attempt to parse date from text input
+                        const parsedDate = new Date(inputText)
+
+                        // If input is empty, treat as clearing the date
+                        if (inputText === "") {
+                            handleDateChange(undefined)
                         }
+                        // If the parsed date is valid, update the parent state
+                        else if (isValidDate(parsedDate)) {
+                            handleDateChange(parsedDate)
+                        }
+                        // If input is not empty but not a valid date yet, keep the parent date as is
                     }}
                     onKeyDown={(e) => {
                         if (e.key === "ArrowDown") {
@@ -88,13 +125,12 @@ const DatePicker = ({ date, setDate, label }: DateProps) => {
                     >
                         <Calendar
                             mode="single"
-                            selected={date}
+                            selected={date} // Uses the external prop directly
                             captionLayout="dropdown"
-                            month={month}
+                            month={month} // Uses the synced month state
                             onMonthChange={setMonth}
-                            onSelect={(date) => {
-                                setDate(date)
-                                setValue(formatDate(date))
+                            onSelect={(selectedDate) => {
+                                handleDateChange(selectedDate)
                                 setOpen(false)
                             }}
                         />

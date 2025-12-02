@@ -26,7 +26,7 @@ const Page = () => {
         firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: ""
     });
     const [caseProperty, setCaseProperty] = useState('');
-    const photoRef = useRef<HTMLInputElement>(null);
+const photoRef = useRef<HTMLInputElement>(null);
     const documentRef = useRef<HTMLInputElement>(null);
 
     const handleInputChange = (field: string, value: string) => {
