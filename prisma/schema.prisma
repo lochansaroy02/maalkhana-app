@@ -138,6 +138,7 @@ model MalkhanaEntry {
   documentUrl      String?
   isMovement       Boolean?  @default(false)
   isRelease        Boolean?  @default(false)
+  // releaseDate      DateTime?
   dbName           String?
 
   // distroy  (new fields)
