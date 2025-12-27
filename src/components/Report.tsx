@@ -384,7 +384,7 @@ const Report = ({
     const renderPaginationControls = () => {
         if (totalPages <= 1) return null;
 
-        const ENTRIES_PER_PAGE_OPTIONS = [20, 40, 60, 80, 100, 500, 1000, 2000];
+        const ENTRIES_PER_PAGE_OPTIONS = [20, 40, 60, 80, 100, 500, 1000, 2000, 4000];
         // END MODIFIED
 
         const pageNumbers = [];
@@ -542,12 +542,12 @@ const Report = ({
                     <Button onClick={handleExport}>
                         <Upload />
                         Export</Button>
-                    <Button onClick={handleDeleteSelected} variant="destructive">
+                    <Button className="cursor-pointer" onClick={handleDeleteSelected} variant="destructive">
                         <Trash />
                         Delete
                     </Button>
                     {selectedIds.length > 0 && (
-                        <Button onClick={handleGenerateBarcodePDF} className="bg-green-600 text-white hover:bg-green-700">
+                        <Button onClick={handleGenerateBarcodePDF} className="bg-green-600 cursor-pointer text-white hover:bg-green-700">
                             <Barcode />
                             Barcode
                         </Button>

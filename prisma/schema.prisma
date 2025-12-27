@@ -77,6 +77,14 @@ model SeizedVehicle {
   isMovement      Boolean?  @default(false)
   isRelease       Boolean?  @default(false)
   receiverName    String?   @map("recevierName")
+  // Nilami ( new fields )
+  isNilami        Boolean?
+  nilamiOrderedBy String?
+  nilamiValue     String?
+  nilamiDate      String?
+  nilamiItemName  String?
+
+  
   dbName          String?
   User            User?     @relation(fields: [userId], references: [id])
 }
@@ -126,8 +134,9 @@ model MalkhanaEntry {
   name           String?
   description    String?
 
-  photo            String?
-  releaseItemName  String?
+  photo           String?
+  releaseItemName String?
+
   releaseOrderedBy String?
   returnBackFrom   String?
   returnDate       DateTime?
@@ -138,7 +147,7 @@ model MalkhanaEntry {
   documentUrl      String?
   isMovement       Boolean?  @default(false)
   isRelease        Boolean?  @default(false)
-  // releaseDate      DateTime?
+  releaseDate      DateTime?
   dbName           String?
 
   // distroy  (new fields)
@@ -147,5 +156,20 @@ model MalkhanaEntry {
   destroyDate      DateTime?
   destroyPurpose   String?
 
+  // Nilami ( new fields )
+  isNilami        Boolean?
+  nilamiOrderedBy String?
+  nilamiValue     String?
+  nilamiDate      String?
+  nilamiItemName  String?
+
   User User? @relation(fields: [userId], references: [id])
 }
+
+// model Nilami {
+//   id              String          @id @default(uuid())
+//   malkhanaEntries MalkhanaEntry[]
+//   nilamiDate      DateTime
+//   createdAt       DateTime?       @default(now())
+//   updatedAt       DateTime?       @updatedAt
+// }

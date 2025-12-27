@@ -4,7 +4,7 @@ import Logo from '@/assets/Logo';
 import Spycore from '@/assets/Spycore';
 import { useAuthStore } from '@/store/authStore';
 import { useSidebarStore } from '@/store/sidebarStore';
-import { Barcode, Bus, Clipboard, LayoutDashboard, Package, PackageOpen, Shredder, UploadIcon, Users } from 'lucide-react';
+import { Barcode, Bus, Clipboard, LayoutDashboard, Megaphone, Package, PackageOpen, Shredder, UploadIcon, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
@@ -23,6 +23,7 @@ const Sidebar = () => {
             { name: t("vehicles"), link: "/seized-vehical", icon: <Bus size={16} /> },
             { name: t("movement"), link: "/movement", icon: <UploadIcon size={16} /> },
             { name: t("release"), link: "/release", icon: <PackageOpen size={16} /> },
+            { name: t("nilami"), link: "/nilami", icon: <Megaphone size={16} /> },
             { name: t("destroy"), link: "/destroy", icon: <Shredder size={16} /> },
             { name: t("barcode"), link: "/barcode", icon: <Barcode size={16} /> },
             { name: t("report"), link: "/report", icon: <Clipboard size={16} /> },

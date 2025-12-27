@@ -3,7 +3,7 @@
 import { expectedSchemas } from "@/constants/schemas";
 import { useAuthStore } from "@/store/authStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
-import { shamli } from "@/utils/headerMap";
+import { sikandrabad } from "@/utils/headerMap";
 import { parseExcelDate } from "@/utils/parseDate";
 import { validateAndMapExcelSchema } from "@/utils/validateSchemas";
 import { X } from "lucide-react";
@@ -22,7 +22,7 @@ interface UploadModalProps {
 const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProps) => {
 
 
-    const exportMap = shamli;
+    const exportMap = sikandrabad;
 
     const { user } = useAuthStore();
     const { addMaalkhanaEntry } = useMaalkhanaStore();

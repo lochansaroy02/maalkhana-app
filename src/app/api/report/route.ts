@@ -116,7 +116,11 @@ export const GET = async (req: NextRequest) => {
                     userId: userId,
                 },
             }),
-            prisma.malkhanaEntry.count({ where: { status: "Nilami", userId } }),
+            prisma.malkhanaEntry.count({
+                where: {
+                    isNilami: true, userId
+                }
+            }),
 
             prisma.seizedVehicle.count({ where: { isReturned: true, userId } }),
             prisma.malkhanaEntry.count({ where: { isReturned: true, userId } }),

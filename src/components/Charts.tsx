@@ -69,7 +69,6 @@ export function PiChart({ data }: {
     data: any
 }) {
 
-    console.log(data);
     // Safely extract the breakdown object
     const breakdown = data?.breakdown || {};
 

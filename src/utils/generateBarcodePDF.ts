@@ -2,11 +2,19 @@ import JsBarcode from "jsbarcode";
 import { jsPDF } from "jspdf";
 
 /**
+ * Helper function to remove non-ASCII characters (like Hindi).
+ * FIX: Explicitly converts input to String() to handle numbers safely.
+ */
+const sanitizeString = (str: any) => {
+    if (str === null || str === undefined) return "";
+    // Force convert to string to prevent "str.replace is not a function" error on numbers
+    const stringValue = String(str);
+    // Keep only ASCII printable characters (regex: range x20 to x7E)
+    return stringValue.replace(/[^\x20-\x7E]/g, '').trim();
+};
+
+/**
  * Generates a PDF document with barcodes arranged on A4 sheets.
- * The layout is designed to match standa  rd A4 label paper (e.g., 40 labels per sheet).
- * @param {Array<Object>} entries - An array of objects, each containing data for a barcode.
- * @param {string} [dbName] - The database name used in the barcode prefix if entry.dbName is missing.
- * @param {boolean} [drawGrid=true] - If true, draws a light gray border around each label for alignment.
  */
 export const generateBarcodePDF = async (
     entries: any,
@@ -39,10 +47,13 @@ export const generateBarcodePDF = async (
         unit: "mm",
         format: "a4",
     });
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
+
     let fileName;
     let count = 0;
+
     // --- Barcode Generation Loop ---
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
@@ -61,11 +72,9 @@ export const generateBarcodePDF = async (
         const labelY = PAGE_MARGIN_TOP + row * (LABEL_HEIGHT + VERTICAL_GAP);
 
         // --- Draw Sticker Grid for Alignment ---
-
-        doc.setLineWidth(0.1); // Set a very thin line
-        doc.setDrawColor(200, 200, 200); // Set a light gray color for the grid
-        doc.rect(labelX, labelY, LABEL_WIDTH, LABEL_HEIGHT); // Draw the rectangle
-
+        doc.setLineWidth(0.1);
+        doc.setDrawColor(200, 200, 200);
+        doc.rect(labelX, labelY, LABEL_WIDTH, LABEL_HEIGHT);
 
         // --- Place Content within the Label ---
         const barcodeX = labelX + (LABEL_WIDTH - BARCODE_WIDTH) / 2;
@@ -73,45 +82,63 @@ export const generateBarcodePDF = async (
         const barcodeY = srNoY + 2;
         const firNoY = barcodeY + BARCODE_HEIGHT + 4;
 
-        // 1. Print SrNo
-
-        doc.text(String(entry.srNo || ''), labelX + LABEL_WIDTH / 2, srNoY, { align: 'center' });
+        // 1. Print SrNo (Visual Text)
+        // sanitizeString now handles Numbers safely
+        const cleanSrNo = sanitizeString(entry.srNo);
+        doc.text(cleanSrNo, labelX + LABEL_WIDTH / 2, srNoY, { align: 'center' });
 
         // 2. Generate Canvas for Barcode Image
         const canvas = document.createElement("canvas");
 
-        // Use the original firNo for the unique barcode value
-        const attachedFir = String(entry.firNo)
-        const barcodeValue = `${entry.dbName || dbName}-${attachedFir || ''}-${entry.srNo || ''}`;
+        // --- PREPARE DATA ---
+        const attachedFir = entry.firNo; // Don't force string yet, let helper do it
 
+        // Clean all parts using the fixed helper
+        const cleanFirForBarcode = sanitizeString(attachedFir);
+        const cleanDbName = sanitizeString(entry.dbName || dbName);
+        const cleanSrForBarcode = sanitizeString(entry.srNo);
 
-        JsBarcode(canvas, barcodeValue, {
-            format: "CODE128",
-            width: 2,
-            height: 80,
-            displayValue: false
-        });
+        // Construct Value: dbName-FIR-SR
+        const barcodeValue = `${cleanDbName}-${cleanFirForBarcode}-${cleanSrForBarcode}`;
 
-        const imageData = canvas.toDataURL("image/png");
-        doc.addImage(imageData, "PNG", barcodeX, barcodeY, BARCODE_WIDTH, BARCODE_HEIGHT);
+        try {
+            JsBarcode(canvas, barcodeValue, {
+                format: "CODE128",
+                width: 2,
+                height: 80,
+                displayValue: false,
+                margin: 0
+            });
 
-        // 3. Print FirNo with replacement logic
-        // If entry.firNo contains '@', replace it with '/' for display only.
+            const imageData = canvas.toDataURL("image/png");
+            doc.addImage(imageData, "PNG", barcodeX, barcodeY, BARCODE_WIDTH, BARCODE_HEIGHT);
+        } catch (error) {
+            console.error("Barcode generation failed for:", barcodeValue, error);
+            doc.setFontSize(6);
+            doc.text("INVALID DATA", labelX + LABEL_WIDTH / 2, barcodeY + 5, { align: 'center' });
+            doc.setFontSize(8);
+        }
+
+        // 3. Print FirNo (Visual Text)
+        // Convert to string safely for regex operations
         const originalFirNo = String(entry.firNo || '');
+
+        // Replace special chars for display
         const firNo1 = originalFirNo.replace(/@/g, '/');
-        const displayFirNo = firNo1.replace(/]/g, ',').replace(/&/g, '-')
+        const displayFirNo = firNo1.replace(/]/g, ',').replace(/&/g, '-');
 
-        let finalDisplayName = displayFirNo + "/" + entry.Year
+        // Sanitize for PDF printing (removes Hindi/Symbols)
+        const safeDisplayFirNo = sanitizeString(displayFirNo);
 
-        doc.text(displayFirNo, labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });
+        // Combine with Year
+        let finalDisplayName = safeDisplayFirNo;
+
+        doc.text(finalDisplayName, labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });
     }
 
+    console.log(`Total barcodes generated: ${count}`);
+    const cleanStationName = sanitizeString(policseStation || 'download');
+    fileName = `${cleanStationName}-barcodes.pdf`;
 
-    //  this is for non chatra thana 
-
-
-    console.log(`total barcodes generated : ${count}`);
-    fileName = `${policseStation}-barcodes.pdf`
     doc.save(fileName);
-    // --- Save the Final PDF ---
 };

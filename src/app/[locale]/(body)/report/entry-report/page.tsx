@@ -46,6 +46,13 @@ interface MaalkhanaEntry {
     receivedBy?: string;
     isDestroy?: boolean,
     returnBackFrom?: string;
+    isNilami?: Boolean
+    nilamiOrderedBy?: String
+    nilamiValue?: String
+    nilamiDate?: String
+    nilamiItemName?: String
+
+
 }
 
 const statusOptions = [
@@ -66,7 +73,7 @@ const entryTypeOptions = [
 ];
 
 
-const reportTypeOptions = ["movement", "release", "return"].map(item => ({ // Added destroy and nilami back for completeness, matching switch logic
+const reportTypeOptions = ["movement", "release", "return", "nilami"].map(item => ({ // Added destroy and nilami back for completeness, matching switch logic
     value: item,
     label: item.charAt(0).toUpperCase() + item.slice(1) // Capitalize first letter for better display
 }));
@@ -182,7 +189,7 @@ const Page = () => {
                         case "destroy":
                             return entry.isDestroy === true;
                         case "nilami":
-                            return entry.status?.toLowerCase() === 'nilami';
+                            return entry.isNilami === true;
                         default:
                             return false; // Ignore unknown types
                     }

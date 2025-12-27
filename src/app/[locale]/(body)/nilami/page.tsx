@@ -5,42 +5,37 @@ import { Button } from '@/components/ui/button';
 import DatePicker from '@/components/ui/datePicker';
 import DropDown from '@/components/ui/DropDown';
 import { useAuthStore } from '@/store/authStore';
-import { useReleaseStore } from '@/store/releaseStore';
+import { useNilamiStore } from '@/store/nilamiStore'; // Updated to Nilami Store
 import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
 import axios from 'axios';
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
-// Helper function to format Date object for the API (e.g., to ISO string)
+// Helper function to format Date object for the API
 const formatDateForApi = (date: Date | undefined): string => {
     if (date) {
-        // Use ISO string for consistent API transport
-        return date.toISOString();
+        return date.toISOString().split('T')[0]; // Sending YYYY-MM-DD for string fields
     }
     return "";
 };
 
-// Interface for formData to clearly define types
-interface FormData {
+interface NilamiFormData {
     firNo: string;
     srNo: string;
     underSection: string;
-    releaseItemName: string;
-    receiverName: string;
-    fathersName: string;
-    address: string;
-    mobile: string;
+    nilamiItemName: string;
+    nilamiOrderedBy: string;
+    nilamiValue: string;
     policeStation: string;
-    releaseOrderedBy: string;
-    // releaseDate will be managed separately as a Date object for the DatePicker
 }
 
-const Page = () => {
-    const t = useTranslations('maalkhanaReleaseForm');
+const NilamiPage = () => {
+    // Assuming you use the same translation structure or a similar one for Nilami
+    const t = useTranslations('maalkhanaNilamiForm');
 
     const { user } = useAuthStore();
-    const { fetchByFIR } = useReleaseStore();
+    const { fetchByFIR } = useNilamiStore(); // From the new store
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const [type, setType] = useState<string>("");
@@ -48,19 +43,23 @@ const Page = () => {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
 
-    // State for all string inputs
-    const [formData, setFormData] = useState<FormData>({
-        firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: ""
+    const [formData, setFormData] = useState<NilamiFormData>({
+        firNo: '',
+        srNo: '',
+        underSection: '',
+        nilamiItemName: "",
+        nilamiOrderedBy: "",
+        nilamiValue: "",
+        policeStation: ""
     });
 
-    // State for the DatePicker
-    const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined);
-
+    const [nilamiDate, setNilamiDate] = useState<Date | undefined>(undefined);
     const [caseProperty, setCaseProperty] = useState('');
+
     const photoRef = useRef<HTMLInputElement>(null);
     const documentRef = useRef<HTMLInputElement>(null);
 
-    const handleInputChange = (field: keyof FormData, value: string) => {
+    const handleInputChange = (field: keyof NilamiFormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
@@ -70,33 +69,27 @@ const Page = () => {
         setExistingId(recordId);
         setCaseProperty(data.caseProperty || '');
 
-        // Populate string fields
         setFormData({
             firNo: data.firNo || '',
             srNo: data.srNo || '',
             underSection: data.underSection || '',
-            releaseItemName: data.releaseItemName || '',
-            receiverName: data.receiverName || "",
-            fathersName: data.fathersName || "",
-            address: data.address || "",
-            mobile: data.mobile || "",
+            nilamiItemName: data.nilamiItemName || '',
+            nilamiOrderedBy: data.nilamiOrderedBy || '',
+            nilamiValue: data.nilamiValue || "",
             policeStation: data.policeStation || "",
-            releaseOrderedBy: data.releaseOrderedBy || "",
         });
 
-        // Set the DatePicker state: 
-        // If data.releaseDate exists and is a valid date string/timestamp, convert it to a Date object.
-        if (data.releaseDate) {
-            const date = new Date(data.releaseDate);
-            setReleaseDate(isNaN(date.getTime()) ? undefined : date);
+        if (data.nilamiDate) {
+            const date = new Date(data.nilamiDate);
+            setNilamiDate(isNaN(date.getTime()) ? undefined : date);
         } else {
-            setReleaseDate(undefined);
+            setNilamiDate(undefined);
         }
     };
 
     const resetAll = () => {
-        setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "" });
-        setReleaseDate(undefined); // Reset the date
+        setFormData({ firNo: '', srNo: '', underSection: '', nilamiItemName: "", nilamiOrderedBy: "", nilamiValue: "", policeStation: "" });
+        setNilamiDate(undefined);
         setCaseProperty(''); setExistingId(''); setType(''); setSearchResults([]); setSelectedResultId('');
         if (photoRef.current) photoRef.current.value = '';
         if (documentRef.current) documentRef.current.value = '';
@@ -114,29 +107,23 @@ const Page = () => {
         try {
             const response = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
 
-            if (response && response.success && Array.isArray(response.data)) {
-                const results = response.data;
-
+            if (response && response.success) {
+                const results = Array.isArray(response.data) ? response.data : [response.data];
                 if (results.length > 1) {
                     setSearchResults(results);
                     toast.success(t('toasts.recordsFound', { count: results.length }));
                 } else if (results.length === 1) {
-                    // Single record found, likely from an SR number. Auto-fill the form.
                     fillForm(results[0]);
                     setSelectedResultId(results[0].id || results[0]._id);
                     toast.success(t('toasts.fetchSuccess'));
                 } else {
-                    // No records found.
                     toast.error(t('toasts.noRecord'));
                 }
-            } else if (response?.data) { // Handle single object response not in array
-                fillForm(response.data)
-                toast.success(t('toasts.fetchSuccess'));
             } else {
                 toast.error(t('toasts.noRecord'));
             }
         } catch (error) {
-            console.error("Error fetching by FIR:", error);
+            console.error("Error fetching for Nilami:", error);
             toast.error(t('toasts.fetchFailed'));
         } finally {
             setIsFetching(false);
@@ -145,36 +132,33 @@ const Page = () => {
 
     const handleSave = async () => {
         if (!existingId) return toast.error(t('toasts.noRecordSelected'));
-        if (!releaseDate) return toast.error(t('toasts.enterReleaseDate' as any)); // Assuming you'll add this translation
+        if (!nilamiDate) return toast.error(t('toasts.enterNilamiDate'));
 
         setIsLoading(true);
         try {
             const photoUrl = photoRef.current?.files?.[0] ? await uploadToCloudinary(photoRef.current.files[0]) : "";
-            const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudinary(documentRef.current.files[0]) : ""; // Assuming you uncommented this line
+            const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudinary(documentRef.current.files[0]) : "";
 
             const updateData = {
-                receiverName: formData.receiverName,
-                fathersName: formData.fathersName,
-                address: formData.address,
-                mobile: formData.mobile,
-                releaseItemName: formData.releaseItemName,
+                nilamiItemName: formData.nilamiItemName,
+                nilamiOrderedBy: formData.nilamiOrderedBy,
+                nilamiValue: formData.nilamiValue,
+                nilamiDate: formatDateForApi(nilamiDate),
                 photoUrl,
                 documentUrl,
-                status: "Released",
-                isReturned: true,
-                isRelease: true,
+                status: "Auctioned",
+                isNilami: true,
                 policeStation: formData.policeStation,
-                releaseOrderedBy: formData.releaseOrderedBy,
-                releaseDate: formatDateForApi(releaseDate), // Add the formatted date here
             };
 
             let response;
+            // Using existing entry/seized update endpoints but passing Nilami fields
             if (type === "malkhana") {
                 response = await axios.put(`/api/entry?id=${existingId}`, updateData);
             } else if (type === "seizedVehicle") {
                 response = await axios.put(`/api/siezed?id=${existingId}`, updateData);
             }
-            console.log(response);
+
             if (response?.data.success) {
                 toast.success(t('toasts.updateSuccess'));
                 resetAll();
@@ -182,7 +166,7 @@ const Page = () => {
                 toast.error(t('toasts.saveError'));
             }
         } catch (error) {
-            console.error('Error saving release info:', error);
+            console.error('Error saving Nilami info:', error);
             toast.error(t('toasts.saveError'));
         } finally {
             setIsLoading(false);
@@ -200,22 +184,21 @@ const Page = () => {
         label: t(`options.type.${key}`)
     }));
 
+    // Specific Nilami fields based on your schema
     const fields = [
-        { name: "releaseItemName", label: t('labels.releaseItemName') },
-        { name: "receiverName", label: t('labels.receiverName') },
-        { name: "fathersName", label: t('labels.fathersName') },
-        { name: "address", label: t('labels.address') },
-        { name: "mobile", label: t('labels.mobileNo') },
-        { name: "releaseOrderedBy", label: t('labels.releaseOrderedBy') },
+        { name: "nilamiItemName", label: t('labels.nilamiItemName') },
+        { name: "nilamiOrderedBy", label: t('labels.nilamiOrderedBy') },
+        { name: "nilamiValue", label: t('labels.nilamiValue') },
         { name: "policeStation", label: t('labels.policeStation') },
     ];
-    const inputFields = [
+
+    const inputFiles = [
         { label: t('labels.uploadPhoto'), id: "photo", ref: photoRef },
         { label: t('labels.uploadDocument'), id: "document", ref: documentRef },
     ];
 
     return (
-        <div className='glass-effect '>
+        <div className='glass-effect'>
             <div className='py-4 border bg-maroon rounded-t-xl border-gray-400 flex justify-center'>
                 <h1 className='text-2xl uppercase text-cream font-semibold'>{t('title')}</h1>
             </div>
@@ -235,7 +218,6 @@ const Page = () => {
                     </div>
                 </div>
 
-
                 {searchResults.length > 1 && (
                     <div className="my-4 col-span-2 flex flex-col gap-1">
                         <label className='text-blue-100'>{t('labels.multipleRecords')}</label>
@@ -250,10 +232,7 @@ const Page = () => {
                                         checked={selectedResultId === (item.id || item._id)}
                                         onChange={() => handleResultSelectionChange(item.id || item._id)}
                                     />
-                                    <label
-                                        htmlFor={`result-${item.id || item._id}`}
-                                        className="text-blue-100 cursor-pointer"
-                                    >
+                                    <label htmlFor={`result-${item.id || item._id}`} className="text-blue-100 cursor-pointer">
                                         {t('placeholders.srNo', { srNo: item.srNo })}
                                     </label>
                                 </div>
@@ -266,7 +245,7 @@ const Page = () => {
                     <div>
                         <hr className="border-gray-600 my-6" />
                         <div>
-                            <h2 className="text-xl text-center text-cream font-semibold mb-4">{t('labels.enterDetails')}</h2>
+                            <h2 className="text-xl text-center text-cream font-semibold mb-4">{t('labels.enterNilamiDetails')}</h2>
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                                 <InputComponent label={t('labels.caseProperty')} value={caseProperty} disabled />
                                 <InputComponent label={t('labels.underSection')} value={formData.underSection} disabled />
@@ -275,21 +254,18 @@ const Page = () => {
                                     <InputComponent
                                         key={field.name}
                                         label={field.label}
-                                        // Type assertion is needed here as formData is guaranteed to have all keys from fields array in this context
-                                        value={formData[field.name as keyof FormData]}
-                                        setInput={(e) => handleInputChange(field.name as keyof FormData, e.target.value)}
+                                        value={formData[field.name as keyof NilamiFormData]}
+                                        setInput={(e) => handleInputChange(field.name as keyof NilamiFormData, e.target.value)}
                                     />
                                 ))}
 
-                                {/* NEW: DatePicker Component */}
                                 <DatePicker
-                                    label={t('labels.releaseDate')}
-                                    date={releaseDate}
-                                    setDate={setReleaseDate}
+                                    label={t('labels.nilamiDate')}
+                                    date={nilamiDate}
+                                    setDate={setNilamiDate}
                                 />
-                                {/* END NEW */}
 
-                                {inputFields.map((item, index) => (
+                                {inputFiles.map((item, index) => (
                                     <div key={index} className='flex flex-col gap-2'>
                                         <label className='text-nowrap text-blue-100' htmlFor={item.id}>{item.label}</label>
                                         <input
@@ -302,18 +278,17 @@ const Page = () => {
                                 ))}
                             </div>
                             <div className='flex w-full px-12 justify-center items-center gap-4 mt-6'>
-                                <Button onClick={handleSave} className='bg-green-600' disabled={isLoading || !releaseDate}>
-                                    {isLoading ? <LoaderIcon className='animate-spin' /> : t('buttons.saveAndRelease')}
+                                <Button onClick={handleSave} className='bg-green-600' disabled={isLoading || !nilamiDate}>
+                                    {isLoading ? <LoaderIcon className='animate-spin' /> : t('buttons.saveAndAuction')}
                                 </Button>
                                 <Button onClick={resetAll} className='bg-red-600'>{t('buttons.clearForm')}</Button>
                             </div>
                         </div>
                     </div>
                 )}
-
             </div>
         </div>
     );
 };
 
-export default Page;
+export default NilamiPage;

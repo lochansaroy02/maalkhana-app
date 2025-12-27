@@ -19,6 +19,7 @@
         "release": "release",
         "destroy": "Destroy",
         "barcode": "Barcode",
+        "nilami": "Nilami",
         "report": "Report"
     },
     "Dashboard": {
@@ -256,7 +257,9 @@
             "releaseOrderedBy": "Release Ordered By",
             "mobileNo": "Mobile No.",
             "uploadPhoto": "Upload Photo",
-            "uploadDocument": "Upload Document"
+            "uploadDocument": "Upload Document",
+            "releaseDate": "Release Date",
+            "policeStation": "Police Station"
         },
         "buttons": {
             "fetchRecord": "Fetch Record",
@@ -327,6 +330,51 @@
             "enterPurpose": "Please enter the purpose of destruction.",
             "updateSuccess": "Malkhana entry successfully marked as destroyed.",
             "saveError": "Failed to save destruction details."
+        }
+    },
+    "maalkhanaNilamiForm": {
+        "title": "Malkhana Nilami (Auction)",
+        "labels": {
+            "selectType": "Select Type for Nilami:",
+            "firNo": "FIR No.",
+            "orSrNo": "Sr. No / Mal No.",
+            "multipleRecords": "Multiple Records Found. Please Select One:",
+            "enterNilamiDetails": "3. Enter Nilami Details",
+            "caseProperty": "Case Property",
+            "underSection": "Under Section",
+            "nilamiItemName": "Nilami Item Name",
+            "nilamiOrderedBy": "Nilami Ordered By",
+            "nilamiValue": "Auction Value (Amount)",
+            "nilamiDate": "Nilami Date",
+            "policeStation": "Police Station",
+            "uploadPhoto": "Upload Nilami Photo",
+            "uploadDocument": "Upload Nilami Document"
+        },
+        "buttons": {
+            "fetchRecord": "Fetch Record",
+            "saveAndAuction": "Confirm and Auction",
+            "clearForm": "Clear Form"
+        },
+        "options": {
+            "type": {
+                "malkhana": "malkhana",
+                "seizedVehicle": "seized vehicle"
+            }
+        },
+        "placeholders": {
+            "srNo": "SR: {srNo}"
+        },
+        "toasts": {
+            "selectType": "Please select a type first.",
+            "enterFirOrSr": "Please enter an FIR No. or Sr. No.",
+            "recordsFound": "{count} records found. Please select one.",
+            "fetchSuccess": "Data Fetched Successfully!",
+            "noRecord": "No record found.",
+            "fetchFailed": "Fetch failed. Please check the console.",
+            "noRecordSelected": "Please fetch a valid record before saving.",
+            "enterNilamiDate": "Please select the Nilami date.",
+            "updateSuccess": "Item successfully marked for Nilami!",
+            "saveError": "An error occurred during the Nilami process."
         }
     }
 }

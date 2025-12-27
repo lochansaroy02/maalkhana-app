@@ -37,7 +37,8 @@
         "release": "मालख़ाना विमोचन",
         "destroy": "नष्ट मालख़ाना",
         "barcode": "बारकोड",
-        "report": "रिपोर्ट"
+        "report": "रिपोर्ट",
+        "nilami": "नीलामी"
     },
     "entry": {
         "malkhanaEntryForm": {
@@ -254,7 +255,9 @@
             "releaseOrderedBy": "रिहाई आदेश ",
             "mobileNo": "मोबाइल नंबर",
             "uploadPhoto": "फोटो अपलोड करें",
-            "uploadDocument": "दस्तावेज़ अपलोड करें"
+            "uploadDocument": "दस्तावेज़ अपलोड करें",
+            "policeStation": "पुलिस थाना",
+            "releaseDate": "रिहाई दिनांक"
         },
         "buttons": {
             "fetchRecord": "रिकॉर्ड प्राप्त करें",
@@ -325,6 +328,51 @@
             "enterPurpose": "कृपया नष्ट करने का उद्देश्य दर्ज करें।",
             "updateSuccess": "मालखाना प्रविष्टि सफलतापूर्वक नष्ट के रूप में चिह्नित की गई।",
             "saveError": "नष्ट करने का विवरण सहेजने में विफल।"
+        }
+    },
+    "maalkhanaNilamiForm": {
+        "title": "मालखाना नीलामी",
+        "labels": {
+            "selectType": "नीलामी के लिए प्रकार चुनें:",
+            "firNo": "एफ.आई.आर. नंबर",
+            "orSrNo": "सी.नं. / माल नं.",
+            "multipleRecords": "एक से अधिक रिकॉर्ड मिले। कृपया एक चुनें:",
+            "enterNilamiDetails": "नीलामी का विवरण दर्ज करें",
+            "caseProperty": "केस संपत्ति",
+            "underSection": "धारा के तहत",
+            "nilamiItemName": "नीलाम होने वाली वस्तु का नाम",
+            "nilamiOrderedBy": "नीलामी आदेश द्वारा",
+            "nilamiValue": "नीलामी मूल्य (राशि)",
+            "nilamiDate": "नीलामी तिथि",
+            "policeStation": "पुलिस थाना",
+            "uploadPhoto": "नीलामी फोटो अपलोड करें",
+            "uploadDocument": "नीलामी दस्तावेज़ अपलोड करें"
+        },
+        "buttons": {
+            "fetchRecord": "रिकॉर्ड प्राप्त करें",
+            "saveAndAuction": "पुष्टि करें और नीलामी करें",
+            "clearForm": "फॉर्म साफ़ करें"
+        },
+        "options": {
+            "type": {
+                "malkhana": "मालखाना",
+                "seizedVehicle": "जब्त वाहन"
+            }
+        },
+        "placeholders": {
+            "srNo": "SR: {srNo}"
+        },
+        "toasts": {
+            "selectType": "कृपया पहले एक प्रकार चुनें।",
+            "enterFirOrSr": "कृपया एफ.आई.आर. नंबर या सी.नं. दर्ज करें।",
+            "recordsFound": "{count} रिकॉर्ड मिले। कृपया एक चुनें।",
+            "fetchSuccess": "डेटा सफलतापूर्वक प्राप्त हुआ!",
+            "noRecord": "कोई रिकॉर्ड नहीं मिला।",
+            "fetchFailed": "डेटा प्राप्त करने में विफल। कृपया कंसोल देखें।",
+            "noRecordSelected": "कृपया सहेजने से पहले एक वैध रिकॉर्ड प्राप्त करें।",
+            "enterNilamiDate": "कृपया नीलामी की तारीख चुनें।",
+            "updateSuccess": "आइटम सफलतापूर्वक नीलामी के लिए चिह्नित किया गया!",
+            "saveError": "नीलामी प्रक्रिया के दौरान एक त्रुटि हुई।"
         }
     }
 }

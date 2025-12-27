@@ -2,7 +2,7 @@
 
 export const narora = {
     "Sr. No.": "srNo",
-    "Fir NO": "firNo",
+    "Fir No": "firNo",
     "Court No": "courtNo",
     "Court Name": "courtName",
     "GD NO.": "gdNo",
@@ -81,6 +81,34 @@ export const bhadohi = {
     "WINE TYPE": "wineType",
 };
 
+export const sre = {
+    "FIR NO": "firNo",
+    "EntryType": "entryType",
+    "ENTRYTYPE ID": "srNo",
+    "POLICESTATION": "policeStation",
+    "ENTRY PERSON": "HM",
+    "IO NAME": "IOName",
+    "GD NO.": "gdNo",
+    "DISCRIPTION": "description",
+    "CASE PROPERTY": "caseProperty",
+    "YEAR": "Year",
+    "BANAM": "accused",
+    "COURT": "courtName",
+    "LOACTION": "place",
+    "UNDER SECTION": "underSection",
+    "STATUS": "status",
+
+    // missing fields
+
+    "SEIZED DATE": "gdDate",
+    "VADI": "vadiName",
+    "BOX NO": "boxNo",
+    "COURT NO": "courtNo",
+    "CASH": "cash",
+    "WINE": "wine",
+    "WINE TYPE": "wineType",
+};
+
 
 
 export const mirzapur = {
@@ -109,34 +137,34 @@ export const mirzapur = {
 }
 
 export const sikandrabad = {
-    "FIR No": "firNo",
-    "Sr No": "srNo",
+    "FIR No.": "firNo",
+    "SrNo": "srNo",
     "Entry Type": "entryType",
     "Case Property": "caseProperty",
     "Under Section": "underSection",
     "Police Station": "policeStation",
     "Year": "Year",
-    "GD No": "gdNo",
+    "GD No.": "gdNo",
     "GD Date": "gdDate",
     "Description": "description",
-    "विवेचक का नाम": "IOName",
+    "ioName": "IOName",
     "hmName": "HM",
-    "वादी का नाम": "vadiName",
+    "vadi": "vadiName",
     "cash": "cash",
     "wine": "wine",
     "wine type": "wineType",
     "Accused": "accused",
     "Status": "status",
     "Place": "place",
-    "Box No": "boxNo",
-    "Court No": "courtNo",
+    "Box No.": "boxNo",
+    "Court No.": "courtNo",
     "Court Name": "courtName",
 }
 
 
 export const shamli = {
-    "FIR No.": "firNo",
-    "SR. No.": "srNo",
+    "FIR No": "firNo",
+    "SR. No": "srNo",
     "Entry Type": "entryType",
     "Case Property": "caseProperty",
     "Under Section": "underSection",
@@ -157,4 +185,29 @@ export const shamli = {
     "Box No.": "boxNo",
     "Court No.": "courtNo",
     "Court Name": "courtName",
+}
+
+export const baghpat = {
+    "firNo": "firNo",
+    "srNo": "srNo",
+    "entryType": "entryType",
+    "caseProperty": "caseProperty",
+    "underSection": "underSection",
+    "policeStation": "policeStation",
+    "Year": "Year",
+    "gdNo": "gdNo",
+    "gdDate": "gdDate",
+    "description": "description",
+    "IOName": "IOName",
+    "HM": "HM",
+    "vadiName": "vadiName",
+    "cash": "cash",
+    "wine": "wine",
+    "wine type": "wineType",
+    "accused": "accused",
+    "status": "status",
+    "place": "place",
+    "boxNo": "boxNo",
+    "courtNo": "courtNo",
+    "courtName": "courtName",
 }

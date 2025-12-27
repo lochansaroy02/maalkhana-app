@@ -13,6 +13,7 @@ import { useEffect } from "react";
 const Page = () => {
     const { fetchTotalEntries, data, fetchAdminEntries } = useTotalEntriesStore();
     const { user } = useAuthStore();
+
     const { userId } = useDistrictStore()
     useEffect(() => {
         if (user?.role === "policeStation") {
@@ -38,7 +39,7 @@ const Page = () => {
             icon: <Shield size={40} />,
             bgColour: `bg-neutral-500 `,
             value: data?.breakdown?.totalPoliceStation || 0,
-            url: "/users"
+            url: "/total-data"
         },
         {
             title: t("totalEntries"),
