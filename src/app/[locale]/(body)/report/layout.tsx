@@ -24,7 +24,7 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
             // Fetch all data needed for all report tabs
             fetchMaalkhanaEntry(user.id, user.role);
             fetchMovementData(user.id);
-            fetchVehicles(user.id);
+            fetchVehicles(user.id, user.role);
             // Add any other fetch calls for release data, etc. here
         }
     }, [user?.id, fetchMaalkhanaEntry, fetchMovementData, fetchVehicles]);

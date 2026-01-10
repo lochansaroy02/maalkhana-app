@@ -33,7 +33,7 @@ interface SeizedVehicleStore {
     vehicles: any[];
     loading: boolean;
     error: string | null;
-    fetchVehicles: (userId: string | undefined) => Promise<void>;
+    fetchVehicles: (userId: string | undefined, role: string) => Promise<void>;
     addVehicle: (vehicle: any) => Promise<boolean>;
     getByFIR: (userId: string | undefined, firNo: string) => Promise<any>
     getById: (id: any) => Promise<any>
@@ -81,10 +81,11 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
             return null
         }
     },
-    fetchVehicles: async (userId: string | undefined) => {
+    fetchVehicles: async (userId: string | undefined, role: string) => {
         set({ loading: true, error: null });
+        let apiUrl = role === 'asp' ? `/api/asp/get-vehicle` : `/api/siezed/?userId=${userId}`
         try {
-            const response = await axios.get(`/api/siezed/?userId=${userId}`);
+            const response = await axios.get(apiUrl);
             if (response.data.success) {
                 set({ vehicles: response.data.data, loading: false });
             } else {

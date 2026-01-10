@@ -74,9 +74,9 @@ const Page = () => {
     // Fetch all vehicle data when the component loads
     useEffect(() => {
         if (user?.role === "policeStation" && user?.id) {
-            fetchVehicles(user.id);
-        } else if (userId) {
-            fetchVehicles(userId);
+            fetchVehicles(user.id, user.role);
+        } else if (user && userId) {
+            fetchVehicles(userId, user.role);
         }
     }, [user?.id, fetchVehicles, userId, user?.role]);
 
@@ -141,7 +141,7 @@ const Page = () => {
     const handleImportSuccess = () => {
         if (user?.id) {
             // Refresh data after a successful import
-            fetchVehicles(user.id);
+            fetchVehicles(user.id, user.role);
         }
     };
 
