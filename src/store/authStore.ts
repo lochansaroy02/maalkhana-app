@@ -2,13 +2,14 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 interface User {
+    districtId: string,
     id: string;
     name: string;
     email: string;
     mobile: string,
     rank: string,
     policeStation: string,
-    role: "district" | "policeStation";
+    role: "district" | "policeStation" | "asp";
 }
 
 interface AuthState {

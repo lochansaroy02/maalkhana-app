@@ -41,7 +41,7 @@ type MaalkhanaStore = {
     setField: (field: keyof MaalkhanaEntry, value: string) => void;
     resetForm: () => void;
     getNewEntry: () => Promise<void>;
-    fetchMaalkhanaEntry: (userId: string | undefined) => Promise<void>;
+    fetchMaalkhanaEntry: (userId: string | undefined, role: string) => Promise<void>;
     addMaalkhanaEntry: (data: any) => Promise<boolean>;
     updateMalkhanaEntry: (id: string, data: any) => Promise<boolean>;
     getByFIR: (firNo: string, userId: string | undefined) => Promise<any>
@@ -82,6 +82,7 @@ const initialState: MaalkhanaEntry = {
 export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
     entry: { ...initialState },
     entries: [],
+
     currentEntry: null,
     setCurrentEntry: (data: any) => {
         set({
@@ -113,9 +114,10 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
         }
     },
 
-    fetchMaalkhanaEntry: async (userId: string | undefined) => {
+    fetchMaalkhanaEntry: async (userId: string | undefined, role: string) => {
+        let apiUrl = role === 'asp' ? `/api/asp/get-data` : `/api/entry?id=${userId}`
         try {
-            const response = await axios.get(`/api/entry?id=${userId}`);
+            const response = await axios.get(apiUrl);
             if (response.data.success) {
                 set({ entries: response.data.data });
             } else {

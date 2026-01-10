@@ -22,7 +22,7 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
     useEffect(() => {
         if (user?.id) {
             // Fetch all data needed for all report tabs
-            fetchMaalkhanaEntry(user.id);
+            fetchMaalkhanaEntry(user.id, user.role);
             fetchMovementData(user.id);
             fetchVehicles(user.id);
             // Add any other fetch calls for release data, etc. here

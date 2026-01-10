@@ -51,7 +51,8 @@ const LoginForm = () => {
     // This makes it compatible with your updated DropDown component.
     const roleOptions = [
         { value: "Police Station", label: "Police Station" },
-        { value: "District", label: "District" }
+        { value: "District", label: "District" },
+        { value: "asp", label: "ASP" }
     ];
 
     return (

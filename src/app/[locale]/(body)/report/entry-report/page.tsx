@@ -129,10 +129,13 @@ const Page = () => {
 
     // Fetch data on component mount and user/userId changes
     useEffect(() => {
+
         if (user?.role === "policeStation" && user?.id) {
-            fetchMaalkhanaEntry(user.id);
-        } else if (userId) {
-            fetchMaalkhanaEntry(userId);
+            fetchMaalkhanaEntry(user.id, user.role);
+        } else if (user && userId) {
+            fetchMaalkhanaEntry(userId, user.role);
+        } else if (user?.role === "asp" && user?.id) {
+            fetchMaalkhanaEntry(user.districtId, user.role);
         }
     }, [user?.id, fetchMaalkhanaEntry, userId, user?.role]);
 
@@ -278,7 +281,7 @@ const Page = () => {
 
     const handleImportSuccess = () => {
         if (user?.id) {
-            fetchMaalkhanaEntry(user.id);
+            fetchMaalkhanaEntry(user.id, user.role);
         }
     };
 
@@ -332,13 +335,13 @@ const Page = () => {
             </div>
 
 
-            <UploadModal
+            {user?.role !== 'asp' && <UploadModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 schemaType="entry"
                 onSuccess={handleImportSuccess}
                 addEntry={addMaalkhanaEntry as any}
-            />
+            />}
             <Report
                 data={reportContent.data}
                 headers={reportContent.headers}

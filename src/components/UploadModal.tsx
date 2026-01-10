@@ -30,7 +30,6 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProp
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    // ⭐ NEW STATE: To hold the data before final submission
     const [uploadedData, setUploadedData] = useState<any[] | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
