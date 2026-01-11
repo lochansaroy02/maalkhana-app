@@ -72,8 +72,8 @@ model SeizedVehicle {
   takenOutBy      String?
   moveDate        String?
   documentUrl     String?
-  receivedBy      String?
   photoUrl        String?
+  receivedBy      String?
   isMovement      Boolean?  @default(false)
   isRelease       Boolean?  @default(false)
   receiverName    String?   @map("recevierName")
@@ -84,8 +84,15 @@ model SeizedVehicle {
   nilamiDate      String?
   nilamiItemName  String?
 
-  dbName String?
-  User   User?   @relation(fields: [userId], references: [id])
+  //released documents
+  releasedPhoto    String?
+  releasedDocument String?
+  movementPhoto    String?
+  movementDocument String?
+
+  dbName      String?
+  User        User?        @relation(fields: [userId], references: [id])
+  attachments Attachment[]
 }
 
 model MalkhanaEntry {
@@ -142,12 +149,13 @@ model MalkhanaEntry {
   takenOutBy       String?
   caseProperty     String?
   receivedBy       String?
-  receiverName     String?
-  documentUrl      String?
-  isMovement       Boolean?  @default(false)
-  isRelease        Boolean?  @default(false)
-  releaseDate      DateTime?
-  dbName           String?
+
+  receiverName String?
+  documentUrl  String?
+  isMovement   Boolean?  @default(false)
+  isRelease    Boolean?  @default(false)
+  releaseDate  DateTime?
+  dbName       String?
 
   // distroy  (new fields)
   isDestroy        Boolean?
@@ -162,7 +170,20 @@ model MalkhanaEntry {
   nilamiDate      String?
   nilamiItemName  String?
 
-  User User? @relation(fields: [userId], references: [id])
+  // Release
+  releasePhotoUrl     String?
+  releaseDocumentUrl  String?
+  // Movement
+  movementPhotoUrl    String?
+  movementDocumentUrl String?
+  // Nilami (Auction)
+  nilamiPhotoUrl      String?
+  nilamiDocumentUrl   String?
+  // Destroy
+  destroyPhotoUrl     String?
+  destroyDocumentUrl  String?
+  User                User?        @relation(fields: [userId], references: [id])
+  attachments         Attachment[]
 }
 
 // model Nilami {
@@ -172,3 +193,26 @@ model MalkhanaEntry {
 //   createdAt       DateTime?       @default(now())
 //   updatedAt       DateTime?       @updatedAt
 // }
+
+enum AttachmentType {
+  INITIAL
+  RELEASE
+  MOVEMENT
+  NILAMI
+  DESTROY
+}
+
+model Attachment {
+  id        String         @id @default(uuid())
+  url       String // S3 or Cloudinary URL
+  fileType  String // "image" or "pdf"
+  category  AttachmentType
+  createdAt DateTime       @default(now())
+
+  // Relations
+  malkhanaId String?
+  Malkhana   MalkhanaEntry? @relation(fields: [malkhanaId], references: [id])
+
+  vehicleId String?
+  Vehicle   SeizedVehicle? @relation(fields: [vehicleId], references: [id])
+}

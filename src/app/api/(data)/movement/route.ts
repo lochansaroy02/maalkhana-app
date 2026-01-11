@@ -44,7 +44,8 @@ export const POST = async (req: NextRequest) => {
             place,
             boxNo,
             courtNo,
-            courtName
+            courtName,
+
         } = body;
 
         const newEntry = await prisma.malkhanaEntry.create({

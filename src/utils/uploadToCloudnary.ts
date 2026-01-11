@@ -1,16 +1,29 @@
+// @/utils/uploadToCloudinary.ts
+
 export const uploadToCloudinary = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!);
 
-    const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`,
-        {
-            method: "POST",
-            body: formData,
+        const res = await fetch(
+            `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/upload`,
+            {
+                method: "POST",
+                body: formData,
+            }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            console.error("Cloudinary Error:", data.error?.message || "Unknown Error");
+            return null;
         }
-    );
 
-    const data = await res.json();
-    return data.secure_url;
+        return data.secure_url; // This will now only return if the request was successful
+    } catch (error) {
+        console.error("Network Error during Cloudinary upload:", error);
+        return null;
+    }
 };

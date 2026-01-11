@@ -6,7 +6,7 @@ import DatePicker from '@/components/ui/datePicker';
 import DropDown from '@/components/ui/DropDown';
 import { useAuthStore } from '@/store/authStore';
 import { useReleaseStore } from '@/store/releaseStore';
-import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
+import { uploadToImageKit } from '@/utils/imagekit';
 import axios from 'axios';
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
@@ -48,6 +48,8 @@ const Page = () => {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
 
+    const [realasedPhoto, setReleasedPhoto] = useState()
+    const [releasedDocument, setReleasedDocument] = useState()
     // State for all string inputs
     const [formData, setFormData] = useState<FormData>({
         firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: ""
@@ -149,23 +151,31 @@ const Page = () => {
 
         setIsLoading(true);
         try {
-            const photoUrl = photoRef.current?.files?.[0] ? await uploadToCloudinary(photoRef.current.files[0]) : "";
-            const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudinary(documentRef.current.files[0]) : ""; // Assuming you uncommented this line
+            let releasePhotoUrl: string | undefined = "";
+            if (photoRef.current?.files?.[0]) {
+                releasePhotoUrl = await uploadToImageKit(photoRef.current.files[0], "photo");
+            }
+
+            // Upload Document if exists
+            let releaseDocumentUrl: string | undefined = "";
+            if (documentRef.current?.files?.[0]) {
+                releaseDocumentUrl = await uploadToImageKit(documentRef.current.files[0], "doc");
+            }
 
             const updateData = {
                 receiverName: formData.receiverName,
                 fathersName: formData.fathersName,
                 address: formData.address,
                 mobile: formData.mobile,
+                releasePhotoUrl,
+                releaseDocumentUrl,
                 releaseItemName: formData.releaseItemName,
-                photoUrl,
-                documentUrl,
                 status: "Released",
                 isReturned: true,
                 isRelease: true,
                 policeStation: formData.policeStation,
                 releaseOrderedBy: formData.releaseOrderedBy,
-                releaseDate: formatDateForApi(releaseDate), // Add the formatted date here
+                releaseDate: formatDateForApi(releaseDate),
             };
 
             let response;
@@ -302,7 +312,7 @@ const Page = () => {
                                 ))}
                             </div>
                             <div className='flex w-full px-12 justify-center items-center gap-4 mt-6'>
-                                <Button onClick={handleSave} className='bg-green-600' disabled={isLoading || !releaseDate}>
+                                <Button onClick={handleSave} className='bg-green-600' disabled={isLoading}>
                                     {isLoading ? <LoaderIcon className='animate-spin' /> : t('buttons.saveAndRelease')}
                                 </Button>
                                 <Button onClick={resetAll} className='bg-red-600'>{t('buttons.clearForm')}</Button>

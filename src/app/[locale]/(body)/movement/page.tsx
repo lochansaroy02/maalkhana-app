@@ -10,13 +10,12 @@ import type { MovementEntry } from "@/store/movementStore";
 import { useMovementStore } from "@/store/movementStore";
 import { useSeizedVehicleStore } from "@/store/siezed-vehical/seizeStore";
 import { uploadToCloudinary } from "@/utils/uploadToCloudnary";
-import { LoaderIcon } from "lucide-react";
+import { LoaderIcon, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const Page: React.FC = () => {
-    // i18n: Initialize translation hook from next-intl
     const t = useTranslations('malkhanaMovementForm');
 
     // --- STATE MANAGEMENT ---
@@ -24,21 +23,21 @@ const Page: React.FC = () => {
     const { updateMovementEntry, fetchByFIR, entry } = useMovementStore();
     const { updateVehicalEntry } = useSeizedVehicleStore();
 
-    // Loading and Page State
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
     const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
 
-    // State for Search and Search Results
     const [type, setType] = useState<string>("");
     const [searchFirNo, setSearchFirNo] = useState("");
     const [searchSrNo, setSearchSrNo] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
 
-    // State for Form Data
+    // Previews State
+    const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+    const [documentPreview, setDocumentPreview] = useState<string | null>(null);
+
     const [isReturned, setIsReturned] = useState(false);
-    const [isMovement, setIsMovement] = useState(false);
     const [returnBackFrom, setReturnBackFrom] = useState("");
     const [caseProperty, setCaseProperty] = useState("");
     const [formData, setFormData] = useState<Partial<MovementEntry>>({
@@ -47,10 +46,39 @@ const Page: React.FC = () => {
     const [dateFields, setDateFields] = useState<{ moveDate: Date; returnDate: Date }>({
         moveDate: new Date(), returnDate: new Date(),
     });
+
     const photoRef = useRef<HTMLInputElement | null>(null);
     const documentRef = useRef<HTMLInputElement | null>(null);
 
-    // --- FORM LOGIC ---
+    // --- HANDLERS ---
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'photo' | 'document') => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Correct syntax: URL.createObjectURL(file)
+            const objectUrl = URL.createObjectURL(file);
+
+            if (type === 'photo') {
+                setPhotoPreview(objectUrl);
+            } else {
+                setDocumentPreview(objectUrl);
+            }
+
+            // Clean up memory when the component unmounts
+            return () => URL.revokeObjectURL(objectUrl);
+        }
+    };
+
+    const clearPreview = (type: 'photo' | 'document') => {
+        if (type === 'photo') {
+            setPhotoPreview(null);
+            if (photoRef.current) photoRef.current.value = "";
+        } else {
+            setDocumentPreview(null);
+            if (documentRef.current) documentRef.current.value = "";
+        }
+    };
+
     const handleInputChange = (field: keyof MovementEntry | string, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
@@ -86,10 +114,10 @@ const Page: React.FC = () => {
         setFormData({ srNo: "", name: "", moveDate: "", policeStation: "", firNo: "", underSection: "", takenOutBy: "", moveTrackingNo: "", movePurpose: "", receivedBy: "", returnDate: "", });
         setDateFields({ moveDate: new Date(), returnDate: new Date() });
         setReturnBackFrom(""); setCaseProperty(""); setIsReturned(false);
+        setPhotoPreview(null); setDocumentPreview(null);
         if (photoRef.current) photoRef.current.value = "";
         if (documentRef.current) documentRef.current.value = "";
     };
-
 
     useEffect(() => {
         if (entry && !Array.isArray(entry) && Object.keys(entry).length > 0) {
@@ -100,31 +128,24 @@ const Page: React.FC = () => {
     const getByFir = async () => {
         if (!type) return toast.error(t('toasts.selectType'));
         if (!searchFirNo && !searchSrNo) return toast.error(t('toasts.enterFirOrSr'));
-
         setIsFetching(true);
         setSearchResults([]);
         setExistingEntryId(null);
         setSelectedResultId('');
-
         try {
             const data = await fetchByFIR(user?.id, type, searchFirNo, searchSrNo);
-
             if (data && data.length > 0) {
                 if (data.length > 1) {
-                    // Multiple records found, show radio buttons
                     setSearchResults(data);
                     toast.success(t('toasts.recordsFound', { count: data.length }));
                 } else {
-                    // Exactly one record found, fill the form directly
                     fillForm(data[0]);
                     toast.success(t('toasts.fetchSuccess'));
                 }
             } else {
-                // No records found
                 toast.error(t('toasts.noRecord'));
             }
         } catch (error) {
-            console.error("Error fetching by FIR:", error);
             toast.error(t('toasts.fetchFailed'));
         } finally {
             setIsFetching(false);
@@ -137,19 +158,40 @@ const Page: React.FC = () => {
         if (selectedData) fillForm(selectedData);
     };
 
+    const uploadAttachments = async () => {
+        let photoUrl = undefined;
+        let documentUrl = undefined;
+
+        if (photoRef.current?.files?.[0]) {
+            photoUrl = await uploadToCloudinary(photoRef.current.files[0]);
+            if (!photoUrl) throw new Error("Photo upload failed");
+        }
+
+        if (documentRef.current?.files?.[0]) {
+            documentUrl = await uploadToCloudinary(documentRef.current.files[0]);
+            if (!documentUrl) throw new Error("Document upload failed");
+        }
+
+        return { photoUrl, documentUrl };
+    };
+
     const handleSave = async () => {
         if (!existingEntryId) return toast.error(t('toasts.noEntrySelected'));
         setIsLoading(true);
         try {
-            const photoUrl = photoRef.current?.files?.[0] ? await uploadToCloudinary(photoRef.current.files[0]) : undefined;
-            const documentUrl = documentRef.current?.files?.[0] ? await uploadToCloudinary(documentRef.current.files[0]) : undefined;
-            if (isReturned) {
-                setIsMovement(false)
-            } else {
-                setIsMovement(true)
-            }
+            const attachments = await uploadAttachments();
+            const currentIsMovement = !isReturned;
+
             const fullData = {
-                ...formData, moveDate: dateFields.moveDate.toISOString(), returnDate: dateFields.returnDate.toISOString(), returnBackFrom, documentUrl, photoUrl, isReturned, caseProperty, isMovement: true,
+                ...formData,
+                returnBackFrom,
+                isReturned,
+                caseProperty,
+                moveDate: dateFields.moveDate.toISOString(),
+                returnDate: dateFields.returnDate.toISOString(),
+                isMovement: currentIsMovement,
+                ...(attachments.photoUrl && { movementPhoto: attachments.photoUrl }),
+                ...(attachments.documentUrl && { movementDocument: attachments.documentUrl }),
             };
 
             const success = (type === "malkhana")
@@ -166,11 +208,9 @@ const Page: React.FC = () => {
             }
         } catch (error) {
             console.error("Save error:", error);
-            toast.error(t('toasts.saveFailed'));
+            toast.error("Failed to upload files or save data.");
         } finally {
-
             setIsLoading(false);
-
         }
     };
 
@@ -196,11 +236,6 @@ const Page: React.FC = () => {
         label: t(`options.returnFrom.${key}`)
     }));
 
-    const inputFields = [
-        { label: t('labels.uploadPhoto'), id: "photo", ref: photoRef },
-        { label: t('labels.uploadDocument'), id: "document", ref: documentRef },
-    ];
-
     return (
         <div>
             <div className="glass-effect">
@@ -208,7 +243,7 @@ const Page: React.FC = () => {
                     <h1 className="text-2xl uppercase text-cream font-semibold">{t('title')}</h1>
                 </div>
                 <div className="px-8 py-4 rounded-b-md">
-                    <div className='w-1/2  items-center gap-4 flex justify-center mb-4'>
+                    <div className='w-full md:w-1/2 items-center gap-4 flex justify-center mb-4'>
                         <label className="text-blue-100 font-semibold text-nowrap">{t('labels.selectType')}</label>
                         <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
                     </div>
@@ -217,7 +252,7 @@ const Page: React.FC = () => {
                         <InputComponent label={t('labels.firNo')} value={searchFirNo} setInput={(e) => setSearchFirNo(e.target.value)} />
                         <InputComponent label={t('labels.orSrNo')} value={searchSrNo} setInput={(e) => setSearchSrNo(e.target.value)} />
                         <div className="md:col-span-2 flex justify-center">
-                            <Button onClick={getByFir} className='bg-blue-600 w-1/2' disabled={isFetching || !type}>
+                            <Button onClick={getByFir} className='bg-blue-600 w-full md:w-1/2' disabled={isFetching || !type}>
                                 {isFetching ? <LoaderIcon className='animate-spin' /> : t('buttons.fetchRecord')}
                             </Button>
                         </div>
@@ -257,7 +292,7 @@ const Page: React.FC = () => {
                                     if (!isReturned && fieldsToHideWhenNotReturned.includes(field.name)) return null;
                                     if (isReturned && fieldsToHideWhenReturned.includes(field.name)) return null;
 
-                                    if (['underSection',].includes(field.name)) {
+                                    if (['underSection'].includes(field.name)) {
                                         return <InputComponent key={field.name} label={field.label} value={formData[field.name as keyof typeof formData] ?? ""} disabled />;
                                     }
                                     if (field.type === "date") {
@@ -268,12 +303,38 @@ const Page: React.FC = () => {
                                     }
                                     return <InputComponent key={field.name} label={field.label} value={formData[field.name as keyof typeof formData] ?? ""} setInput={(e: any) => handleInputChange(field.name, e.target.value)} />;
                                 })}
-                                {inputFields.map((item, index) => (
-                                    <div key={index} className="flex flex-col gap-2">
-                                        <label className="text-blue-100">{item.label}</label>
-                                        <input ref={item.ref} className="text-blue-100 rounded-xl glass-effect px-2 py-1" id={item.id} type="file" />
-                                    </div>
-                                ))}
+
+                                {/* PHOTO UPLOAD WITH PREVIEW */}
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-blue-100">{t('labels.uploadPhoto')}</label>
+                                    <input ref={photoRef} onChange={(e) => handleFileChange(e, 'photo')} className="text-blue-100 rounded-xl glass-effect px-2 py-1" type="file" accept="image/*" />
+                                    {photoPreview && (
+                                        <div className="relative mt-2 w-32 h-32 rounded-lg overflow-hidden border border-white/20">
+                                            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                            <button onClick={() => clearPreview('photo')} className="absolute top-1 right-1 bg-black/50 rounded-full text-red-500 hover:text-red-400">
+                                                <XCircle size={20} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* DOCUMENT UPLOAD WITH PREVIEW */}
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-blue-100">{t('labels.uploadDocument')}</label>
+                                    <input ref={documentRef} onChange={(e) => handleFileChange(e, 'document')} className="text-blue-100 rounded-xl glass-effect px-2 py-1" type="file" accept="image/*,application/pdf" />
+                                    {documentPreview && (
+                                        <div className="relative mt-2 w-32 h-32 rounded-lg overflow-hidden border border-white/20 flex items-center justify-center bg-white/5">
+                                            {documentRef.current?.files?.[0]?.type === 'application/pdf' ? (
+                                                <div className="text-xs text-center p-2 text-cream">PDF File Selected</div>
+                                            ) : (
+                                                <img src={documentPreview} alt="Doc Preview" className="w-full h-full object-cover" />
+                                            )}
+                                            <button onClick={() => clearPreview('document')} className="absolute top-1 right-1 bg-black/50 rounded-full text-red-500 hover:text-red-400">
+                                                <XCircle size={20} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="flex w-full justify-center items-center gap-4 mt-6">
@@ -290,4 +351,4 @@ const Page: React.FC = () => {
     );
 };
 
-export default Page;    
+export default Page;
