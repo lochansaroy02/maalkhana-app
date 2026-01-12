@@ -201,13 +201,14 @@ export const baghpat = {
     "IOName": "IOName",
     "HM": "HM",
     "vadiName": "vadiName",
-    "cash": "cash",
-    "wine": "wine",
-    "wine type": "wineType",
+
     "accused": "accused",
     "status": "status",
     "place": "place",
     "boxNo": "boxNo",
     "courtNo": "courtNo",
+    "cash": "cash",
+    "wine": "wine",
+    "wine type": "wineType",
     "courtName": "courtName",
 }

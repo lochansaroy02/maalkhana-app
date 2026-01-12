@@ -16,7 +16,7 @@ export const uploadToImageKit = async (file: File, subFolder: string) => {
             token: auth.token,
             signature: auth.signature,
             expire: auth.expire,
-            folder: `/uploads/nilami`,
+            folder: `/uploads/${subFolder}`,
         });
         return result.url;
     } catch (error) {

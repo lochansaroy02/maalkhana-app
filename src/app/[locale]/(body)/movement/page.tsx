@@ -9,7 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import type { MovementEntry } from "@/store/movementStore";
 import { useMovementStore } from "@/store/movementStore";
 import { useSeizedVehicleStore } from "@/store/siezed-vehical/seizeStore";
-import { uploadToCloudinary } from "@/utils/uploadToCloudnary";
+import { uploadToImageKit } from "@/utils/imagekit";
 import { LoaderIcon, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import React, { useEffect, useRef, useState } from "react";
@@ -163,12 +163,12 @@ const Page: React.FC = () => {
         let documentUrl = undefined;
 
         if (photoRef.current?.files?.[0]) {
-            photoUrl = await uploadToCloudinary(photoRef.current.files[0]);
+            photoUrl = await uploadToImageKit(photoRef.current.files[0], "movement-data");
             if (!photoUrl) throw new Error("Photo upload failed");
         }
 
         if (documentRef.current?.files?.[0]) {
-            documentUrl = await uploadToCloudinary(documentRef.current.files[0]);
+            documentUrl = await uploadToImageKit(documentRef.current.files[0], "movement-docs");
             if (!documentUrl) throw new Error("Document upload failed");
         }
 
@@ -190,8 +190,9 @@ const Page: React.FC = () => {
                 moveDate: dateFields.moveDate.toISOString(),
                 returnDate: dateFields.returnDate.toISOString(),
                 isMovement: currentIsMovement,
-                ...(attachments.photoUrl && { movementPhoto: attachments.photoUrl }),
-                ...(attachments.documentUrl && { movementDocument: attachments.documentUrl }),
+
+                ...(attachments.photoUrl && { movementPhotoUrl: attachments.photoUrl }),
+                ...(attachments.documentUrl && { movementDocumentUrl: attachments.documentUrl }),
             };
 
             const success = (type === "malkhana")

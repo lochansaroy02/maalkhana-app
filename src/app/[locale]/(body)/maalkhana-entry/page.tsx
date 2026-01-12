@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { convertUnicodeToKurtidev, kurtidevKeys } from '@/utils/font';
-import { uploadToCloudinary } from '@/utils/uploadToCloudnary';
+import { uploadToImageKit } from '@/utils/imagekit';
 import { Mic, Trash } from 'lucide-react';
 
 import { useTranslations } from 'next-intl';
@@ -53,7 +53,7 @@ const Page = () => {
     const { addMaalkhanaEntry, updateMalkhanaEntry, getByFIR, currentEntry } = useMaalkhanaStore();
 
     const [firData, setFirData] = useState<any[]>([]);
-    const [photoUrl, SetPhotoUrl] = useState("");
+    const [photoUrl, SetPhotoUrl] = useState<string | undefined>("");
     const [currentEntryType, setCurrentEntryType] = useState("");
     const [dropdownSelection, setDropdownSelection] = useState('');
     const [otherStatus, setOtherStatus] = useState('');
@@ -301,7 +301,7 @@ const Page = () => {
         if (!file) return;
         setLoading(true);
         try {
-            const uploadedUrl = await uploadToCloudinary(file);
+            const uploadedUrl = await uploadToImageKit(file, "malkhana-entry");
             SetPhotoUrl(uploadedUrl);
             toast.success(t(`${baseKey}.toasts.photoUploadSuccess`));
         } catch (err) {
