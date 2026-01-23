@@ -84,7 +84,7 @@ const Page = () => {
         gdNo: '', // Kept as string for input component compatibility
         caseProperty: '',
         underSection: '',
-        Year: 2025,
+        Year: 2026,
         policeStation: '',
         IOName: '',
         vadiName: '',

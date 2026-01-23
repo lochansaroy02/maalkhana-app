@@ -1,11 +1,14 @@
 // store/maalkhanaStore.ts
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { create } from 'zustand';
 
 type MaalkhanaEntry = {
     isReturned: boolean;
     isRelease: boolean;
     srNo: string;
+    isNilami: boolean,
+    isDestroy: boolean,
     gdNo: string;
     photoUrl: string,
     cash: number,
@@ -53,6 +56,8 @@ const initialState: MaalkhanaEntry = {
     isReturned: false,
     srNo: '',
     gdNo: '',
+    isNilami: false,
+    isDestroy: false,
     description: '',
     gdDate: '',
     photoUrl: '',
@@ -115,7 +120,7 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
     },
 
     fetchMaalkhanaEntry: async (userId: string | undefined, role: string) => {
-        let apiUrl = role === 'asp' ? `/api/asp/get-data` : `/api/entry?id=${userId}`
+        let apiUrl = role === 'asp' || role === 'district' ? `/api/asp/get-data` : `/api/entry?id=${userId}`
         try {
             const response = await axios.get(apiUrl);
             if (response.data.success) {
@@ -136,9 +141,9 @@ export const useMaalkhanaStore = create<MaalkhanaStore>((set, get) => ({
             });
             if (response.data.success) {
                 if (Array.isArray(data)) {
-                    console.log(`🚀 Bulk insert successful: ${response.data.count} .`);
+                    toast.success(`🚀 Bulk insert successful: ${response.data.count} .`);
                 } else {
-                    console.log("🚀 Single insert successful:", response.data.data);
+                    toast.success("🚀 Single insert successful:", response.data.data);
                 }
                 return true
             } else {

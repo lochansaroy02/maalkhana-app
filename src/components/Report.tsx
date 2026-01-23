@@ -384,7 +384,7 @@ const Report = ({
     const renderPaginationControls = () => {
         if (totalPages <= 1) return null;
 
-        const ENTRIES_PER_PAGE_OPTIONS = [20, 40, 60, 80, 100, 500, 1000, 2000, 4000];
+        const ENTRIES_PER_PAGE_OPTIONS = [20, 40, 60, 80, 100, 320, 500, 1000, 2000, 4000];
         // END MODIFIED
 
         const pageNumbers = [];

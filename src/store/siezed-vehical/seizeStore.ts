@@ -83,7 +83,7 @@ export const useSeizedVehicleStore = create<SeizedVehicleStore>((set, get) => ({
     },
     fetchVehicles: async (userId: string | undefined, role: string) => {
         set({ loading: true, error: null });
-        let apiUrl = role === 'asp' ? `/api/asp/get-vehicle` : `/api/siezed/?userId=${userId}`
+        let apiUrl = role === 'asp' || role === 'district' ? `/api/asp/get-vehicle` : `/api/siezed/?userId=${userId}`
         try {
             const response = await axios.get(apiUrl);
             if (response.data.success) {

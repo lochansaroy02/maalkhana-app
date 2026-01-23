@@ -76,7 +76,7 @@ export const POST = async (req: NextRequest) => {
 };
 
 // GET: Fetch all seized vehicle entries
-
+//api/siezed
 interface Params {
     districtId: string;
 }

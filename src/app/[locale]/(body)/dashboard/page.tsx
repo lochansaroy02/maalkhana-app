@@ -1,6 +1,5 @@
 "use client";
 
-import { PiChart } from "@/components/Charts";
 import ReportCard from "@/components/ReportCard";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
@@ -11,8 +10,8 @@ import { useEffect } from "react";
 
 // --- Skeleton Component for individual cards ---
 const CardSkeleton = () => (
-    <div className="h-32 w-full bg-slate-200 animate-pulse rounded-xl border border-slate-300 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skeleton-shimmer"></div>
+    <div className="h-32 w-full  animate-pulse rounded-xl border border-blue-300 relative overflow-hidden">
+        <div className="absolute inset-0  bg-gradient-to-r from-transparent via-blue/20 to-transparent skeleton-shimmer"></div>
     </div>
 );
 
@@ -57,8 +56,6 @@ const Page = () => {
         { title: t("totalDestroyedItems"), icon: <Shredder size={40} />, bgColour: "bg-pink-500", value: data?.breakdown?.destroy || 0, url: "/report/entry-report?reportType=destroy" },
         { title: t("returnedEntries"), icon: <ArrowDownNarrowWide size={40} />, bgColour: "bg-green-700", value: data?.breakdown?.totalReturn || 0, url: "/report/entry-report?reportType=return" },
         { title: t("totalWine"), icon: <Wine size={40} />, bgColour: "bg-purple-700", value: `${data?.breakdown?.totalWine?._sum?.wine || 0} ${t("unitLtr")}` },
-        { title: t("totalDesiWine"), icon: <Wine size={40} />, bgColour: "bg-purple-700", value: `${data?.desi?._sum?.wine || 0} ${t("unitLtr")}` },
-        { title: t("totalEnglishWine"), icon: <Wine size={40} />, bgColour: "bg-amber-700", value: `${data?.angrezi?._sum?.wine || 0} ${t("unitLtr")}` },
         { title: t("totalCash"), icon: <Banknote size={40} />, bgColour: "bg-cyan-700", value: `₹${(data?.breakdown?.totalCash?._sum?.cash || 0).toLocaleString('en-IN')}` },
         { title: t("totalYellowItem"), icon: <Banknote size={40} />, bgColour: "bg-yellow-500", value: ` ₹${(data?.breakdown?.totalYellowItems?._sum?.yellowItemPrice / 2 || 0).toLocaleString('en-IN')}` },
     ];
@@ -91,10 +88,10 @@ const Page = () => {
                     })
                 )}
             </div>
-
+            {/* 
             <div className="p-4">
                 {loading ? <ChartSkeleton /> : <PiChart data={data} />}
-            </div>
+            </div> */}
         </div>
     );
 };
