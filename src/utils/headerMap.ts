@@ -207,10 +207,10 @@ export const baghpat = {
     "place": "place",
     "boxNo": "boxNo",
     "courtNo": "courtNo",
+    "courtName": "courtName",
     "cash": "cash",
     "wine": "wine",
     "wineType": "wineType",
-    "courtName": "courtName",
 }
 
 export const mau = {

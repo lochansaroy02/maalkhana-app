@@ -12,16 +12,14 @@ import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
-// Helper function to format Date object for the API (e.g., to ISO string)
+// Helper function to format Date object for the API
 const formatDateForApi = (date: Date | undefined): string => {
     if (date) {
-        // Use ISO string for consistent API transport
         return date.toISOString();
     }
     return "";
 };
 
-// Interface for formData to clearly define types
 interface FormData {
     firNo: string;
     srNo: string;
@@ -33,7 +31,6 @@ interface FormData {
     mobile: string;
     policeStation: string;
     releaseOrderedBy: string;
-    // releaseDate will be managed separately as a Date object for the DatePicker
 }
 
 const Page = () => {
@@ -48,20 +45,15 @@ const Page = () => {
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
 
-    const [realasedPhoto, setReleasedPhoto] = useState()
-    const [releasedDocument, setReleasedDocument] = useState()
-    // State for all string inputs
     const [formData, setFormData] = useState<FormData>({
         firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: ""
     });
 
-    // State for the DatePicker
     const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined);
-
     const [caseProperty, setCaseProperty] = useState('');
     const photoRef = useRef<HTMLInputElement>(null);
     const documentRef = useRef<HTMLInputElement>(null);
-
+    console.log(type);
     const handleInputChange = (field: keyof FormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
@@ -72,7 +64,6 @@ const Page = () => {
         setExistingId(recordId);
         setCaseProperty(data.caseProperty || '');
 
-        // Populate string fields
         setFormData({
             firNo: data.firNo || '',
             srNo: data.srNo || '',
@@ -86,8 +77,6 @@ const Page = () => {
             releaseOrderedBy: data.releaseOrderedBy || "",
         });
 
-        // Set the DatePicker state: 
-        // If data.releaseDate exists and is a valid date string/timestamp, convert it to a Date object.
         if (data.releaseDate) {
             const date = new Date(data.releaseDate);
             setReleaseDate(isNaN(date.getTime()) ? undefined : date);
@@ -98,7 +87,7 @@ const Page = () => {
 
     const resetAll = () => {
         setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "" });
-        setReleaseDate(undefined); // Reset the date
+        setReleaseDate(undefined);
         setCaseProperty(''); setExistingId(''); setType(''); setSearchResults([]); setSelectedResultId('');
         if (photoRef.current) photoRef.current.value = '';
         if (documentRef.current) documentRef.current.value = '';
@@ -115,30 +104,25 @@ const Page = () => {
 
         try {
             const response = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
-
             if (response && response.success && Array.isArray(response.data)) {
                 const results = response.data;
-
                 if (results.length > 1) {
                     setSearchResults(results);
                     toast.success(t('toasts.recordsFound', { count: results.length }));
                 } else if (results.length === 1) {
-                    // Single record found, likely from an SR number. Auto-fill the form.
                     fillForm(results[0]);
                     setSelectedResultId(results[0].id || results[0]._id);
                     toast.success(t('toasts.fetchSuccess'));
                 } else {
-                    // No records found.
                     toast.error(t('toasts.noRecord'));
                 }
-            } else if (response?.data) { // Handle single object response not in array
+            } else if (response?.data) {
                 fillForm(response.data)
                 toast.success(t('toasts.fetchSuccess'));
             } else {
                 toast.error(t('toasts.noRecord'));
             }
         } catch (error) {
-            console.error("Error fetching by FIR:", error);
             toast.error(t('toasts.fetchFailed'));
         } finally {
             setIsFetching(false);
@@ -146,8 +130,31 @@ const Page = () => {
     };
 
     const handleSave = async () => {
+        // --- VALIDATION LOGIC ---
         if (!existingId) return toast.error(t('toasts.noRecordSelected'));
-        if (!releaseDate) return toast.error(t('toasts.enterReleaseDate' as any)); // Assuming you'll add this translation
+
+        // Check text fields
+        const requiredTextFields: (keyof FormData)[] = [
+            'releaseItemName', 'receiverName', 'fathersName',
+            'address', 'mobile', 'policeStation', 'releaseOrderedBy'
+        ];
+
+        for (const field of requiredTextFields) {
+            if (!formData[field] || formData[field].trim() === "") {
+                return toast.error(`${t(`labels.${field}`)} ${t('toasts.isRequired' as any) || 'is required'}`);
+            }
+        }
+
+        // Check Date
+        if (!releaseDate) {
+            return toast.error(t('toasts.enterReleaseDate' as any) || "Release date is required");
+        }
+
+        // Check Files (Optional: remove if files are not strictly mandatory)
+        if (!photoRef.current?.files?.[0]) {
+            return toast.error(t('labels.uploadPhoto') + " " + (t('toasts.isRequired' as any) || 'is required'));
+        }
+        // --- END VALIDATION ---
 
         setIsLoading(true);
         try {
@@ -156,25 +163,18 @@ const Page = () => {
                 releasePhotoUrl = await uploadToImageKit(photoRef.current.files[0], "photo");
             }
 
-            // Upload Document if exists
             let releaseDocumentUrl: string | undefined = "";
             if (documentRef.current?.files?.[0]) {
                 releaseDocumentUrl = await uploadToImageKit(documentRef.current.files[0], "doc");
             }
 
             const updateData = {
-                receiverName: formData.receiverName,
-                fathersName: formData.fathersName,
-                address: formData.address,
-                mobile: formData.mobile,
+                ...formData,
                 releasePhotoUrl,
                 releaseDocumentUrl,
-                releaseItemName: formData.releaseItemName,
                 status: "Released",
                 isReturned: true,
                 isRelease: true,
-                policeStation: formData.policeStation,
-                releaseOrderedBy: formData.releaseOrderedBy,
                 releaseDate: formatDateForApi(releaseDate),
             };
 
@@ -184,7 +184,7 @@ const Page = () => {
             } else if (type === "seizedVehicle") {
                 response = await axios.put(`/api/siezed?id=${existingId}`, updateData);
             }
-            console.log(response);
+
             if (response?.data.success) {
                 toast.success(t('toasts.updateSuccess'));
                 resetAll();
@@ -210,17 +210,19 @@ const Page = () => {
         label: t(`options.type.${key}`)
     }));
 
+    // Added asterisk (*) to labels for visual feedback
     const fields = [
-        { name: "releaseItemName", label: t('labels.releaseItemName') },
-        { name: "receiverName", label: t('labels.receiverName') },
-        { name: "fathersName", label: t('labels.fathersName') },
-        { name: "address", label: t('labels.address') },
-        { name: "mobile", label: t('labels.mobileNo') },
-        { name: "releaseOrderedBy", label: t('labels.releaseOrderedBy') },
-        { name: "policeStation", label: t('labels.policeStation') },
+        { name: "releaseItemName", label: `${t('labels.releaseItemName')} *` },
+        { name: "receiverName", label: `${t('labels.receiverName')} *` },
+        { name: "fathersName", label: `${t('labels.fathersName')} *` },
+        { name: "address", label: `${t('labels.address')} *` },
+        { name: "mobile", label: `${t('labels.mobileNo')} *` },
+        { name: "releaseOrderedBy", label: `${t('labels.releaseOrderedBy')} *` },
+        { name: "policeStation", label: `${t('labels.policeStation')} *` },
     ];
+
     const inputFields = [
-        { label: t('labels.uploadPhoto'), id: "photo", ref: photoRef },
+        { label: `${t('labels.uploadPhoto')} *`, id: "photo", ref: photoRef },
         { label: t('labels.uploadDocument'), id: "document", ref: documentRef },
     ];
 
@@ -231,7 +233,7 @@ const Page = () => {
             </div>
             <div className='px-8 py-4 rounded-b-md'>
                 <div className='flex w-1/2 justify-center my-4 items-center gap-4'>
-                    <label className="text-blue-100 font-semibold">{t('labels.selectType')}</label>
+                    <label className="text-blue-100 font-semibold">{t('labels.selectType')} *</label>
                     <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
                 </div>
                 <hr className="border-gray-600 my-4" />
@@ -244,7 +246,6 @@ const Page = () => {
                         </Button>
                     </div>
                 </div>
-
 
                 {searchResults.length > 1 && (
                     <div className="my-4 col-span-2 flex flex-col gap-1">
@@ -260,10 +261,7 @@ const Page = () => {
                                         checked={selectedResultId === (item.id || item._id)}
                                         onChange={() => handleResultSelectionChange(item.id || item._id)}
                                     />
-                                    <label
-                                        htmlFor={`result-${item.id || item._id}`}
-                                        className="text-blue-100 cursor-pointer"
-                                    >
+                                    <label htmlFor={`result-${item.id || item._id}`} className="text-blue-100 cursor-pointer">
                                         {t('placeholders.srNo', { srNo: item.srNo })}
                                     </label>
                                 </div>
@@ -285,19 +283,16 @@ const Page = () => {
                                     <InputComponent
                                         key={field.name}
                                         label={field.label}
-                                        // Type assertion is needed here as formData is guaranteed to have all keys from fields array in this context
-                                        value={formData[field.name as keyof FormData]}
-                                        setInput={(e) => handleInputChange(field.name as keyof FormData, e.target.value)}
+                                        value={formData[field.name.replace(' *', '') as keyof FormData]}
+                                        setInput={(e) => handleInputChange(field.name.replace(' *', '') as keyof FormData, e.target.value)}
                                     />
                                 ))}
 
-                                {/* NEW: DatePicker Component */}
                                 <DatePicker
-                                    label={t('labels.releaseDate')}
+                                    label={`${t('labels.releaseDate')} *`}
                                     date={releaseDate}
                                     setDate={setReleaseDate}
                                 />
-                                {/* END NEW */}
 
                                 {inputFields.map((item, index) => (
                                     <div key={index} className='flex flex-col gap-2'>
@@ -320,7 +315,6 @@ const Page = () => {
                         </div>
                     </div>
                 )}
-
             </div>
         </div>
     );

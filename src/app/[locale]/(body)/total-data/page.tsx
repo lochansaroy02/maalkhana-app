@@ -71,6 +71,8 @@ const Page = () => {
         XLSX.writeFile(workbook, `Digital_Malkhana_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
+
+
     return (
         <div className="p-8 h-screen overflow-y-auto">
             <div className="flex justify-between items-center mb-8">

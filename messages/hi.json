@@ -283,7 +283,8 @@
             "fetchFailed": "डेटा प्राप्त करने में विफल। कृपया कंसोल देखें।",
             "noRecordSelected": "कृपया सहेजने से पहले एक वैध रिकॉर्ड प्राप्त करें।",
             "updateSuccess": "डेटा सफलतापूर्वक अपडेट हो गया!",
-            "saveError": "सहेजने के दौरान एक त्रुटि हुई।"
+            "saveError": "सहेजने के दौरान एक त्रुटि हुई।",
+            "enterReleaseDate": "Please Enter Released Date"
         }
     },
     "maalkhanaDestroyForm": {

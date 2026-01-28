@@ -36,163 +36,168 @@ model User {
 }
 
 model SeizedVehicle {
-  id              String    @id @default(cuid())
-  srNo            String?
-  gdNo            String
-  gdDate          String
-  underSection    String
-  rtoName         String?
-  vehicleType     String
-  colour          String
-  registrationNo  String
-  engineNo        String
-  description     String
-  status          String
-  policeStation   String
-  ownerName       String
-  seizedBy        String
-  caseProperty    String
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  districtId      String?
-  firNo           String?
-  userId          String?
-  address         String?
-  document        String?
-  fathersName     String?
-  isReturned      Boolean   @default(false)
-  mobile          String?
-  movePurpose     String?
-  moveTrackingNo  String?
-  name            String?
-  receviedBy      String?
-  releaseItemName String?
-  returnBackFrom  String?
-  returnDate      DateTime?
-  takenOutBy      String?
-  moveDate        String?
-  documentUrl     String?
-  photoUrl        String?
-  receivedBy      String?
-  isMovement      Boolean?  @default(false)
-  isRelease       Boolean?  @default(false)
-  receiverName    String?   @map("recevierName")
-  // Nilami ( new fields )
-  isNilami        Boolean?
+  id             String   @id @default(cuid())
+  srNo           String?
+  gdNo           String
+  gdDate         String
+  underSection   String
+  rtoName        String?
+  vehicleType    String
+  colour         String
+  registrationNo String
+  engineNo       String
+  description    String
+  status         String
+  policeStation  String
+  ownerName      String
+  seizedBy       String
+  caseProperty   String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  districtId     String?
+  firNo          String?
+  userId         String?
+  address        String?
+  document       String?
+  fathersName    String?
+  mobile         String?
+  dbName         String?
+
+  // --- Release Fields ---
+  isRelease          Boolean?  @default(false)
+  releaseDate        DateTime?
+  releaseItemName    String?
+  releaseOrderedBy   String?
+  receiverName       String?
+  receivedBy         String?
+  releasePhoto       String? // Legacy field
+  releasedDocument   String? // Legacy field
+  releasePhotoUrl    String? // New consistent naming
+  releaseDocumentUrl String?
+
+  // --- Movement Fields ---
+  isMovement       Boolean?  @default(false)
+  moveDate         String?
+  movePurpose      String?
+  moveTrackingNo   String?
+  takenOutBy       String?
+  returnBackFrom   String?
+  returnDate       DateTime?
+  movementPhoto    String? // Legacy field
+  movementDocument String? // Legacy field
+  movementPhotoUrl String?
+  movementDocUrl   String?
+
+  // --- Nilami (Auction) Fields ---
+  isNilami        Boolean? @default(false)
   nilamiOrderedBy String?
   nilamiValue     String?
   nilamiDate      String?
   nilamiItemName  String?
+  nilamiPhotoUrl  String?
+  nilamiDocUrl    String?
 
-  //released documents
-  releasedPhoto    String?
-  releasedDocument String?
-  movementPhoto    String?
-  movementDocument String?
+  // --- Destroy Fields ---
+  isDestroy        Boolean?  @default(false)
+  destroyOrderedBy String?
+  destroyDate      DateTime?
+  destroyPurpose   String?
+  destroyPhotoUrl  String?
+  destroyDocUrl    String?
 
-  dbName      String?
+  // Base Photos/Docs
+  photoUrl    String?
+  documentUrl String?
+  isReturned  Boolean @default(false)
+
+  // Relations
   User        User?        @relation(fields: [userId], references: [id])
   attachments Attachment[]
 }
 
 model MalkhanaEntry {
-  id String @id @default(uuid())
-
-  firNo     String?
-  srNo      Int?    @default(1)
-  entryType String
-  gdNo      Int?
-  gdDate    String
-
-  underSection String
-  vadiName     String
-  accused      String
-  IOName       String
-  HM           String
-
-  policeStation String
-  Year          Int?
-  boxNo         Int?
-  status        String
-  place         String
-  courtNo       String
-  courtName     String
-
+  id              String    @id @default(uuid())
+  firNo           String?
+  srNo            Int?      @default(1)
+  entryType       String
+  gdNo            Int?
+  caseProperty    String
+  gdDate          String
+  underSection    String
+  vadiName        String
+  accused         String
+  IOName          String
+  name            String?
+  HM              String
+  policeStation   String
+  Year            Int?
+  boxNo           Int?
+  status          String
+  place           String
+  courtNo         String
+  courtName       String
   wine            Int?
   cash            Int?
   wineType        String
   yellowItemPrice Int?
   address         String?
-  // ... other fields unchanged
+  createdAt       DateTime? @default(now())
+  updatedAt       DateTime? @updatedAt
+  districtId      String?
+  userId          String?
+  fathersName     String?
+  mobile          String?
+  description     String?
+  dbName          String?
 
-  createdAt      DateTime? @default(now())
-  updatedAt      DateTime? @updatedAt
-  districtId     String?
-  photoUrl       String    @default("")
-  userId         String?
-  document       String?
-  fathersName    String?
-  isReturned     Boolean?  @default(false)
-  mobile         String?
-  moveDate       String?
-  movePurpose    String?
-  moveTrackingNo String?
-  name           String?
-  description    String?
+  // --- Release Fields ---
+  isRelease          Boolean?  @default(false)
+  releaseDate        DateTime?
+  releaseItemName    String?
+  releaseOrderedBy   String?
+  receiverName       String?
+  receivedBy         String?
+  releasePhotoUrl    String?
+  releaseDocumentUrl String?
 
-  photo           String?
-  releaseItemName String?
-
-  releaseOrderedBy String?
-  returnBackFrom   String?
-  returnDate       DateTime?
-  takenOutBy       String?
-  caseProperty     String?
-  receivedBy       String?
-
-  receiverName String?
-  documentUrl  String?
-  isMovement   Boolean?  @default(false)
-  isRelease    Boolean?  @default(false)
-  releaseDate  DateTime?
-  dbName       String?
-
-  // distroy  (new fields)
-  isDestroy        Boolean?
-  destroyOrderedBy String?
-  destroyDate      DateTime?
-  destroyPurpose   String?
-
-  // Nilami ( new fields )
-  isNilami        Boolean?
-  nilamiOrderedBy String?
-  nilamiValue     String?
-  nilamiDate      String?
-  nilamiItemName  String?
-
-  // Release
-  releasePhotoUrl     String?
-  releaseDocumentUrl  String?
-  // Movement
+  // --- Movement Fields ---
+  isMovement          Boolean?  @default(false)
+  moveDate            String?
+  movePurpose         String?
+  moveTrackingNo      String?
+  takenOutBy          String?
+  returnBackFrom      String?
+  returnDate          DateTime?
   movementPhotoUrl    String?
   movementDocumentUrl String?
-  // Nilami (Auction)
-  nilamiPhotoUrl      String?
-  nilamiDocumentUrl   String?
-  // Destroy
-  destroyPhotoUrl     String?
-  destroyDocumentUrl  String?
-  User                User?        @relation(fields: [userId], references: [id])
-  attachments         Attachment[]
-}
 
-// model Nilami {
-//   id              String          @id @default(uuid())
-//   malkhanaEntries MalkhanaEntry[]
-//   nilamiDate      DateTime
-//   createdAt       DateTime?       @default(now())
-//   updatedAt       DateTime?       @updatedAt
-// }
+  // --- Nilami (Auction) Fields ---
+  isNilami          Boolean? @default(false)
+  nilamiOrderedBy   String?
+  nilamiValue       String?
+  nilamiDate        String?
+  nilamiItemName    String?
+  nilamiPhotoUrl    String?
+  nilamiDocumentUrl String?
+
+  // --- Destroy Fields ---
+  isDestroy          Boolean?  @default(false)
+  destroyOrderedBy   String?
+  destroyDate        DateTime?
+  destroyPurpose     String?
+  destroyPhotoUrl    String?
+  destroyDocumentUrl String?
+
+  // Base Photos/Docs
+  photoUrl    String   @default("")
+  document    String?
+  documentUrl String?
+  isReturned  Boolean? @default(false)
+
+  // Relations
+  User        User?        @relation(fields: [userId], references: [id])
+  attachments Attachment[]
+}
 
 enum AttachmentType {
   INITIAL
@@ -204,15 +209,233 @@ enum AttachmentType {
 
 model Attachment {
   id        String         @id @default(uuid())
-  url       String // S3 or Cloudinary URL
-  fileType  String // "image" or "pdf"
+  url       String
+  fileType  String
   category  AttachmentType
   createdAt DateTime       @default(now())
 
-  // Relations
   malkhanaId String?
   Malkhana   MalkhanaEntry? @relation(fields: [malkhanaId], references: [id])
 
   vehicleId String?
   Vehicle   SeizedVehicle? @relation(fields: [vehicleId], references: [id])
 }
+
+// generator client {
+//   provider = "prisma-client-js"
+//   output   = "../src/generated/prisma"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+// model District {
+//   id           String   @id @default(uuid())
+//   name         String
+//   email        String   @unique
+//   passwordHash String
+//   createdAt    DateTime @default(now())
+//   updatedAt    DateTime @updatedAt
+//   users        User[]
+// }
+
+// model User {
+//   id            String          @id @default(uuid())
+//   name          String
+//   email         String          @unique
+//   passwordHash  String
+//   createdAt     DateTime        @default(now())
+//   updatedAt     DateTime        @updatedAt
+//   districtId    String
+//   policeStation String?
+//   rank          String?
+//   role          String?
+//   mobileNo      String
+//   entries       MalkhanaEntry[]
+//   vehicles      SeizedVehicle[]
+//   District      District        @relation(fields: [districtId], references: [id])
+// }
+
+// model SeizedVehicle {
+//   id              String    @id @default(cuid())
+//   srNo            String?
+//   gdNo            String
+//   gdDate          String
+//   underSection    String
+//   rtoName         String?
+//   vehicleType     String
+//   colour          String
+//   registrationNo  String
+//   engineNo        String
+//   description     String
+//   status          String
+//   policeStation   String
+//   ownerName       String
+//   seizedBy        String
+//   caseProperty    String
+//   createdAt       DateTime  @default(now())
+//   updatedAt       DateTime  @updatedAt
+//   districtId      String?
+//   firNo           String?
+//   userId          String?
+//   address         String?
+//   document        String?
+//   fathersName     String?
+//   isReturned      Boolean   @default(false)
+//   mobile          String?
+//   movePurpose     String?
+//   moveTrackingNo  String?
+//   name            String?
+//   receviedBy      String?
+//   releaseItemName String?
+//   returnBackFrom  String?
+//   returnDate      DateTime?
+//   takenOutBy      String?
+//   moveDate        String?
+//   documentUrl     String?
+//   photoUrl        String?
+//   receivedBy      String?
+//   isMovement      Boolean?  @default(false)
+//   isRelease       Boolean?  @default(false)
+//   receiverName    String?   @map("recevierName")
+//   // Nilami ( new fields )
+//   isNilami        Boolean?
+//   nilamiOrderedBy String?
+//   nilamiValue     String?
+//   nilamiDate      String?
+//   nilamiItemName  String?
+
+//   //released documents
+//   releasedPhoto    String?
+//   releasedDocument String?
+//   movementPhoto    String?
+//   movementDocument String?
+
+//   dbName      String?
+//   User        User?        @relation(fields: [userId], references: [id])
+//   attachments Attachment[]
+// }
+
+// model MalkhanaEntry {
+//   id String @id @default(uuid())
+
+//   firNo     String?
+//   srNo      Int?    @default(1)
+//   entryType String
+//   gdNo      Int?
+//   gdDate    String
+
+//   underSection String
+//   vadiName     String
+//   accused      String
+//   IOName       String
+//   HM           String
+
+//   policeStation String
+//   Year          Int?
+//   boxNo         Int?
+//   status        String
+//   place         String
+//   courtNo       String
+//   courtName     String
+
+//   wine            Int?
+//   cash            Int?
+//   wineType        String
+//   yellowItemPrice Int?
+//   address         String?
+//   // ... other fields unchanged
+
+//   createdAt      DateTime? @default(now())
+//   updatedAt      DateTime? @updatedAt
+//   districtId     String?
+//   photoUrl       String    @default("")
+//   userId         String?
+//   document       String?
+//   fathersName    String?
+//   isReturned     Boolean?  @default(false)
+//   mobile         String?
+//   moveDate       String?
+//   movePurpose    String?
+//   moveTrackingNo String?
+//   name           String?
+//   description    String?
+
+//   photo           String?
+//   releaseItemName String?
+
+//   releaseOrderedBy String?
+//   returnBackFrom   String?
+//   returnDate       DateTime?
+//   takenOutBy       String?
+//   caseProperty     String?
+//   receivedBy       String?
+
+//   receiverName String?
+//   documentUrl  String?
+//   isMovement   Boolean?  @default(false)
+//   isRelease    Boolean?  @default(false)
+//   releaseDate  DateTime?
+//   dbName       String?
+
+//   // distroy  (new fields)
+//   isDestroy        Boolean?
+//   destroyOrderedBy String?
+//   destroyDate      DateTime?
+//   destroyPurpose   String?
+
+//   // Nilami ( new fields )
+//   isNilami        Boolean?
+//   nilamiOrderedBy String?
+//   nilamiValue     String?
+//   nilamiDate      String?
+//   nilamiItemName  String?
+
+//   // Release
+//   releasePhotoUrl     String?
+//   releaseDocumentUrl  String?
+//   // Movement
+//   movementPhotoUrl    String?
+//   movementDocumentUrl String?
+//   // Nilami (Auction)
+//   nilamiPhotoUrl      String?
+//   nilamiDocumentUrl   String?
+//   // Destroy
+//   destroyPhotoUrl     String?
+//   destroyDocumentUrl  String?
+//   User                User?        @relation(fields: [userId], references: [id])
+//   attachments         Attachment[]
+// }
+
+// // model Nilami {
+// //   id              String          @id @default(uuid())
+// //   malkhanaEntries MalkhanaEntry[]
+// //   nilamiDate      DateTime
+// //   createdAt       DateTime?       @default(now())
+// //   updatedAt       DateTime?       @updatedAt
+// // }
+
+// enum AttachmentType {
+//   INITIAL
+//   RELEASE
+//   MOVEMENT
+//   NILAMI
+//   DESTROY
+// }
+
+// model Attachment {
+//   id        String         @id @default(uuid())
+//   url       String // S3 or Cloudinary URL
+//   fileType  String // "image" or "pdf"
+//   category  AttachmentType
+//   createdAt DateTime       @default(now())
+
+//   // Relations
+//   malkhanaId String?
+//   Malkhana   MalkhanaEntry? @relation(fields: [malkhanaId], references: [id])
+
+//   vehicleId String?
+//   Vehicle   SeizedVehicle? @relation(fields: [vehicleId], references: [id])
+// }

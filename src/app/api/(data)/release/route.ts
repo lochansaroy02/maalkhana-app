@@ -110,29 +110,64 @@ export const GET = async (req: NextRequest) => {
     }
 };
 
-// UPDATE Movement data
 export const PUT = async (req: NextRequest) => {
     try {
-
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
-        const type = searchParams.get("type")
-        const body = await req.json();
-        const { ...movementData } = body;
+        const type = searchParams.get("type"); // 'malkhana' or 'seizedVehicle'
 
         if (!id) {
-            return NextResponse.json({ success: false, message: "FIR No. is required" }, { status: 400 });
+            return NextResponse.json(
+                { success: false, message: "ID is required" },
+                { status: 400 }
+            );
         }
 
-        const updatedEntry = await prisma.malkhanaEntry.update({
+        const body = await req.json();
 
-            where: { id },
-            data: movementData
-        });
+        // We extract the data. Using a spread here allows the frontend to 
+        // send fields like isRelease, releaseDate, etc., dynamically.
+        const updateData = { ...body };
 
-        return NextResponse.json({ success: true, data: updatedEntry }, { status: 200 });
-    } catch (error) {
+        let updatedEntry;
+
+        if (type === 'malkhana') {
+            updatedEntry = await prisma.malkhanaEntry.update({
+                where: { id },
+                data: updateData,
+            });
+        } else if (type === 'seizedVehicle') {
+            updatedEntry = await prisma.seizedVehicle.update({
+                where: { id },
+                data: updateData,
+            });
+        } else {
+            return NextResponse.json(
+                { success: false, message: "Invalid type provided" },
+                { status: 400 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: "Entry updated successfully",
+            data: updatedEntry
+        }, { status: 200 });
+
+    } catch (error: any) {
         console.error("PUT /api/movement error:", error);
-        return NextResponse.json({ success: false, error: "Failed to update data" }, { status: 500 });
+
+        // Specific handling for Prisma record not found
+        if (error.code === 'P2025') {
+            return NextResponse.json(
+                { success: false, error: "Record not found" },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(
+            { success: false, error: "Failed to update data" },
+            { status: 500 }
+        );
     }
 };

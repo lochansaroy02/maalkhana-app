@@ -127,7 +127,7 @@ export const GET = async (req: NextRequest) => {
 
         ]);
 
-
+        console.log(malkhanaEntryCount);
         const totalEntries = malkhanaEntryCount + seizedVehicleCount;
 
         // ✅ FIXED: The response object now uses the correct keys expected by the frontend.
@@ -146,7 +146,6 @@ export const GET = async (req: NextRequest) => {
                 nilami: nilamiCount,
                 totalCash: totalCash,
                 totalYellowItems: totalYellowItem,
-
                 desi: totalDesiWine,
                 english: totalAngreziWine,
                 totalWine: totalWine,
