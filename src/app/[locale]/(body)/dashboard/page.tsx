@@ -40,13 +40,14 @@ const Page = () => {
             }
         }
     }, [user?.id, fetchTotalEntries, userId, fetchAdminEntries]);
+
     const totalEntry = (data?.breakdown?.entry || 0) - (data?.breakdown?.movement || 0) - (data?.breakdown?.release || 0) - (data?.breakdown?.destroy || 0);
     const actualEntries = totalEntry < 0 ? "0" : totalEntry;
     const movementvalue = (data?.breakdown?.movement || 0) < 0 ? 0 : data?.breakdown?.movement;
 
     const reportItems = [
         { title: t("totalPoliceStation"), icon: <Shield size={40} />, bgColour: "bg-neutral-500", value: data?.breakdown?.totalPoliceStation || 0, url: "/total-data" },
-        { title: t("totalEntries"), icon: <Menu size={40} />, bgColour: "bg-cyan-500", value: data?.breakdown?.totalEntries, url: "/report/entry-report" },
+        { title: t("totalEntries"), icon: <Menu size={40} />, bgColour: "bg-cyan-500", value: data?.breakdown?.totalEntries || 0, url: "/report/entry-report" },
         { title: t("totalMalkhanaEntry"), icon: <User size={40} />, bgColour: "bg-red-500", value: actualEntries || 0, url: "/report/entry-report" },
         { title: t("malkhanaMovement"), icon: <User size={40} />, bgColour: "bg-orange-500", value: movementvalue || 0, url: "/report/entry-report?reportType=movement" },
         { title: t("malkhanaRelease"), icon: <Settings size={40} />, bgColour: "bg-green-500", value: data?.breakdown?.release || 0, url: "/report/entry-report?reportType=release" },
