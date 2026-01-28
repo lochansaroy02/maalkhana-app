@@ -3,6 +3,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
 
 @font-face {
   font-family: 'Kurtidev 010';

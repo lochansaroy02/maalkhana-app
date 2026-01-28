@@ -384,7 +384,7 @@ model Attachment {
 //   isDestroy        Boolean?
 //   destroyOrderedBy String?
 //   destroyDate      DateTime?
-//   destroyPurpose   String?
+//   destroyPurpose   St ring?
 
 //   // Nilami ( new fields )
 //   isNilami        Boolean?
