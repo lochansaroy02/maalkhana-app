@@ -20,7 +20,8 @@
         "destroy": "Destroy",
         "barcode": "Barcode",
         "nilami": "Nilami",
-        "report": "Report"
+        "report": "Report",
+        "rfid": "RFID"
     },
     "Dashboard": {
         "totalEntries": "Total Entries",
@@ -281,7 +282,7 @@
             "enterFirOrSr": "Please enter an FIR No. or Sr. No.",
             "recordsFound": "{count} records found. Please select one.",
             "fetchSuccess": "Data Fetched Successfully!",
-            "enterReleaseDate":"Please Enter Released Date",
+            "enterReleaseDate": "Please Enter Released Date",
             "noRecord": "No record found.",
             "fetchFailed": "Fetch failed. Please check the console for details.",
             "noRecordSelected": "Please fetch a valid record before saving.",

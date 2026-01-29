@@ -38,7 +38,8 @@
         "destroy": "नष्ट मालख़ाना",
         "barcode": "बारकोड",
         "report": "रिपोर्ट",
-        "nilami": "नीलामी"
+        "nilami": "नीलामी",
+        "rfid": "RFID"
     },
     "entry": {
         "malkhanaEntryForm": {

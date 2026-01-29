@@ -25,6 +25,7 @@ const Sidebar = () => {
             { name: t("release"), link: "/release", icon: <PackageOpen size={16} /> },
             { name: t("nilami"), link: "/nilami", icon: <Megaphone size={16} /> },
             { name: t("destroy"), link: "/destroy", icon: <Shredder size={16} /> },
+            // { name: t("rfid"), link: "/not-found", icon: <Nfc size={16} /> },
             { name: t("barcode"), link: "/barcode", icon: <Barcode size={16} /> },
             { name: t("report"), link: "/report", icon: <Clipboard size={16} /> },
         ];
