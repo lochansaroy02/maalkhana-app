@@ -7,6 +7,7 @@ import { useSeizedVehicleStore } from './siezed-vehical/seizeStore';
 
 type ReleaseStore = {
     fetchByFIR: (userId: string | undefined, type: string, firNo?: string, srNo?: string) => Promise<any | null>;
+    fetchByRegistration: (userId: string | undefined, type: string, firNo?: string, srNo?: string) => Promise<any | null>;
     updateReleaseEntry: (id: string, type: string, updatedData: any) => Promise<boolean>;
 
 };
@@ -18,6 +19,25 @@ export const useReleaseStore = create<ReleaseStore>((set, get) => ({
         try {
 
             const response = await axios.get(`/api/release/fir?userId=${userId}&type=${type}&firNo=${firNo}&srNo=${srNo}`);
+            const data = response.data
+
+            if (response.data.success) {
+                return {
+                    data: data.data,
+                    success: data.success
+                }
+            }
+            return null;
+
+        } catch (error: any) {
+            console.error("Error in FetchByFIR:", error.response?.data?.message || error.message);
+            return null;
+        }
+    },
+    fetchByRegistration: async (userId: string | undefined, type: string, registrationNo?: string, srNo?: string) => {
+        try {
+
+            const response = await axios.get(`/api/release/registration?userId=${userId}&registrationNo=${registrationNo}`);
             const data = response.data
 
             if (response.data.success) {

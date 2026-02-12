@@ -23,7 +23,6 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProp
 
 
     const exportMap = ballia;
-    // const exportMap = baghpat;
 
     const { user } = useAuthStore();
     const { addMaalkhanaEntry } = useMaalkhanaStore();
@@ -32,7 +31,6 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProp
     const [loading, setLoading] = useState(false);
 
     const [uploadedData, setUploadedData] = useState<any[] | null>(null);
-
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const integerFields = ["srNo", "gdNo", "boxNo", "Year", "cash", "wine"];

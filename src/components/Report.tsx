@@ -135,7 +135,7 @@ const Report = ({
     };
 
     const excluded = [
-        "Id", "id", "createdAt", "updatedAt", , "isReturned", "dbName", "isMovement", "isRelease", "userId", "districtId", "_id", "__v", "",
+        "Id", "id", "updatedAt", , "isReturned", "dbName", "isMovement", "isRelease", "userId", "districtId", "_id", "__v", "",
     ];
 
     const pathName = usePathname();

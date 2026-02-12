@@ -23,6 +23,7 @@ const formatDateForApi = (date: Date | undefined): string => {
 interface FormData {
     firNo: string;
     srNo: string;
+    registrationNo: string;
     underSection: string;
     releaseItemName: string;
     receiverName: string;
@@ -37,16 +38,17 @@ const Page = () => {
     const t = useTranslations('maalkhanaReleaseForm');
 
     const { user } = useAuthStore();
-    const { fetchByFIR } = useReleaseStore();
+    const { fetchByFIR, fetchByRegistration } = useReleaseStore();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const [type, setType] = useState<string>("");
+    const [unclaimed, setUnclaimed] = useState<string>("");
     const [existingId, setExistingId] = useState<string>("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
 
     const [formData, setFormData] = useState<FormData>({
-        firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: ""
+        firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "", registrationNo: ""
     });
 
     const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined);
@@ -67,6 +69,7 @@ const Page = () => {
         setFormData({
             firNo: data.firNo || '',
             srNo: data.srNo || '',
+            registrationNo: data.registrationNo || '',
             underSection: data.underSection || '',
             releaseItemName: data.releaseItemName || '',
             receiverName: data.receiverName || "",
@@ -86,7 +89,11 @@ const Page = () => {
     };
 
     const resetAll = () => {
-        setFormData({ firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "" });
+        setFormData({
+            firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "",
+            registrationNo: ""
+
+        });
         setReleaseDate(undefined);
         setCaseProperty(''); setExistingId(''); setType(''); setSearchResults([]); setSelectedResultId('');
         if (photoRef.current) photoRef.current.value = '';
@@ -95,7 +102,7 @@ const Page = () => {
 
     const handleGetByFir = async () => {
         if (!type) return toast.error(t('toasts.selectType'));
-        if (!formData.firNo && !formData.srNo) return toast.error(t('toasts.enterFirOrSr'));
+        // if (!formData.firNo && !formData.srNo) return toast.error(t('toasts.enterFirOrSr'));
 
         setIsFetching(true);
         setSearchResults([]);
@@ -103,7 +110,14 @@ const Page = () => {
         setSelectedResultId('');
 
         try {
-            const response = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
+            let response;
+            if (unclaimed === 'unclaimed') {
+                response = await fetchByRegistration(user?.id, type, formData.registrationNo, formData.srNo);
+            }
+            else {
+                response = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
+            }
+
             if (response && response.success && Array.isArray(response.data)) {
                 const results = response.data;
                 if (results.length > 1) {
@@ -209,7 +223,12 @@ const Page = () => {
         value: key,
         label: t(`options.type.${key}`)
     }));
+    const unclaimedOptions = [{
+        value: 'unclaimed',
+        label: "unclaimed"
+    }]
 
+    console.log(formData.registrationNo);
     // Added asterisk (*) to labels for visual feedback
     const fields = [
         { name: "releaseItemName", label: `${t('labels.releaseItemName')} *` },
@@ -232,13 +251,22 @@ const Page = () => {
                 <h1 className='text-2xl uppercase text-cream font-semibold'>{t('title')}</h1>
             </div>
             <div className='px-8 py-4 rounded-b-md'>
-                <div className='flex w-1/2 justify-center my-4 items-center gap-4'>
-                    <label className="text-blue-100 font-semibold">{t('labels.selectType')} *</label>
-                    <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
+                <div className='flex '>
+
+                    <div className='flex w-1/2 justify-center my-4 items-center gap-4'>
+                        <label className="text-blue-100 font-semibold">{t('labels.selectType')} *</label>
+                        <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
+                    </div>
+                    {type === 'seizedVehicle' && <div className='flex w-1/2 justify-center my-4 items-center gap-4'>
+                        <label className="text-blue-100 font-semibold">{t('labels.unclaimed')} *</label>
+                        <DropDown selectedValue={unclaimed} handleSelect={setUnclaimed} options={unclaimedOptions} />
+                    </div>}
                 </div>
                 <hr className="border-gray-600 my-4" />
                 <div className='mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-end'>
                     <InputComponent label={t('labels.firNo')} value={formData.firNo} setInput={(e) => handleInputChange('firNo', e.target.value)} />
+                    {unclaimed === 'unclaimed' &&
+                        <InputComponent label={t('labels.registrationNo')} value={formData.registrationNo} setInput={(e) => handleInputChange('registrationNo', e.target.value)} />}
                     <InputComponent label={t('labels.orSrNo')} value={formData.srNo} setInput={(e) => handleInputChange('srNo', e.target.value)} />
                     <div className="md:col-span-2 flex justify-center">
                         <Button onClick={handleGetByFir} className='bg-blue-600 w-1/2' disabled={isFetching || !type}>

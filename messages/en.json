@@ -219,6 +219,9 @@
                 "malkhana": "malkhana",
                 "seizedVehicle": "siezed vehical"
             },
+            "unclaimed": {
+                "unclaimed": "unclaimed"
+            },
             "returnFrom": {
                 "court": "Court",
                 "fsl": "FSL",
@@ -245,7 +248,9 @@
         "title": "Malkhana Release",
         "labels": {
             "selectType": "Select Type to Release From:",
+            "unclaimed": "Unclaimed",
             "firNo": "FIR No.",
+            "registrationNo": "Registration No.",
             "orSrNo": "Sr. No / Mal No.",
             "multipleRecords": "Multiple Records Found. Please Select One:",
             "enterDetails": "3. Enter Release Details",

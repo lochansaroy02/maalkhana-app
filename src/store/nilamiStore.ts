@@ -43,6 +43,8 @@ export const useNilamiStore = create<NilamiStore>((set, get) => ({
         try {
             let success = false;
 
+
+
             // Ensure data includes the nilami status flag if not already present
             const nilamiPayload = {
                 ...updatedData,
@@ -57,7 +59,6 @@ export const useNilamiStore = create<NilamiStore>((set, get) => ({
                 const { updateVehicalEntry } = useSeizedVehicleStore.getState();
                 success = await updateVehicalEntry(id, nilamiPayload);
             }
-
             return success;
         } catch (err) {
             console.error("Error in updateNilamiEntry:", err);

@@ -100,6 +100,7 @@ const NilamiPage = () => {
         setIsFetching(true);
         try {
             const response = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
+            console.log(response);
             if (response && response.success) {
                 const results = Array.isArray(response.data) ? response.data : [response.data];
                 setSearchResults(results);

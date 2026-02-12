@@ -217,6 +217,9 @@
                 "malkhana": "मालखाना",
                 "seizedVehicle": "जब्त वाहन"
             },
+            "unclaimed": {
+                "unclaimed": "लावारिस"
+            },
             "returnFrom": {
                 "court": "न्यायालय",
                 "fsl": "एफएसएल",
@@ -244,6 +247,7 @@
         "labels": {
             "selectType": "रिहाई के लिए प्रकार चुनें:",
             "firNo": "एफ.आई.आर. नंबर",
+            "registrationNo": "पंजीकरण संख्या",
             "orSrNo": "सी.नं. / माल नं.",
             "multipleRecords": "एक से अधिक रिकॉर्ड मिले। कृपया एक चुनें:",
             "enterDetails": "रिहाई का विवरण दर्ज करें",
