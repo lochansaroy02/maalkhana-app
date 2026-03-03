@@ -36,7 +36,7 @@ export const GET = async (req: NextRequest) => {
             photoUrl: true,
             document: true,
             moveDate: true,
-            receivedBy: true,
+            // receivedBy: true,    
             documentUrl: true,
             receiverName: true,
             fathersName: true,
@@ -49,7 +49,7 @@ export const GET = async (req: NextRequest) => {
             where: {
                 firNo, userId
             },
-            select: selection
+
 
         })
 

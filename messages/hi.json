@@ -262,7 +262,9 @@
             "uploadPhoto": "फोटो अपलोड करें",
             "uploadDocument": "दस्तावेज़ अपलोड करें",
             "policeStation": "पुलिस थाना",
-            "releaseDate": "रिहाई दिनांक"
+            "releaseDate": "रिहाई दिनांक",
+            "gdDate": "जी.डी. दिनांक",
+            "description": "विवरण"
         },
         "buttons": {
             "fetchRecord": "रिकॉर्ड प्राप्त करें",

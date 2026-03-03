@@ -12,17 +12,20 @@ import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
-// Helper function to format Date object for the API
+// Fixed: Helper function to format Date without losing a day due to UTC conversion
 const formatDateForApi = (date: Date | undefined): string => {
     if (date) {
-        return date.toISOString();
+        return date.toISOString()
     }
-    return "";
+    return ""
 };
+
+
 
 interface FormData {
     firNo: string;
     srNo: string;
+    description: string,
     registrationNo: string;
     underSection: string;
     releaseItemName: string;
@@ -38,24 +41,29 @@ const Page = () => {
     const t = useTranslations('maalkhanaReleaseForm');
 
     const { user } = useAuthStore();
-    const { fetchByFIR, fetchByRegistration } = useReleaseStore();
+    const { fetchByFIR } = useReleaseStore();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isFetching, setIsFetching] = useState<boolean>(false);
     const [type, setType] = useState<string>("");
     const [unclaimed, setUnclaimed] = useState<string>("");
+    const [unclaimedDate, setUnclaimedDate] = useState<Date | undefined>(undefined);
+
     const [existingId, setExistingId] = useState<string>("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
 
     const [formData, setFormData] = useState<FormData>({
-        firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "", registrationNo: ""
+        firNo: '', srNo: '', underSection: '', releaseItemName: "",
+        description: "",
+
+        receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "", registrationNo: ""
     });
 
     const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined);
     const [caseProperty, setCaseProperty] = useState('');
     const photoRef = useRef<HTMLInputElement>(null);
     const documentRef = useRef<HTMLInputElement>(null);
-    console.log(type);
+
     const handleInputChange = (field: keyof FormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
@@ -69,6 +77,8 @@ const Page = () => {
         setFormData({
             firNo: data.firNo || '',
             srNo: data.srNo || '',
+            description: data.description || '',
+
             registrationNo: data.registrationNo || '',
             underSection: data.underSection || '',
             releaseItemName: data.releaseItemName || '',
@@ -91,52 +101,61 @@ const Page = () => {
     const resetAll = () => {
         setFormData({
             firNo: '', srNo: '', underSection: '', releaseItemName: "", receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "",
-            registrationNo: ""
-
+            registrationNo: "", description: ''
         });
         setReleaseDate(undefined);
-        setCaseProperty(''); setExistingId(''); setType(''); setSearchResults([]); setSelectedResultId('');
+        setUnclaimedDate(undefined);
+        setCaseProperty(''); setExistingId(''); setType(''); setUnclaimed(''); setSearchResults([]); setSelectedResultId('');
         if (photoRef.current) photoRef.current.value = '';
         if (documentRef.current) documentRef.current.value = '';
     };
 
     const handleGetByFir = async () => {
         if (!type) return toast.error(t('toasts.selectType'));
-        // if (!formData.firNo && !formData.srNo) return toast.error(t('toasts.enterFirOrSr'));
 
         setIsFetching(true);
         setSearchResults([]);
         setExistingId('');
         setSelectedResultId('');
 
+        const formattedDate = formatDateForApi(unclaimedDate);
+        console.log(formattedDate);
         try {
-            let response;
+            let resultData;
+
             if (unclaimed === 'unclaimed') {
-                response = await fetchByRegistration(user?.id, type, formData.registrationNo, formData.srNo);
-            }
-            else {
-                response = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
+                const response = await axios.get(`http://localhost:3000/api/siezed/gdDate?gdDate=${formattedDate}`);
+                // Extracting data from Axios response wrapper
+                resultData = response.data.data || response.data;
+                console.log(resultData);
+            } else {
+                const response = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
+                resultData = response.success ? response.data : response;
             }
 
-            if (response && response.success && Array.isArray(response.data)) {
-                const results = response.data;
-                if (results.length > 1) {
-                    setSearchResults(results);
-                    toast.success(t('toasts.recordsFound', { count: results.length }));
-                } else if (results.length === 1) {
-                    fillForm(results[0]);
-                    setSelectedResultId(results[0].id || results[0]._id);
+            // Normalization & Form Filling Logic
+            if (Array.isArray(resultData)) {
+                if (resultData.length > 1) {
+                    setSearchResults(resultData);
+                    toast.success(t('toasts.recordsFound', { count: resultData.length }));
+                } else if (resultData.length === 1) {
+                    fillForm(resultData[0]);
+                    setSelectedResultId(resultData[0].id || resultData[0]._id);
                     toast.success(t('toasts.fetchSuccess'));
                 } else {
                     toast.error(t('toasts.noRecord'));
                 }
-            } else if (response?.data) {
-                fillForm(response.data)
+            } else if (resultData && typeof resultData === 'object' && Object.keys(resultData).length > 0) {
+                // Single object found
+                fillForm(resultData);
+                setSelectedResultId(resultData.id || resultData._id);
                 toast.success(t('toasts.fetchSuccess'));
             } else {
                 toast.error(t('toasts.noRecord'));
             }
+
         } catch (error) {
+            console.error("Fetch Error:", error);
             toast.error(t('toasts.fetchFailed'));
         } finally {
             setIsFetching(false);
@@ -144,10 +163,8 @@ const Page = () => {
     };
 
     const handleSave = async () => {
-        // --- VALIDATION LOGIC ---
         if (!existingId) return toast.error(t('toasts.noRecordSelected'));
 
-        // Check text fields
         const requiredTextFields: (keyof FormData)[] = [
             'releaseItemName', 'receiverName', 'fathersName',
             'address', 'mobile', 'policeStation', 'releaseOrderedBy'
@@ -159,16 +176,8 @@ const Page = () => {
             }
         }
 
-        // Check Date
-        if (!releaseDate) {
-            return toast.error(t('toasts.enterReleaseDate' as any) || "Release date is required");
-        }
-
-        // Check Files (Optional: remove if files are not strictly mandatory)
-        if (!photoRef.current?.files?.[0]) {
-            return toast.error(t('labels.uploadPhoto') + " " + (t('toasts.isRequired' as any) || 'is required'));
-        }
-        // --- END VALIDATION ---
+        if (!releaseDate) return toast.error(t('toasts.enterReleaseDate' as any) || "Release date is required");
+        if (!photoRef.current?.files?.[0]) return toast.error(t('labels.uploadPhoto') + " " + (t('toasts.isRequired' as any) || 'is required'));
 
         setIsLoading(true);
         try {
@@ -223,13 +232,9 @@ const Page = () => {
         value: key,
         label: t(`options.type.${key}`)
     }));
-    const unclaimedOptions = [{
-        value: 'unclaimed',
-        label: "unclaimed"
-    }]
 
-    console.log(formData.registrationNo);
-    // Added asterisk (*) to labels for visual feedback
+    const unclaimedOptions = [{ value: 'unclaimed', label: "Unclaimed" }];
+
     const fields = [
         { name: "releaseItemName", label: `${t('labels.releaseItemName')} *` },
         { name: "receiverName", label: `${t('labels.receiverName')} *` },
@@ -240,11 +245,6 @@ const Page = () => {
         { name: "policeStation", label: `${t('labels.policeStation')} *` },
     ];
 
-    const inputFields = [
-        { label: `${t('labels.uploadPhoto')} *`, id: "photo", ref: photoRef },
-        { label: t('labels.uploadDocument'), id: "document", ref: documentRef },
-    ];
-
     return (
         <div className='glass-effect '>
             <div className='py-4 border bg-maroon rounded-t-xl border-gray-400 flex justify-center'>
@@ -252,22 +252,39 @@ const Page = () => {
             </div>
             <div className='px-8 py-4 rounded-b-md'>
                 <div className='flex '>
-
                     <div className='flex w-1/2 justify-center my-4 items-center gap-4'>
                         <label className="text-blue-100 font-semibold">{t('labels.selectType')} *</label>
-                        <DropDown selectedValue={type} handleSelect={setType} options={typeOptions} />
+                        <DropDown selectedValue={type} handleSelect={(val) => { setType(val); setUnclaimed(''); }} options={typeOptions} />
                     </div>
-                    {type === 'seizedVehicle' && <div className='flex w-1/2 justify-center my-4 items-center gap-4'>
-                        <label className="text-blue-100 font-semibold">{t('labels.unclaimed')} *</label>
-                        <DropDown selectedValue={unclaimed} handleSelect={setUnclaimed} options={unclaimedOptions} />
-                    </div>}
+                    {type === 'seizedVehicle' && (
+                        <div className='flex w-1/2 justify-center my-4 items-center gap-4'>
+                            <label className="text-blue-100 font-semibold">{t('labels.unclaimed')} *</label>
+                            <DropDown selectedValue={unclaimed} handleSelect={setUnclaimed} options={unclaimedOptions} />
+                        </div>
+                    )}
                 </div>
+
                 <hr className="border-gray-600 my-4" />
+
                 <div className='mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-end'>
-                    <InputComponent label={t('labels.firNo')} value={formData.firNo} setInput={(e) => handleInputChange('firNo', e.target.value)} />
-                    {unclaimed === 'unclaimed' &&
-                        <InputComponent label={t('labels.registrationNo')} value={formData.registrationNo} setInput={(e) => handleInputChange('registrationNo', e.target.value)} />}
-                    <InputComponent label={t('labels.orSrNo')} value={formData.srNo} setInput={(e) => handleInputChange('srNo', e.target.value)} />
+                    {/* Fixed Conditional Rendering: Hide FIR/SR if Unclaimed is selected */}
+                    {unclaimed !== 'unclaimed' && (
+                        <>
+                            <InputComponent label={t('labels.firNo')} value={formData.firNo} setInput={(e) => handleInputChange('firNo', e.target.value)} />
+                            <InputComponent label={t('labels.orSrNo')} value={formData.srNo} setInput={(e) => handleInputChange('srNo', e.target.value)} />
+                        </>
+                    )}
+
+                    {unclaimed === 'unclaimed' && (
+                        <div className="md:col-span-2 flex justify-center">
+                            <DatePicker
+                                label={`${t('labels.gdDate')} *`}
+                                date={unclaimedDate}
+                                setDate={setUnclaimedDate}
+                            />
+                        </div>
+                    )}
+
                     <div className="md:col-span-2 flex justify-center">
                         <Button onClick={handleGetByFir} className='bg-blue-600 w-1/2' disabled={isFetching || !type}>
                             {isFetching ? <LoaderIcon className='animate-spin' /> : t('buttons.fetchRecord')}
@@ -306,7 +323,10 @@ const Page = () => {
                             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                                 <InputComponent label={t('labels.caseProperty')} value={caseProperty} disabled />
                                 <InputComponent label={t('labels.underSection')} value={formData.underSection} disabled />
-
+                                <div>
+                                    <label className='text-[17px] text-nowrap text-blue-100/90' htmlFor="">{t('labels.description')}</label>
+                                    <p className='text-[17px] text-nowrap text-blue-100'>{formData.description}</p>
+                                </div>
                                 {fields.map((field) => (
                                     <InputComponent
                                         key={field.name}
@@ -347,5 +367,10 @@ const Page = () => {
         </div>
     );
 };
+
+const inputFields = [
+    { label: "Upload Photo *", id: "photo", ref: null },
+    { label: "Upload Document", id: "document", ref: null },
+];
 
 export default Page;

@@ -50,7 +50,9 @@ export const GET = async (req: NextRequest) => {
             address: true,
             policeStation: true,
             mobile: true,
+            description: true,
             releaseItemName: true,
+            gdDate: true,
             userId: true,
         };
 

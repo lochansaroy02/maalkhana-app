@@ -265,7 +265,9 @@
             "uploadPhoto": "Upload Photo",
             "uploadDocument": "Upload Document",
             "releaseDate": "Release Date",
-            "policeStation": "Police Station"
+            "gdDate": "G.D. Date",
+            "policeStation": "Police Station",
+            "description": "Description"
         },
         "buttons": {
             "fetchRecord": "Fetch Record",
