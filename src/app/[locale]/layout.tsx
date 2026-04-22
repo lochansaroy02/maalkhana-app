@@ -42,6 +42,8 @@ const RootLayout = async ({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased gradient`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
+          {/* Your Content/Components */}
+
         </NextIntlClientProvider>
         <Toaster position="top-right"
           reverseOrder={false} />

@@ -112,8 +112,8 @@ export const sre = {
 
 
 export const mirzapur = {
-    "मु0अ0सं0 (FIR No)": "firNo",
-    "SrNo": "srNo",
+    "FirNo": "firNo",
+    "क्र0स0": "srNo",
     "दाखिल मालखाना (ENTRY TYPE)": "entryType",
     "case property": "caseProperty",
     "धारा": "underSection",
@@ -201,7 +201,6 @@ export const baghpat = {
     "IOName": "IOName",
     "HM": "HM",
     "vadiName": "vadiName",
-
     "accused": "accused",
     "status": "status",
     "place": "place",
@@ -240,7 +239,7 @@ export const mau = {
 
 export const ballia = {
     "मु0अ0सं0 (FIR No)": "firNo",
-    "क्र0सं0(Sr No)": "srNo",
+    "srNo": "srNo",
     "दाखिल मालखाना (ENTRY TYPE)": "entryType",
     "case property": "caseProperty",
     "धारा": "underSection",

@@ -18,7 +18,7 @@ export const uploadToImageKit = async (file: File, subFolder: string) => {
             expire: auth.expire,
             folder: `/uploads/${subFolder}`,
         });
-        return result.url;
+        return result.url!;
     } catch (error) {
         console.error("ImageKit Upload Error:", error);
         throw new Error("Upload failed");

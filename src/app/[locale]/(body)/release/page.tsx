@@ -12,20 +12,16 @@ import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 
-// Fixed: Helper function to format Date without losing a day due to UTC conversion
+// Helper function to format Date
 const formatDateForApi = (date: Date | undefined): string => {
-    if (date) {
-        return date.toISOString()
-    }
-    return ""
+    if (!date) return "";
+    return date.toISOString();
 };
-
-
 
 interface FormData {
     firNo: string;
     srNo: string;
-    description: string,
+    description: string;
     registrationNo: string;
     underSection: string;
     releaseItemName: string;
@@ -55,14 +51,21 @@ const Page = () => {
     const [formData, setFormData] = useState<FormData>({
         firNo: '', srNo: '', underSection: '', releaseItemName: "",
         description: "",
-
         receiverName: "", fathersName: "", address: "", mobile: "", policeStation: "", releaseOrderedBy: "", registrationNo: ""
     });
 
     const [releaseDate, setReleaseDate] = useState<Date | undefined>(undefined);
     const [caseProperty, setCaseProperty] = useState('');
+
+    // REFS FOR FILE INPUTS
     const photoRef = useRef<HTMLInputElement>(null);
     const documentRef = useRef<HTMLInputElement>(null);
+
+    // This must be inside the component to access photoRef and documentRef
+    const inputFields = [
+        { label: `${t('labels.uploadPhoto')} *`, id: "photo", ref: photoRef },
+        { label: `${t('labels.uploadDocument')}`, id: "document", ref: documentRef },
+    ];
 
     const handleInputChange = (field: keyof FormData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -78,7 +81,6 @@ const Page = () => {
             firNo: data.firNo || '',
             srNo: data.srNo || '',
             description: data.description || '',
-
             registrationNo: data.registrationNo || '',
             underSection: data.underSection || '',
             releaseItemName: data.releaseItemName || '',
@@ -119,21 +121,17 @@ const Page = () => {
         setSelectedResultId('');
 
         const formattedDate = formatDateForApi(unclaimedDate);
-        console.log(formattedDate);
+
         try {
             let resultData;
-
             if (unclaimed === 'unclaimed') {
-                const response = await axios.get(`http://localhost:3000/api/siezed/gdDate?gdDate=${formattedDate}`);
-                // Extracting data from Axios response wrapper
+                const response = await axios.get(`/api/siezed/gdDate?gdDate=${formattedDate}`);
                 resultData = response.data.data || response.data;
-                console.log(resultData);
             } else {
                 const response = await fetchByFIR(user?.id, type, formData.firNo, formData.srNo);
                 resultData = response.success ? response.data : response;
             }
 
-            // Normalization & Form Filling Logic
             if (Array.isArray(resultData)) {
                 if (resultData.length > 1) {
                     setSearchResults(resultData);
@@ -146,14 +144,12 @@ const Page = () => {
                     toast.error(t('toasts.noRecord'));
                 }
             } else if (resultData && typeof resultData === 'object' && Object.keys(resultData).length > 0) {
-                // Single object found
                 fillForm(resultData);
                 setSelectedResultId(resultData.id || resultData._id);
                 toast.success(t('toasts.fetchSuccess'));
             } else {
                 toast.error(t('toasts.noRecord'));
             }
-
         } catch (error) {
             console.error("Fetch Error:", error);
             toast.error(t('toasts.fetchFailed'));
@@ -177,16 +173,20 @@ const Page = () => {
         }
 
         if (!releaseDate) return toast.error(t('toasts.enterReleaseDate' as any) || "Release date is required");
-        if (!photoRef.current?.files?.[0]) return toast.error(t('labels.uploadPhoto') + " " + (t('toasts.isRequired' as any) || 'is required'));
+
+        // VALIDATION FIX: photoRef.current is now correctly populated
+        if (!photoRef.current?.files?.[0]) {
+            return toast.error(`${t('labels.uploadPhoto')} ${t('toasts.isRequired' as any) || 'is required'}`);
+        }
 
         setIsLoading(true);
         try {
-            let releasePhotoUrl: string | undefined = "";
+            let releasePhotoUrl = "";
             if (photoRef.current?.files?.[0]) {
                 releasePhotoUrl = await uploadToImageKit(photoRef.current.files[0], "photo");
             }
 
-            let releaseDocumentUrl: string | undefined = "";
+            let releaseDocumentUrl = "";
             if (documentRef.current?.files?.[0]) {
                 releaseDocumentUrl = await uploadToImageKit(documentRef.current.files[0], "doc");
             }
@@ -267,7 +267,6 @@ const Page = () => {
                 <hr className="border-gray-600 my-4" />
 
                 <div className='mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 items-end'>
-                    {/* Fixed Conditional Rendering: Hide FIR/SR if Unclaimed is selected */}
                     {unclaimed !== 'unclaimed' && (
                         <>
                             <InputComponent label={t('labels.firNo')} value={formData.firNo} setInput={(e) => handleInputChange('firNo', e.target.value)} />
@@ -324,8 +323,8 @@ const Page = () => {
                                 <InputComponent label={t('labels.caseProperty')} value={caseProperty} disabled />
                                 <InputComponent label={t('labels.underSection')} value={formData.underSection} disabled />
                                 <div>
-                                    <label className='text-[17px] text-nowrap text-blue-100/90' htmlFor="">{t('labels.description')}</label>
-                                    <p className='text-[17px] text-nowrap text-blue-100'>{formData.description}</p>
+                                    <label className='text-[17px] text-nowrap text-blue-100/90'>{t('labels.description')}</label>
+                                    <p className='text-[17px] text-blue-100'>{formData.description}</p>
                                 </div>
                                 {fields.map((field) => (
                                     <InputComponent
@@ -350,6 +349,7 @@ const Page = () => {
                                             className='w-full text-blue-100 rounded-xl glass-effect px-2 py-1'
                                             id={item.id}
                                             type='file'
+                                            accept={item.id === "photo" ? "image/*" : "image/*,application/pdf"}
                                         />
                                     </div>
                                 ))}
@@ -367,10 +367,5 @@ const Page = () => {
         </div>
     );
 };
-
-const inputFields = [
-    { label: "Upload Photo *", id: "photo", ref: null },
-    { label: "Upload Document", id: "document", ref: null },
-];
 
 export default Page;

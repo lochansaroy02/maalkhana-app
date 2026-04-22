@@ -22,7 +22,7 @@ interface UploadModalProps {
 const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProps) => {
 
 
-    const exportMap = mau;
+    const exportMap = mau
 
     const { user } = useAuthStore();
     const { addMaalkhanaEntry } = useMaalkhanaStore();
@@ -99,7 +99,9 @@ const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProp
 
                         // Handle gdDate specifically
                         if (key === "gdDate") {
-                            newEntry[key] = parseExcelDate(rawValue);
+                            const value = rawValue?.toString() || "";
+                            const trimmedValue = value.includes("/") ? value.split("/").pop().trim() : value;
+                            newEntry[key] = parseExcelDate(trimmedValue);
                             continue;
                         }
 
