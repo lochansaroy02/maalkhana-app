@@ -30,7 +30,7 @@ const LoginForm = () => {
                 email, password, role
             });
             const data = response.data;
-
+            console.log(data);
             if (data.success) {
                 login(data.token, data.user);
                 toast.success("Successfully Logged In");
