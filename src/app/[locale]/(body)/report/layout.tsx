@@ -9,9 +9,11 @@ import React, { Suspense, useEffect } from 'react'; // Import useEffect
 
 import Modal from '@/components/Modal';
 import { Loader, X } from 'lucide-react';
-const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
+import { useTranslations } from 'next-intl';
+const ReportLayout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
 
     const { isOpen, setIsOpen } = useOpenStore();
+    const tc = useTranslations('ui.common');
     const { user } = useAuthStore();
 
     // Get the fetch functions from your stores
@@ -49,7 +51,7 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
                 <div className='h-screen flex items-center justify-center'>
                     <span className='animate-spin'><Loader /></span>
                     <h1 className='text-xl text-blue-100'>
-                        Loading...
+                        {tc('loading')}
                     </h1>
                 </div>}>
                 {children}
@@ -70,4 +72,4 @@ const layout = ({ children }: Readonly<{ children: React.ReactNode }>) => {
         </div>
     )
 }
-export default layout
+export default ReportLayout

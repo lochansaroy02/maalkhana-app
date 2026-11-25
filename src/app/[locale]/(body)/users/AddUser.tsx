@@ -6,7 +6,9 @@ import DropDown from '@/components/ui/DropDown';
 import { useAuthStore } from '@/store/authStore';
 import { useUserStore } from '@/store/userStore';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { useFieldLabel } from '@/utils/useFieldLabel';
 import toast from 'react-hot-toast';
 
 type ModalProps = {
@@ -17,6 +19,8 @@ type ModalProps = {
 const AddUser = ({ setIsModalOpen }: ModalProps) => {
     const { addUser } = useUserStore();
     const { user, isLoggedIn } = useAuthStore();
+    const t = useTranslations("ui.users");
+    const fl = useFieldLabel();
     const [districtId, setDistrictId] = useState<string>("");
     const [formData, setFormData] = useState({
         name: '',
@@ -36,8 +40,8 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
 
 
     const roleOptions = [
-        { value: 'admin', label: 'Admin' },
-        { value: 'user', label: 'User' },
+        { value: 'admin', label: t('admin') },
+        { value: 'user', label: t('user') },
     ];
 
     const handleChange = (field: string, value: string) => {
@@ -49,7 +53,7 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
             const { name, email, password, role } = formData;
             if (!name || !email || !password || !role) {
                 // Also check for role
-                toast.error('Please enter all required fields');
+                toast.error(t('required'));
                 return;
             }
 
@@ -68,22 +72,22 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
                     rank: '',
                     role: ''
                 });
-                toast.success("User Added");
+                toast.success(t("added"));
                 setIsModalOpen(false);
             }
         } catch (error) {
-            toast.error("Failed to add user.");
+            toast.error(t("addFailed"));
             console.error(error);
         }
     };
 
     const fields = [
-        { label: 'Name', key: 'name' },
-        { label: 'Email', key: 'email' },
-        { label: 'Password', key: 'password' },
-        { label: 'Mobile No', key: 'mobileNo' },
-        { label: 'Rank', key: 'rank' },
-        { label: 'Police Station', key: 'policeStation' },
+        { label: fl('name'), key: 'name' },
+        { label: fl('email'), key: 'email' },
+        { label: fl('password'), key: 'password' },
+        { label: fl('mobileNo'), key: 'mobileNo' },
+        { label: fl('rank'), key: 'rank' },
+        { label: fl('policeStation'), key: 'policeStation' },
     ];
 
     return (
@@ -95,11 +99,11 @@ const AddUser = ({ setIsModalOpen }: ModalProps) => {
                 >
                     <X />
                 </Button>
-                <h1 className='text-blue-100 mt-4 text-xl'>Add User</h1>
+                <h1 className='text-blue-100 mt-4 text-xl'>{t('addUser')}</h1>
                 <div className='px-2 py-1 gap-2 flex mt-8 flex-col'>
                     <div className='grid grid-cols-2 gap-2'>
                         <DropDown
-                            label='Set Role'
+                            label={t('setRole')}
                             options={roleOptions}
                             selectedValue={formData.role}
                             handleSelect={(value) => handleChange('role', value)}

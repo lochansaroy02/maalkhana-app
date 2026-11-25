@@ -1,5 +1,5 @@
 export const orderedKeys = [
-    "firNo", "srNo", "gdNo", "gdDate", "underSection", "caseProperty", "policeStation", "IOName", "vadiName", "accused", "status", "entryType", "receiptNo", "licenseNo", "ownerName", "weaponName", "weaponNo", "depositDate", "depositReason", "rackNo", "place", "boxNo", "courtNo", "courtName", "address", "fathersName", "mobile", "name", "releaseItemName", "returnDate", "description", "wine", "wineType", "Year", "HM", "moveDate", "movePurpose", "moveTrackingNo", "returnBackFrom", "takenOutBy", "receivedBy", "receiverName", "photoUrl", "documentUrl", "cash", "isMovement", "isRelease", "yellowItemPrice", "dbName",
+    "firNo", "srNo", "gdNo", "gdDate", "underSection", "caseProperty", "policeStation", "IOName", "vadiName", "accused", "status", "entryType", "receiptNo", "licenseNo", "ownerName", "weaponName", "weaponNo", "depositDate", "depositReason", "rackNo", "category", "malkhanaRackNo", "place", "boxNo", "courtNo", "courtName", "address", "fathersName", "mobile", "name", "releaseItemName", "returnDate", "description", "wine", "wineType", "Year", "HM", "moveDate", "movePurpose", "moveTrackingNo", "returnBackFrom", "takenOutBy", "receivedBy", "receiverName", "photoUrl", "documentUrl", "cash", "isMovement", "isRelease", "yellowItemPrice", "dbName",
 ];
 export const exportMap = {
     "SR. No.": "srNo",

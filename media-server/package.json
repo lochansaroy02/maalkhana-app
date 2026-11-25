@@ -1,0 +1,11 @@
+{
+  "name": "maalkhana-media-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stores Maalkhana photos and documents per district / police station",
+  "type": "module",
+  "engines": { "node": ">=20.6" },
+  "scripts": {
+    "start": "node --env-file=.env server.mjs"
+  }
+}

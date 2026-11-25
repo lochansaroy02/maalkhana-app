@@ -6,7 +6,7 @@ import DatePicker from '@/components/ui/datePicker';
 import DropDown from '@/components/ui/DropDown';
 import { useAuthStore } from '@/store/authStore';
 import { useNilamiStore } from '@/store/nilamiStore';
-import { uploadToImageKit } from '@/utils/imagekit';
+import { uploadFile } from '@/utils/media';
 // ImageKit Upload Utility
 import axios from 'axios';
 import { useTranslations } from 'next-intl';
@@ -32,6 +32,7 @@ interface NilamiFormData {
 
 const NilamiPage = () => {
     const t = useTranslations('maalkhanaNilamiForm');
+    const tu = useTranslations("ui.forms");
     const { user } = useAuthStore();
     const { fetchByFIR } = useNilamiStore();
 
@@ -125,13 +126,13 @@ const NilamiPage = () => {
             // Upload Photo if exists
             let nilamiPhotoUrl: string | undefined = "";
             if (photoRef.current?.files?.[0]) {
-                nilamiPhotoUrl = await uploadToImageKit(photoRef.current.files[0], "photo");
+                nilamiPhotoUrl = await uploadFile(photoRef.current.files[0], "photo");
             }
 
             // Upload Document if exists
             let nilamiDocumentUrl: string | undefined = "";
             if (documentRef.current?.files?.[0]) {
-                nilamiDocumentUrl = await uploadToImageKit(documentRef.current.files[0], "doc");
+                nilamiDocumentUrl = await uploadFile(documentRef.current.files[0], "doc");
             }
 
 
@@ -161,7 +162,7 @@ const NilamiPage = () => {
             }
         } catch (error) {
             console.error('Error saving Nilami info:', error);
-            toast.error("Upload or Save Failed");
+            toast.error(tu("saveFailed"));
         } finally {
             setIsLoading(false);
         }

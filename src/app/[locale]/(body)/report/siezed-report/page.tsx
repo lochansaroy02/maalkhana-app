@@ -2,13 +2,12 @@
 
 import Report from '@/components/Report';
 import ReportFilterBar, { FilterDef } from '@/components/report/ReportFilterBar';
-import UploadModal from '@/components/UploadModal';
 import { useAuthStore } from '@/store/authStore';
 import { useDistrictStore } from '@/store/districtStore';
 import { useSearchStore } from '@/store/searchStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useOpenStore } from '@/store/store';
-import { ACTIVITY_KEYS, matchesActivity, matchesSearch, matchesYearRange, rowYear } from '@/utils/reportFilters';
+import { matchesActivity, matchesSearch, matchesYearRange, rowYear } from '@/utils/reportFilters';
 import { Activity, Car, FolderOpen } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from "next/navigation";
@@ -16,13 +15,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type SeizedVehicleEntry = Record<string, any>;
 
-// Columns per activity (unchanged from before).
+// Columns per activity. Vehicles are only released or auctioned (no movement / destroy).
+const VEHICLE_ACTIVITIES = ["release", "nilami"] as const;
+
 const HEADER_CONFIG: Record<string, string[]> = {
-    movement: ["FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"],
     release: ["FIR No", "Sr No", "Case Property", "Court Name", "Court No", "Receiver Name"],
-    destroy: ["FIR No", "Sr No", "Status", "Case Property", "Description"],
     nilami: ["FIR No", "Sr No", "Status", "Case Property", "Description"],
-    return: ["FIR No", "Sr No", "Return Date", "Received By", "Return Back From", "Is Returned"],
     all: ["FIR No", "Sr No", "underSection", "description", "vehicleType", "Case Property", "GD No", "GD Date", "Year", "status", "Police Station", "colour", "registrationNo", "seizedBy", ""],
 };
 
@@ -37,9 +35,8 @@ const Page = () => {
     const { reportType, setReportType } = useOpenStore();
     const { user } = useAuthStore();
     const { userId } = useDistrictStore();
-    const { vehicles, addVehicle, fetchVehicles } = useSeizedVehicleStore();
+    const { vehicles, fetchVehicles } = useSeizedVehicleStore();
     const { searchData } = useSearchStore();
-    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [keyword, setKeyword] = useState("");
     const onSearch = useCallback((q: string) => setKeyword(q), []);
@@ -55,7 +52,7 @@ const Page = () => {
         const urlReportType = searchParams.get('reportType');
         if (urlReportType) {
             setReportType(urlReportType);
-            setActivities(urlReportType !== 'all' && (ACTIVITY_KEYS as readonly string[]).includes(urlReportType) ? [urlReportType] : []);
+            setActivities(urlReportType !== 'all' && (VEHICLE_ACTIVITIES as readonly string[]).includes(urlReportType) ? [urlReportType] : []);
         }
     }, [searchParams, setReportType]);
 
@@ -101,7 +98,7 @@ const Page = () => {
     const filters: FilterDef[] = [
         {
             key: "activity", label: t("filters.type"), icon: <Activity size={15} />,
-            options: ACTIVITY_KEYS.map((k) => ({ value: k, label: t(`activities.${k}`), count: source.filter((v) => matchesActivity(v, k)).length })),
+            options: VEHICLE_ACTIVITIES.map((k) => ({ value: k, label: t(`activities.${k}`), count: source.filter((v) => matchesActivity(v, k)).length })),
             selected: activities,
             onChange: (values) => {
                 setActivities(values);
@@ -121,10 +118,6 @@ const Page = () => {
         return [...ys].sort((a, b) => Number(b) - Number(a));
     }, [source]);
 
-    const handleImportSuccess = () => {
-        if (user?.id) fetchVehicles(user.id, user.role);
-    };
-
     return (
         <>
             <ReportFilterBar
@@ -138,19 +131,11 @@ const Page = () => {
             />
 
             <Report
-                onImportClick={() => setIsModalOpen(true)}
                 data={reportContent.data}
                 headers={reportContent.headers}
                 emptyState={source.length > 0 ? { title: t("results.none"), hint: t("results.noneHint") } : undefined}
                 heading="Seized Vehicles Report"
                 detailsPathPrefix="/report/siezed-report"
-            />
-            <UploadModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                schemaType="seizedVehicle"
-                onSuccess={handleImportSuccess}
-                addEntry={addVehicle as any}
             />
         </>
     );

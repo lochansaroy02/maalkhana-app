@@ -2,15 +2,17 @@
 
 import Link from 'next/link'; // Import Link for navigation
 import { usePathname } from 'next/navigation'; // Import usePathname to track the active page
+import { useTranslations } from 'next-intl';
 
 // This component is now a Layout, so it receives 'children' as a prop
 const GenerateBarcodeLayout = ({ children }: { children: any }) => {
 
     // Get the current URL path to highlight the active tab
     const pathname = usePathname();
+    const t = useTranslations('ui.barcodePage');
     const tabs = [
-        { name: 'Single', href: '/barcode/generate/single' },
-        { name: 'Multiple', href: '/barcode/generate/multiple' }
+        { name: t('single'), href: '/barcode/generate/single' },
+        { name: t('multiple'), href: '/barcode/generate/multiple' }
     ];
 
     return (
@@ -18,7 +20,7 @@ const GenerateBarcodeLayout = ({ children }: { children: any }) => {
             {/* HEADER */}
             <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
                 <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>
-                    generate barcode
+                    {t('title')}
                 </h1>
             </div>
 

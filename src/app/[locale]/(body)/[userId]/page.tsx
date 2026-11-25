@@ -4,7 +4,9 @@ import InputComponent from '@/components/InputComponent';
 import { useAuthStore } from '@/store/authStore';
 import axios from 'axios'; // 1. Import axios
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { FormEvent, useState } from 'react';
+import { useFieldLabel } from '@/utils/useFieldLabel';
 
 // A simple component to display messages (success or error)
 const AlertMessage = ({ message, type }: { message: string; type: 'success' | 'error' }) => {
@@ -18,6 +20,9 @@ const AlertMessage = ({ message, type }: { message: string; type: 'success' | 'e
 
 
 const UserProfilePage = () => {
+    const t = useTranslations('ui.profile');
+    const tc = useTranslations('ui.common');
+    const fl = useFieldLabel();
 
     const params = useParams();
     const { userId: pageUserId } = params;
@@ -39,8 +44,8 @@ const UserProfilePage = () => {
     if (user?.id !== pageUserId) {
         return (
             <div className="p-8">
-                <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-                <p className="mt-2 text-gray-600">You are not authorized to view this page.</p>
+                <h1 className="text-2xl font-bold text-red-600">{t('accessDenied')}</h1>
+                <p className="mt-2 text-gray-600">{t('notAuthorized')}</p>
             </div>
         );
     }
@@ -52,12 +57,12 @@ const UserProfilePage = () => {
 
         // Client-side validation
         if (newPassword !== confirmPassword) {
-            setError("New passwords do not match.");
+            setError(t('mismatch'));
             return;
         }
 
         if (newPassword.length < 6) {
-            setError("New password must be at least 6 characters long.");
+            setError(t('tooShort'));
             return;
         }
 
@@ -72,7 +77,7 @@ const UserProfilePage = () => {
             });
 
             // With axios, the response data is directly on the `data` property
-            setSuccess(response.data.message || 'Password updated successfully!');
+            setSuccess(t('updated'));
 
             // Clear form fields on success
             setCurrentPassword('');
@@ -95,44 +100,44 @@ const UserProfilePage = () => {
         <div className="h-screen mx-auto glass-effect  ">
 
             <div className="flex justify-center py-4 border  border-white/50 rounded-t-xl bg-maroon">
-                <h1 className="text-textColor text-2xl text-blue-100 font-bold">User Profile</h1>
+                <h1 className="text-textColor text-2xl text-blue-100 font-bold">{t('title')}</h1>
             </div>
 
             <div className='flex flex-col md:flex-row gap-8  p-6 '>
                 <div className='p-6 flex-1'>
-                    <p className="text-gray-400 mb-6">Manage your account details here.</p>
+                    <p className="text-gray-400 mb-6">{t('subtitle')}</p>
                     <div className="glass-effect text-blue-100 p-4 rounded-lg mb-8">
-                        <p><strong>Name:</strong> {user?.name}</p>
-                        <p><strong>Email:</strong> {user?.email}</p>
-                        <p><strong>Mobile No.:</strong> {user?.mobile || 'N/A'}</p>
-                        <p><strong>Rank:</strong> {user?.rank || 'N/A'}</p>
-                        <p><strong>Police Station:</strong> {user?.policeStation || 'N/A'}</p>
+                        <p><strong>{fl('name')}:</strong> {user?.name}</p>
+                        <p><strong>{fl('email')}:</strong> {user?.email}</p>
+                        <p><strong>{fl('mobileNo')}:</strong> {user?.mobile || tc('na')}</p>
+                        <p><strong>{fl('rank')}:</strong> {user?.rank || tc('na')}</p>
+                        <p><strong>{fl('policeStation')}:</strong> {user?.policeStation || tc('na')}</p>
                     </div>
 
 
                 </div>
 
                 <div className='flex items-center p-6 flex-1 flex-col justify-center'>
-                    <h2 className="text-xl text-blue-100 font-semibold border-b border-gray-600 pb-2 mb-6 w-full text-center">Change Password</h2>
+                    <h2 className="text-xl text-blue-100 font-semibold border-b border-gray-600 pb-2 mb-6 w-full text-center">{t('changePassword')}</h2>
                     <form onSubmit={handleSubmit} className="w-full max-w-sm">
                         <AlertMessage message={error} type="error" />
                         <AlertMessage message={success} type="success" />
 
                         <div className="mb-4">
-                            <InputComponent label='Current Password' type='password' value={currentPassword} setInput={(e) => { setCurrentPassword(e.target.value) }} />
+                            <InputComponent label={t('currentPassword')} type='password' value={currentPassword} setInput={(e) => { setCurrentPassword(e.target.value) }} />
                         </div>
                         <div className="mb-4">
-                            <InputComponent label='New Password' type='password' value={newPassword} setInput={(e) => { setNewPassword(e.target.value) }} />
+                            <InputComponent label={t('newPassword')} type='password' value={newPassword} setInput={(e) => { setNewPassword(e.target.value) }} />
                         </div>
                         <div className="mb-6">
-                            <InputComponent label='Confirm New Password' type='password' value={confirmPassword} setInput={(e) => { setConfirmPassword(e.target.value) }} />
+                            <InputComponent label={t('confirmPassword')} type='password' value={confirmPassword} setInput={(e) => { setConfirmPassword(e.target.value) }} />
                         </div>
                         <button
                             type="submit"
                             disabled={isLoading}
                             className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
                         >
-                            {isLoading ? 'Updating...' : 'Update Password'}
+                            {isLoading ? t('updating') : t('update')}
                         </button>
                     </form>
                 </div>

@@ -2,6 +2,7 @@
 
 import { useAuthStore } from "@/store/authStore";
 import axios from "axios";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 
@@ -9,6 +10,8 @@ const Page = () => {
     const [combinedData, setCombinedData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuthStore();
+    const t = useTranslations("ui.totalData");
+    const tf = useTranslations("fieldLabels");
 
     const fetchAllData = async () => {
         try {
@@ -57,11 +60,11 @@ const Page = () => {
 
     const downloadExcel = () => {
         const excelData = combinedData.map((item, index) => ({
-            "S.No": index + 1,
-            "Police Station": item.policeStation,
-            "Malkhana Entries": item.malkhanaCount,
-            "Seized Vehicles": item.seizedCount,
-            "Total Records": item.totalCount,
+            [t("sNo")]: index + 1,
+            [tf("policeStation")]: item.policeStation,
+            [t("malkhanaEntries")]: item.malkhanaCount,
+            [t("seizedVehicles")]: item.seizedCount,
+            [t("total")]: item.totalCount,
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -77,8 +80,8 @@ const Page = () => {
         <div className="p-8 h-screen overflow-y-auto">
             <div className="flex justify-between items-center mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Digital Malkhana Statistics</h1>
-                    <p className="text-gray-400">Consolidated report of all police station records</p>
+                    <h1 className="text-3xl font-bold text-white">{t("title")}</h1>
+                    <p className="text-gray-400">{t("subtitle")}</p>
                 </div>
 
                 <button
@@ -89,24 +92,24 @@ const Page = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Download Excel Report
+                    {t("download")}
                 </button>
             </div>
 
             {loading ? (
                 <div className="flex justify-center items-center h-64">
-                    <p className="text-white animate-pulse">Compiling statistics...</p>
+                    <p className="text-white animate-pulse">{t("compiling")}</p>
                 </div>
             ) : (
                 <div className="border border-white/20 rounded-xl overflow-hidden glass-effect shadow-2xl">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-white/10 text-gray-200">
-                                <th className="p-4 border-b border-white/10">S.No</th>
-                                <th className="p-4 border-b border-white/10">Police Station</th>
-                                <th className="p-4 border-b border-white/10 text-center">Malkhana Entries</th>
-                                <th className="p-4 border-b border-white/10 text-center">Seized Vehicles</th>
-                                <th className="p-4 border-b border-white/10 text-center bg-white/5">Total</th>
+                                <th className="p-4 border-b border-white/10">{t("sNo")}</th>
+                                <th className="p-4 border-b border-white/10">{tf("policeStation")}</th>
+                                <th className="p-4 border-b border-white/10 text-center">{t("malkhanaEntries")}</th>
+                                <th className="p-4 border-b border-white/10 text-center">{t("seizedVehicles")}</th>
+                                <th className="p-4 border-b border-white/10 text-center bg-white/5">{t("total")}</th>
                             </tr>
                         </thead>
                         <tbody className="text-gray-300">

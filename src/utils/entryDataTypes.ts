@@ -2,7 +2,7 @@
 // Prisma. Forms send numbers as strings ("10", or "" when empty), and Prisma
 // rejects a string for an Int column, which made release/movement saves fail.
 
-const NUMBER_FIELDS = ["wine", "srNo", "gdNo", "Year", "boxNo", "cash", "yellowItemPrice"];
+const NUMBER_FIELDS = ["wine", "srNo", "gdNo", "Year", "boxNo", "cash", "yellowItemPrice", "malkhanaRackNo"];
 const BOOLEAN_FIELDS = ["isReturned", "isMovement", "isRelease", "isNilami", "isDestroy"];
 
 export const convertMalkhanaDataTypes = (data: any) => {

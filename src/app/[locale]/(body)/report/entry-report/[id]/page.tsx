@@ -4,6 +4,8 @@ import Logo from "@/assets/Logo";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useFieldLabel } from "@/utils/useFieldLabel";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -67,6 +69,8 @@ export default function EntryReportDetail() {
     // Hooks and State
     const { id } = useParams();
     const router = useRouter()
+    const tc = useTranslations("ui.common");
+    const fl = useFieldLabel();
     const [entry, setEntry] = useState<any>(null);
     const [fieldsToDisplay, setFieldsToDisplay] = useState<any[]>([]);
 
@@ -185,7 +189,7 @@ export default function EntryReportDetail() {
 
         // Write a complete HTML document into the iframe
         iframeDoc.open();
-        iframeDoc.write('<!DOCTYPE html><html><head><title>Print Report</title>');
+        iframeDoc.write(`<!DOCTYPE html><html><head><title>${tc('printReport')}</title>`);
 
         // Copy all style links and style tags from the main document's head
         const headElements = document.querySelectorAll('head > link[rel="stylesheet"], head > style');
@@ -220,7 +224,7 @@ export default function EntryReportDetail() {
     };
     // ----------------------------------------------------------------------
 
-    if (!entry) return <div className="p-4 text-center h-screen text-white">Loading..</div>;
+    if (!entry) return <div className="p-4 text-center h-screen text-white">{tc("loading")}</div>;
 
     // Check once if the entry is in the legacy year range to apply class conditionally
     const isLegacyEntry = isEntryInLegacyYearRange(entry);
@@ -232,8 +236,8 @@ export default function EntryReportDetail() {
             <div className="flex  mb-2  gap-4   ">
                 <Button onClick={() => {
                     router.back()
-                }} className="cursor-pointer   "><span><ArrowLeft /></span>Back</Button>
-                <Button onClick={handlePrintWithIframe} className="cursor-pointer    ">Print</Button>
+                }} className="cursor-pointer   "><span><ArrowLeft /></span>{tc("back")}</Button>
+                <Button onClick={handlePrintWithIframe} className="cursor-pointer    ">{tc("print")}</Button>
             </div>
 
             <div
@@ -244,13 +248,14 @@ export default function EntryReportDetail() {
                     <div className="flex  p-4 justify-around items-center  ">
                         <Logo width={100} height={100} />
                         <div className="text-center  ">
-                            <h1 className="text-3xl font-bold text-gray-800">DIGITAL MALKHANA</h1>
-                            <h2 className="text-lg font-semibold text-gray-600">Entry Detail</h2>
+                            <h1 className="text-3xl font-bold text-gray-800">{tc("digitalMalkhana")}</h1>
+                            <h2 className="text-lg font-semibold text-gray-600">{tc("entryDetail")}</h2>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                        {fieldsToDisplay.map(({ key, label }) => {
+                        {fieldsToDisplay.map(({ key, label: enLabel }) => {
+                            const label = fl(key, enLabel);
                             const value = entry[key];
                             const isKurtidevField = isLegacyEntry && kurtidevKeys.includes(key);
 
@@ -263,7 +268,7 @@ export default function EntryReportDetail() {
                                         <h3 className="text-lg font-semibold text-gray-700 mb-2">{label}</h3>
                                         <img
                                             src={String(value)}
-                                            alt="Entry Photo"
+                                            alt={label}
                                             className="max-h-80 mx-auto rounded-lg shadow-md"
                                         />
                                     </div>

@@ -119,17 +119,18 @@ model MalkhanaEntry {
   id    String  @id @default(uuid())
   firNo String?
 
-  srNo            Int?      @default(1)
-  registrationNo  String?
-  entryType       String
-  gdNo            Int?
-  caseProperty    String
-  gdDate          String
-  underSection    String
-  vadiName        String
-  accused         String
-  IOName          String
-  name            String?
+  srNo           Int?    @default(1)
+  registrationNo String?
+  entryType      String
+  gdNo           Int?
+  caseProperty   String
+  gdDate         String
+  underSection   String
+  vadiName       String
+  accused        String
+  IOName         String
+  name           String?
+
   HM              String
   policeStation   String
   Year            Int?
@@ -151,16 +152,18 @@ model MalkhanaEntry {
   mobile          String?
   description     String?
   dbName          String?
-
+  // new fields
+  category        String?
+  malkhanaRackNo  Int?
   // --- Licensed Weapon (लाइसेंसी शस्त्र) Fields ---
-  receiptNo     String? // रसीद नं
-  licenseNo     String? // लाइसेंस नं.
-  ownerName     String? // मालिक का नाम
-  weaponName    String? // हथियार
-  weaponNo      String? // हथियार नं.
-  depositDate   String? // जमा तिथि
-  depositReason String? // कारण
-  rackNo        String? // रैक
+  receiptNo       String? // रसीद नं
+  licenseNo       String? // लाइसेंस नं.
+  ownerName       String? // मालिक का नाम
+  weaponName      String? // हथियार
+  weaponNo        String? // हथियार नं.
+  depositDate     String? // जमा तिथि
+  depositReason   String? // कारण
+  rackNo          String? // रैक
 
   // --- Release Fields ---
   isRelease          Boolean?  @default(false)

@@ -13,10 +13,11 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 
-export const metadata: Metadata = {
-  title: "Digital Malkhana",
-
-  description: "District-wise Property Seizure App",
+export const generateMetadata = async ({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> => {
+  const { locale } = await params;
+  return locale === "hi"
+    ? { title: "डिजिटल मालखाना", description: "जनपदवार संपत्ति जब्ती ऐप" }
+    : { title: "Digital Malkhana", description: "District-wise Property Seizure App" };
 };
 
 

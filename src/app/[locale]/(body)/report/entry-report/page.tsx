@@ -3,6 +3,7 @@
 import Report from "@/components/Report";
 import ReportFilterBar, { FilterDef } from "@/components/report/ReportFilterBar";
 import UploadModal from "@/components/UploadModal";
+import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import { useDistrictStore } from "@/store/districtStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
@@ -23,7 +24,17 @@ const HEADER_CONFIG: Record<string, string[]> = {
     return: ["firNo", "srNo", "entryType", "status", "caseProperty", "description", "returnDate", "receivedBy", "returnBackFrom"],
     nilami: ["firNo", "srNo", "entryType", "status", "caseProperty", "description", "nilamiDate", "nilamiItemName", "nilamiValue", "nilamiOrderedBy", "nilamiPhotoUrl", "nilamiDocumentUrl"],
     licensedWeapon: ["receiptNo", "licenseNo", "ownerName", "address", "mobile", "weaponName", "weaponNo", "depositDate", "depositReason", "rackNo", "policeStation", "status", "photoUrl"],
-    all: ["firNo", "srNo", "entryType", "status", "underSection", "description", "caseProperty", "gdNo", "gdDate", "Year", "policeStation", "HM", "vadiName", "IOName", "accused", "boxNo", "courtNo", "courtName", "photoUrl", "documentUrl", "releaseDate", "releaseItemName", "releasePhotoUrl", "releaseDocumentUrl", "moveDate", "movementPhotoUrl", "movementDocumentUrl", "nilamiDate", "destroyDate"]
+    all: ["firNo", "srNo", "entryType", "status", "underSection", "description", "category", "malkhanaRackNo", "caseProperty", "gdNo", "gdDate", "Year", "policeStation", "HM", "vadiName", "IOName", "accused", "boxNo", "courtNo", "courtName", "photoUrl", "documentUrl"]
+};
+
+// Release / movement / destroy / nilami details are hidden in the default view
+// and added only when that status is picked in the Status filter.
+const STATUS_COLUMNS: Record<string, string[]> = {
+    movement: ["moveDate", "takenOutBy", "movePurpose", "moveTrackingNo", "returnBackFrom", "returnDate", "movementPhotoUrl", "movementDocumentUrl"],
+    released: ["releaseDate", "releaseItemName", "releaseOrderedBy", "receiverName", "fathersName", "address", "mobile", "releasePhotoUrl", "releaseDocumentUrl"],
+    destroy: ["destroyDate", "destroyOrderedBy", "destroyPurpose", "destroyPhotoUrl", "destroyDocumentUrl"],
+    nilami: ["nilamiDate", "nilamiItemName", "nilamiValue", "nilamiOrderedBy", "nilamiPhotoUrl", "nilamiDocumentUrl"],
+    auctioned: ["nilamiDate", "nilamiItemName", "nilamiValue", "nilamiOrderedBy", "nilamiPhotoUrl", "nilamiDocumentUrl"],
 };
 
 interface MaalkhanaEntry {
@@ -35,6 +46,7 @@ const SEARCHABLE_FIELDS = [
     "firNo", "srNo", "Year", "gdNo", "gdDate", "description", "caseProperty", "entryType", "status", "policeStation",
     "underSection", "vadiName", "accused", "IOName", "HM", "place", "boxNo", "courtName", "registrationNo",
     "receiptNo", "licenseNo", "ownerName", "weaponName", "weaponNo", "receiverName", "releaseItemName",
+    "category", "malkhanaRackNo",
 ];
 
 const Page = () => {
@@ -114,6 +126,10 @@ const Page = () => {
                 : [...licenceCore, ...headers.filter(h => !["firNo", "srNo", "entryType", "caseProperty", "underSection"].includes(h))];
         }
 
+        // Add the detail columns of each selected status (no duplicates).
+        const statusColumns = selectedStatuses.flatMap(st => STATUS_COLUMNS[st] || []);
+        if (statusColumns.length) headers = [...new Set([...headers, ...statusColumns])];
+
         return { data: filteredData, headers, total: sourceEntries.length, source: sourceEntries as MaalkhanaEntry[] };
     }, [entries, year, searchData, selectedEntryTypes, selectedStatuses, keyword, selectedReportTypes, reportType]);
 
@@ -145,8 +161,10 @@ const Page = () => {
         return Array.from({ length: now - 1980 + 1 }, (_, i) => String(now - i));
     }, []);
 
-    const handleImportSuccess = () => {
-        if (user?.id) fetchMaalkhanaEntry(user.id, user.role);
+    const handleImportSuccess = (message: string) => {
+        toast.success(message);
+        if (user?.role === "policeStation" && user?.id) fetchMaalkhanaEntry(user.id, user.role);
+        else if (user && userId) fetchMaalkhanaEntry(userId, user.role);
     };
 
     return (

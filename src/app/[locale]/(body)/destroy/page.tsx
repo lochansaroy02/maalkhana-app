@@ -10,17 +10,7 @@ import { Button } from '@/components/ui/button';
 import DropDown from '@/components/ui/DropDown';
 import { useAuthStore } from '@/store/authStore';
 import { useDestroyStore } from '@/store/destroyStore'; // The new store
-
-// Placeholder for utility function (replace with your actual path)
-// NOTE: I am keeping the original function name and import structure for consistency.
-const uploadToCloudinary = async (file: File) => {
-    // In a real application, this function would handle image upload.
-    // Placeholder implementation:
-    console.log("Uploading file:", file.name);
-    return `mock-cloudinary-url/destroy-evidence-${Date.now()}`;
-};
-
-
+import { uploadFile } from '@/utils/media';
 
 const Page = () => {
     const t = useTranslations('maalkhanaDestroyForm'); // Updated translation namespace
@@ -31,7 +21,8 @@ const Page = () => {
     const { fetchByFIR, updateDestroyEntry } = useDestroyStore();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [isFetching, setIsFetching] = useState<boolean>(false);
-    const [type, setType] = useState<string>("");
+    // Vehicles can only be released or auctioned, so this page is Malkhana only.
+    const [type, setType] = useState<string>("malkhana");
     const [existingId, setExistingId] = useState<string>("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [selectedResultId, setSelectedResultId] = useState<string>('');
@@ -72,7 +63,7 @@ const Page = () => {
 
     const resetAll = () => {
         setFormData({ firNo: '', srNo: '', underSection: '', policeStation: '', destroyOrderedBy: '', destroyPurpose: '' });
-        setCaseProperty(''); setExistingId(''); setType(''); setSearchResults([]); setSelectedResultId('');
+        setCaseProperty(''); setExistingId(''); setType('malkhana'); setSearchResults([]); setSelectedResultId('');
         if (photoRef.current) photoRef.current.value = '';
         if (documentRef.current) documentRef.current.value = '';
     };
@@ -133,9 +124,8 @@ const Page = () => {
             const photoFile = photoRef.current?.files?.[0];
             const documentFile = documentRef.current?.files?.[0];
 
-            // Note: Upload logic is mocked, replace with actual uploadToCloudinary
-            const photoUrl = photoFile ? await uploadToCloudinary(photoFile) : "";
-            const documentUrl = documentFile ? await uploadToCloudinary(documentFile) : "";
+            const photoUrl = photoFile ? await uploadFile(photoFile, "photo") : "";
+            const documentUrl = documentFile ? await uploadFile(documentFile, "doc") : "";
 
             const updateData = {
                 destroyOrderedBy: formData.destroyOrderedBy,
@@ -168,7 +158,7 @@ const Page = () => {
     };
 
     // Assuming these options are translated similarly to the release page
-    const typeOptions = Object.keys(t.raw('options.type')).map(key => ({
+    const typeOptions = Object.keys(t.raw('options.type')).filter(key => key !== 'seizedVehicle').map(key => ({
         value: key,
         label: t(`options.type.${key}`)
     }));

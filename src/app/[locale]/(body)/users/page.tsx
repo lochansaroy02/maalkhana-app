@@ -4,11 +4,16 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuthStore } from '@/store/authStore';
 import { useUserStore } from '@/store/userStore';
 import { Eye, Pen } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { useFieldLabel } from '@/utils/useFieldLabel';
 import AddUser from './AddUser';
 
 const Page = () => {
     const { login, user } = useAuthStore()
+    const t = useTranslations('ui.users');
+    const tc = useTranslations('ui.common');
+    const fl = useFieldLabel();
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const { getUsers, users, deleteUsers } = useUserStore()
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
@@ -27,8 +32,8 @@ const Page = () => {
         );
     };
     const handleDeleteSelected = () => {
-        if (selectedUserIds.length === 0) return alert("No users selected!");
-        const confirm = window.confirm("Are you sure you want to delete the selected users?");
+        if (selectedUserIds.length === 0) return alert(t("noneSelected"));
+        const confirm = window.confirm(t("confirmDelete"));
         if (confirm) {
             deleteUsers(selectedUserIds);
             setSelectedUserIds([]);
@@ -39,25 +44,25 @@ const Page = () => {
         <div className='glass-effect relative  min-h-screen p-4'>
             {isModalOpen && <AddUser setIsModalOpen={setIsModalOpen} isModalOpen={isModalOpen} />}
             <div className='bg-maroon py-4 border border-gray-400 rounded-t-xl flex justify-center'>
-                <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Users</h1>
+                <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>{t('title')}</h1>
             </div>
             <div className='flex gap-4  justify-end px-12 items-center py-1    glass-noRound  rounded-b-xl'>
-                <Button onClick={() => setIsModalOpen(true)} className='bg-blue cursor-pointer'>Add User</Button>
-                {selectedUserIds.length > 0 && <Button onClick={handleDeleteSelected} className='bg-red-800'>Delete Selected</Button>}
+                <Button onClick={() => setIsModalOpen(true)} className='bg-blue cursor-pointer'>{t('addUser')}</Button>
+                {selectedUserIds.length > 0 && <Button onClick={handleDeleteSelected} className='bg-red-800'>{t('deleteSelected')}</Button>}
             </div>
             <div className="overflow-x-auto mt-4 glass-effect shadow-md rounded-md">
                 <table className="min-w-full divide-y  divide-blue-900/50 text-sm text-left">
                     <thead className="">
                         <tr>
-                            <th className="px-6 py-3 font-semibold text-blue-100">Select</th>
+                            <th className="px-6 py-3 font-semibold text-blue-100">{tc('select')}</th>
                             <th className="px-6 py-3 font-semibold text-blue-100">#</th>
-                            <th className="px-6 py-3 font-semibold text-blue-100">Name</th>
-                            <th className="px-6 py-3 font-semibold text-blue-100">Email</th>
-                            <th className="px-6 py-3 font-semibold text-blue-100">Mobile No.</th>
-                            <th className="px-6 py-3 font-semibold text-blue-100">Rank</th>
-                            <th className="px-6 py-3 font-semibold text-blue-100">Police Station</th>
-                            <th className="px-6 py-3 font-semibold text-blue-100">Role</th>
-                            <th className="px-6 py-3 font-semibold text-blue-100">Actions</th>
+                            <th className="px-6 py-3 font-semibold text-blue-100">{fl('name')}</th>
+                            <th className="px-6 py-3 font-semibold text-blue-100">{fl('email')}</th>
+                            <th className="px-6 py-3 font-semibold text-blue-100">{fl('mobileNo')}</th>
+                            <th className="px-6 py-3 font-semibold text-blue-100">{fl('rank')}</th>
+                            <th className="px-6 py-3 font-semibold text-blue-100">{fl('policeStation')}</th>
+                            <th className="px-6 py-3 font-semibold text-blue-100">{fl('role')}</th>
+                            <th className="px-6 py-3 font-semibold text-blue-100">{tc('actions')}</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-blue-900/5 0">
@@ -95,7 +100,7 @@ const Page = () => {
                 </table>
 
                 {users?.length === 0 && (
-                    <div className="p-4 text-center text-gray-500">No data available</div>
+                    <div className="p-4 text-center text-gray-500">{tc('noData')}</div>
                 )}
             </div>
         </div>

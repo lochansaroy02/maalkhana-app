@@ -5,20 +5,24 @@ import { useAuthStore } from "@/store/authStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
 import { useBarcodeLabels } from "@/utils/useBarcodeLabels";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 // Helper Component for Checkbox Row (Optional, but cleaner)
 const CheckboxRow = ({ item, isSelected, onToggle }: {
     item: any, isSelected: any, onToggle: any
-}) => (
+}) => {
+    const tf = useTranslations("fieldLabels");
+    const tc = useTranslations("ui.common");
+    return (
     <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-white hover:bg-gray-50">
         <label htmlFor={`item-${item.id}`} className=" flex flex-col justify-between cursor-pointer">
 
             <span className="font-medium text-gray-800">
-                FIR No: <span className="font-bold">{item.firNo}</span>
+                {tf("firNo")}: <span className="font-bold">{item.firNo}</span>
             </span>
             <span className="text-sm text-gray-500">
-                Sr No: <span className="font-bold">{item.srNo || 'N/A'}</span>
+                {tf("srNo")}: <span className="font-bold">{item.srNo || tc("na")}</span>
             </span>
         </label>
         <input
@@ -29,10 +33,13 @@ const CheckboxRow = ({ item, isSelected, onToggle }: {
             className="w-4 h-4 text-maroon bg-gray-100 border-gray-300 rounded focus:ring-maroon"
         />
     </div>
-);
+    );
+};
 
 
-const page = () => {
+const BarcodePage = () => {
+    const t = useTranslations("ui.barcodePage");
+    const tc = useTranslations("ui.common");
     const [searchQuery, setSearchQuery] = useState("")
 
     // Main array for items added to the barcode generation list
@@ -141,7 +148,7 @@ const page = () => {
     return (
         <div className='h-screen w-full glass-effect flex flex-col items-center'>
             <div className='bg-maroon w-full py-4 border border-gray-400 rounded-t-xl flex justify-center'>
-                <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>Generate Barcodes</h1>
+                <h1 className='text-2xl uppercase text-[#fdf8e8] font-semibold'>{t('title')}</h1>
             </div>
 
             <div className='w-3/4 flex pt-8 flex-col items-center'>
@@ -150,17 +157,17 @@ const page = () => {
                     <InputComponent
                         isLabel={false}
                         value={searchQuery}
-                        label=" firNo"
+                        label={t("firPlaceholder")}
                         setInput={(e) => setSearchQuery(e.target.value)}
                     />
-                    <Button onClick={handleGet} >Search and Add</Button>
+                    <Button onClick={handleGet} >{t("searchAdd")}</Button>
                 </div>
 
                 {/* AREA FOR MULTIPLE SELECTION */}
                 {multipleResults.length > 0 && (
                     <div id="selection-area" className="mt-6 p-4 border border-blue-100/20 rounded-lg w-full max-w-md bg-blue">
                         <h2 className="text-lg font-semibold  text-blue-100 mb-3">
-                            Multiple Entries Found for
+                            {t("multipleFound")}{" "}
                             <span className="font-bold">{searchQuery}</span>
                         </h2>
                         <div className="max-h-60 overflow-y-auto border border-gray-300 rounded-md">
@@ -178,14 +185,14 @@ const page = () => {
                             disabled={selectedItems.length === 0}
                             className="w-full mt-3 bg-maroon text-white hover:bg-red-700"
                         >
-                            Add Selected Items ({selectedItems.length})
+                            {t("addSelected", { count: selectedItems.length })}
                         </Button>
                     </div>
                 )}
 
                 {/* LIST OF ADDED ITEMS */}
                 <h3 className="mt-8 text-xl font-semibold text-gray-700">
-                    Items for Barcode Generation ({data.length})
+                    {t("itemsHeading", { count: data.length })}
                 </h3>
                 <div id='row area' className="mt-2 w-full max-w-md border border-gray-300 rounded-md glass-effect shadow-md">
                     {data.length > 0 ? (
@@ -193,16 +200,16 @@ const page = () => {
                             // Ensure key is unique
                             <div key={item.id || index} className="p-3 border-b border-gray-100 flex justify-between items-center last:border-b-0">
                                 <span className="text-blue-100 font-medium">
-                                    FIR: <span className="font-bold">{item.firNo}</span>
+                                    {t("fir")}: <span className="font-bold">{item.firNo}</span>
                                 </span>
                                 <span className="text-sm text-blue-200">
-                                    Sr No: {item.srNo || 'N/A'}
+                                    {t("srNo")}: {item.srNo || tc("na")}
                                 </span>
                             </div>
                         ))
                     ) : (
                         <p className="p-4 text-center text-blue-100 italic">
-                            No items added yet. Search by FIR No to begin.
+                            {t("empty")}
                         </p>
                     )}
                 </div>
@@ -214,7 +221,7 @@ const page = () => {
                         disabled={data.length === 0}
                         className="bg-green-600 hover:bg-green-700"
                     >
-                        Generate Barcodes for {data.length} Items
+                        {t("generate", { count: data.length })}
                     </Button>
                 </div>
             </div>
@@ -222,4 +229,4 @@ const page = () => {
     )
 }
 
-export default page
+export default BarcodePage

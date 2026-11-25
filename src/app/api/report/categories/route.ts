@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma";
+import { ITEM_CATEGORY_BUCKETS, isItemCategoryBucket, itemCategoryOf, UNSET_CATEGORY } from "@/utils/itemCategories";
 import {
     categoryForEntryType,
     deriveItemStatus,
@@ -6,7 +8,6 @@ import {
     formatDisplayDate,
     isMaalCategory,
     isPlainCategorySpelling,
-    MaalCategoryKey,
     toIsoDay,
 } from "@/utils/maalCategories";
 import { NextRequest, NextResponse } from "next/server";
@@ -16,7 +17,8 @@ export interface CategoryItem {
     firNo: string;
     srNo: string;
     malkhanaNo: string;
-    category: MaalCategoryKey;
+    /** Entry-type category, or the item category when by=category. */
+    category: string;
     /** The saved entryType; for "other" this is the custom text the user typed. */
     entryType: string;
     description: string;
@@ -28,13 +30,25 @@ export interface CategoryItem {
 
 const clean = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
 
+const ENTRY_SELECT = {
+    id: true, firNo: true, srNo: true, entryType: true, category: true, caseProperty: true, description: true,
+    gdDate: true, status: true, policeStation: true, isRelease: true, isDestroy: true,
+    isNilami: true, isMovement: true, isReturned: true, receiptNo: true, licenseNo: true,
+    weaponName: true, weaponNo: true, depositDate: true, ownerName: true,
+} satisfies Prisma.MalkhanaEntrySelect;
+
+type EntryRow = Prisma.MalkhanaEntryGetPayload<{ select: typeof ENTRY_SELECT }>;
+
 /**
  * GET /api/report/categories
  *   userId?     – police station user (omit for district / admin view)
  *   districtId? – restrict the admin view to one district
- *   category?   – entry type to list (malkhana, fsl, kurki, cash, wine,
+ *   by?         – "category": group by the item category field (weapon, ndps,
+ *                 cash…, "unset" for entries saved without one). Default:
+ *                 group by entry type (malkhana, fsl, kurki, cash, wine,
  *                 unclaimed, yellowItem, licensedWeapon, other)
- *   subType?    – for "other": one specific custom entry type
+ *   category?   – the group to list
+ *   subType?    – entry-type "other": one specific custom entry type
  *   search, status, from, to (yyyy-mm-dd) – item filters
  *   page, pageSize – pagination (default 50); all=1 returns every match (export)
  */
@@ -42,7 +56,8 @@ export const GET = async (req: NextRequest) => {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId") || undefined;
     const districtId = searchParams.get("districtId") || undefined;
-    const categoryParam = searchParams.get("category");
+    const byItemCategory = searchParams.get("by") === "category";
+    const category = searchParams.get("category");
     const search = clean(searchParams.get("search")).toLowerCase();
     const subType = clean(searchParams.get("subType"));
     const statusFilter = clean(searchParams.get("status"));
@@ -52,45 +67,68 @@ export const GET = async (req: NextRequest) => {
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const pageSize = Math.min(500, Math.max(1, Number(searchParams.get("pageSize")) || 50));
 
-    if (categoryParam && !isMaalCategory(categoryParam)) {
+    if (category && !(byItemCategory ? isItemCategoryBucket(category) : isMaalCategory(category))) {
         return NextResponse.json({ success: false, error: "Invalid category" }, { status: 400 });
     }
-    const category = categoryParam as MaalCategoryKey | null;
-    const where = userId ? { userId } : districtId ? { districtId } : {};
+    const where: Prisma.MalkhanaEntryWhereInput = userId ? { userId } : districtId ? { districtId } : {};
 
     try {
-        // Counts per entry type come straight from the database.
-        const grouped = await prisma.malkhanaEntry.groupBy({
-            by: ["entryType"],
-            where,
-            _count: { _all: true },
-        });
-        const counts = Object.fromEntries(ENTRY_TYPE_CATEGORIES.map((c) => [c, 0])) as Record<MaalCategoryKey, number>;
+        // ---- counts (straight from the database) and the filter for the chosen group
+        let counts: Record<string, number>;
         let total = 0;
-        for (const g of grouped) {
-            counts[categoryForEntryType(g.entryType)] += g._count._all;
-            total += g._count._all;
+        let groupWhere: Prisma.MalkhanaEntryWhereInput = {};
+        let subTypes: { value: string; count: number }[] = [];
+        let groupOf: (e: EntryRow) => string;
+
+        if (byItemCategory) {
+            const grouped = await prisma.malkhanaEntry.groupBy({ by: ["category"], where, _count: { _all: true } });
+            counts = Object.fromEntries(ITEM_CATEGORY_BUCKETS.map((c) => [c, 0]));
+            for (const g of grouped) {
+                counts[itemCategoryOf(g.category)] += g._count._all;
+                total += g._count._all;
+            }
+            if (category) {
+                // Saved values are keys, or free text on older entries: match every spelling in this group.
+                const texts = grouped
+                    .filter((g) => itemCategoryOf(g.category) === category && g.category !== null)
+                    .map((g) => g.category as string);
+                groupWhere = category === UNSET_CATEGORY
+                    ? { OR: [{ category: null }, { category: { in: texts } }] }
+                    : { category: { in: texts.length ? texts : ["__none__"] } };
+            }
+            groupOf = (e) => itemCategoryOf(e.category);
+        } else {
+            const grouped = await prisma.malkhanaEntry.groupBy({ by: ["entryType"], where, _count: { _all: true } });
+            counts = Object.fromEntries(ENTRY_TYPE_CATEGORIES.map((c) => [c, 0]));
+            for (const g of grouped) {
+                counts[categoryForEntryType(g.entryType)] += g._count._all;
+                total += g._count._all;
+            }
+            if (category) {
+                // entryType is free text, so collect every stored spelling in this category.
+                const rawTypes = grouped.map((g) => g.entryType ?? "").filter((t) => categoryForEntryType(t) === category);
+                groupWhere = subType
+                    ? { entryType: rawTypes.includes(subType) ? subType : "__no_matching_type__" }
+                    : { entryType: { in: rawTypes } };
+                // Custom / crime-head values in this category, for the sub-type filter
+                // (most common first; independent of the current filter).
+                subTypes = grouped
+                    .filter((g) => categoryForEntryType(g.entryType) === category && !isPlainCategorySpelling(g.entryType))
+                    .sort((a, b) => b._count._all - a._count._all)
+                    .map((g) => ({ value: g.entryType, count: g._count._all }));
+            }
+            groupOf = (e) => categoryForEntryType(e.entryType);
         }
 
         if (!category) {
             return NextResponse.json({ success: true, counts, total });
         }
 
-        // entryType is free text, so collect every stored spelling in this category.
-        const rawTypes = grouped.map((g) => g.entryType ?? "").filter((t) => categoryForEntryType(t) === category);
-        const typeWhere = subType
-            ? { entryType: rawTypes.includes(subType) ? subType : "__no_matching_type__" }
-            : { entryType: { in: rawTypes } };
-
+        // ---- items of the chosen group
         const entries = await prisma.malkhanaEntry.findMany({
-            where: { ...where, ...typeWhere },
+            where: { AND: [where, groupWhere] },
             orderBy: [{ createdAt: "desc" }],
-            select: {
-                id: true, firNo: true, srNo: true, entryType: true, caseProperty: true, description: true,
-                gdDate: true, status: true, policeStation: true, isRelease: true, isDestroy: true,
-                isNilami: true, isMovement: true, isReturned: true, receiptNo: true, licenseNo: true,
-                weaponName: true, weaponNo: true, depositDate: true, ownerName: true,
-            },
+            select: ENTRY_SELECT,
         });
 
         const items: CategoryItem[] = entries.map((e) => {
@@ -105,7 +143,7 @@ export const GET = async (req: NextRequest) => {
                 firNo: clean(e.firNo),
                 srNo: clean(e.srNo),
                 malkhanaNo: isLicensed && e.receiptNo ? clean(e.receiptNo) : clean(e.srNo),
-                category: categoryForEntryType(e.entryType),
+                category: groupOf(e),
                 entryType: clean(e.entryType),
                 description,
                 statusKey: deriveItemStatus(e),
@@ -114,13 +152,6 @@ export const GET = async (req: NextRequest) => {
                 policeStation: clean(e.policeStation),
             };
         });
-
-        // Custom / crime-head values in this category, for the sub-type filter
-        // (most common first; independent of the current filter).
-        const subTypes = grouped
-            .filter((g) => categoryForEntryType(g.entryType) === category && !isPlainCategorySpelling(g.entryType))
-            .sort((a, b) => b._count._all - a._count._all)
-            .map((g) => ({ value: g.entryType, count: g._count._all }));
 
         const filtered = items.filter((i) => {
             if (statusFilter && i.statusKey !== statusFilter) return false;

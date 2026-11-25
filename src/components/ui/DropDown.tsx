@@ -1,3 +1,6 @@
+"use client";
+import { useTranslations } from "next-intl";
+
 interface DropDownProps {
     selectedValue: string,
     handleSelect: (value: string) => void,
@@ -7,7 +10,8 @@ interface DropDownProps {
     label?: string
 }
 
-const DropDown = ({ selectedValue, options, handleSelect, selectValueLabel = "select value", label }: DropDownProps) => {
+const DropDown = ({ selectedValue, options, handleSelect, selectValueLabel, label }: DropDownProps) => {
+    const tc = useTranslations("ui.common");
     return (
         <div className='flex flex-col gap-2 w-full'>
             <label className="text-blue-100 text-nowrap" htmlFor={label}>{label}</label>
@@ -17,7 +21,7 @@ const DropDown = ({ selectedValue, options, handleSelect, selectValueLabel = "se
                 value={selectedValue}
                 onChange={(e) => { handleSelect(e.target.value) }}
             >
-                <option className='bg-blue' disabled value="">{selectValueLabel}</option>
+                <option className='bg-blue' disabled value="">{selectValueLabel ?? tc("select")}</option>
                 {
                     // FIX: Map over the options and use `item.value` and `item.label`
                     options.map((item) => (

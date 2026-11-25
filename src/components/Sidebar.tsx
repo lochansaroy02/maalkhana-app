@@ -16,6 +16,7 @@ const Sidebar = () => {
     const { user } = useAuthStore();
     const { isOpen } = useSidebarStore();
     const t = useTranslations("Sidebar");
+    const tu = useTranslations("ui.sidebar");
 
     const sidebarData = useMemo(() => {
         const baseRoutes = [
@@ -32,10 +33,10 @@ const Sidebar = () => {
         ];
 
         if (user?.role === 'district') {
-            return [...baseRoutes, { name: "Users", link: "/users", icon: <Users size={16} /> }];
+            return [...baseRoutes, { name: tu("users"), link: "/users", icon: <Users size={16} /> }];
         }
         return baseRoutes;
-    }, [user, t]);
+    }, [user, t, tu]);
 
     return (
         <div className={` ${isOpen ? "flex" : "hidden"} h-screen lg:flex transition-all ease-in-out duration-300 z-40 lg:w-[20%] lg:pt-0 pt-18 fixed lg:glass-effect border border-white/50 rounded-xl bg-blue `}>
@@ -75,7 +76,7 @@ const Sidebar = () => {
                     <div className='lg:p-2 items-center flex flex-col justify-center mb-2 rounded-xl  border-white/20 bg-blue'>
                         <div className='w-3/4 flex flex-col justify-center items-center'>
                             <Spycore />
-                            <h1 className='text-blue-100 text-sm'>Helpline</h1>
+                            <h1 className='text-blue-100 text-sm'>{tu('helpline')}</h1>
                             <h2 className='text-blue-100 text-sm'>+917500064949</h2>
                         </div>
                     </div>

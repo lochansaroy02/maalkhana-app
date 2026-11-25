@@ -60,7 +60,7 @@ const Page = () => {
     const { user } = useAuthStore();
     const { userId } = useDistrictStore();
     const t = useTranslations("Dashboard");
-    console.log(data);
+    const tu = useTranslations("ui.dashboard");
     useEffect(() => {
         if (user?.role === "policeStation") {
             if (user?.id) fetchTotalEntries(user?.id);
@@ -81,29 +81,26 @@ const Page = () => {
     const actualVehicles = (vehicleData?.total || 0) - (vehicleData?.release || 0) - (vehicleData?.destroy || 0) - (vehicleData?.nilami || 0);
 
     const malkhanaItems = [
-        { title: `Current ${t("totalMalkhanaEntry")}`, icon: <PackageOpen size={36} />, bgColour: "bg-red-600", value: actualMalkhana < 0 ? 0 : actualMalkhana, url: "/report/entry-report" },
-        { title: `Malkhana Movement`, icon: <User size={36} />, bgColour: "bg-orange-500", value: malkhanaData?.movement || 0, url: "/report/entry-report?reportType=movement" },
-        { title: `Malkhana Release`, icon: <RotateCcw size={36} />, bgColour: "bg-green-600", value: malkhanaData?.release || 0, url: "/report/entry-report?reportType=release" },
-        { title: `Malkhana Destroyed`, icon: <Shredder size={36} />, bgColour: "bg-pink-600", value: malkhanaData?.destroy || 0, url: "/report/entry-report?reportType=destroy" },
+        { title: tu("currentMalkhana"), icon: <PackageOpen size={36} />, bgColour: "bg-red-600", value: actualMalkhana < 0 ? 0 : actualMalkhana, url: "/report/entry-report" },
+        { title: tu("malkhanaMovement"), icon: <User size={36} />, bgColour: "bg-orange-500", value: malkhanaData?.movement || 0, url: "/report/entry-report?reportType=movement" },
+        { title: tu("malkhanaRelease"), icon: <RotateCcw size={36} />, bgColour: "bg-green-600", value: malkhanaData?.release || 0, url: "/report/entry-report?reportType=release" },
+        { title: tu("malkhanaDestroyed"), icon: <Shredder size={36} />, bgColour: "bg-pink-600", value: malkhanaData?.destroy || 0, url: "/report/entry-report?reportType=destroy" },
         { title: t("totalWine"), icon: <Wine size={36} />, bgColour: "bg-fuchsia-700", value: `${data?.breakdown?.wine?.total || 0} ${t("unitLtr")}`, url: "/report/entry-report" },
         { title: t("totalCash"), icon: <Banknote size={36} />, bgColour: "bg-teal-700", value: `₹${(data?.breakdown?.seizedVehicle?.totalCash || 0).toLocaleString('en-IN')}`, url: "/report/entry-report" },
         { title: t("totalYellowItem"), icon: <Coins size={36} />, bgColour: "bg-yellow-600", value: `₹${(data?.breakdown?.seizedVehicle?.totalYellowItems || 0).toLocaleString('en-IN')}`, url: "/report/entry-report" },
-        { title: "Returned Items", icon: <ArrowDownNarrowWide size={36} />, bgColour: "bg-slate-600", value: malkhanaData?.returned || 0, url: "/report/entry-report?reportType=return" },
+        { title: tu("returnedItems"), icon: <ArrowDownNarrowWide size={36} />, bgColour: "bg-slate-600", value: malkhanaData?.returned || 0, url: "/report/entry-report?reportType=return" },
     ];
 
     const vehicleItems = [
-        { title: `Current ${t("seizedVehicles")}`, icon: <Car size={36} />, bgColour: "bg-blue-600", value: actualVehicles < 0 ? 0 : actualVehicles, url: "/report/siezed-report" },
-        { title: "Vehicle Movement", icon: <Truck size={36} />, bgColour: "bg-indigo-500", value: vehicleData?.movement || 0, url: "/report/siezed-report?reportType=movement" },
-        { title: "Vehicle Release", icon: <RotateCcw size={36} />, bgColour: "bg-emerald-600", value: vehicleData?.release || 0, url: "/report/siezed-report?reportType=release" },
-        { title: "Vehicle Nilami", icon: <Gavel size={36} />, bgColour: "bg-purple-600", value: vehicleData?.nilami || 0, url: "/report/siezed-report?reportType=nilami" },
-        { title: "Vehicle Destroyed", icon: <Shredder size={36} />, bgColour: "bg-rose-700", value: vehicleData?.destroy || 0, url: "/report/siezed-report?reportType=destroy" },
-        { title: "Vehicle Returned", icon: <ArrowDownNarrowWide size={36} />, bgColour: "bg-slate-700", value: vehicleData?.returned || 0, url: "/report/siezed-report?reportType=return" },
+        { title: tu("currentVehicles"), icon: <Car size={36} />, bgColour: "bg-blue-600", value: actualVehicles < 0 ? 0 : actualVehicles, url: "/report/siezed-report" },
+        { title: tu("vehicleRelease"), icon: <RotateCcw size={36} />, bgColour: "bg-emerald-600", value: vehicleData?.release || 0, url: "/report/siezed-report?reportType=release" },
+        { title: tu("vehicleNilami"), icon: <Gavel size={36} />, bgColour: "bg-purple-600", value: vehicleData?.nilami || 0, url: "/report/siezed-report?reportType=nilami" },
     ];
 
     return (
         <div className="flex lg:h-fit flex-col glass-effect min-h-screen pb-10">
             <div className="flex justify-center py-4 border-b border-white/50 rounded-t-xl bg-maroon">
-                <h1 className="text-white text-2xl font-bold">Dashboard Overview</h1>
+                <h1 className="text-white text-2xl font-bold">{tu("overview")}</h1>
             </div>
 
             <div className="p-6">
@@ -120,6 +117,8 @@ const Page = () => {
 
                 {/* Property categories, one per entry type */}
                 <MaalCategories userId={user?.role === "policeStation" ? user?.id : userId || undefined} />
+                {/* Item categories (श्रेणी chosen on the Malkhana Entry form) */}
+                <MaalCategories by="category" userId={user?.role === "policeStation" ? user?.id : userId || undefined} />
 
                 {/* Global Stats Grid */}
                 <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 gap-4">
@@ -139,7 +138,7 @@ const Page = () => {
 
                             {/* Loading State for Vehicle Section */}
                             <HeaderSkeleton />
-                            {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={`v-skel-${i}`} />)}
+                            {Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={`v-skel-${i}`} />)}
                         </>
                     ) : (
                         <>
@@ -151,12 +150,12 @@ const Page = () => {
                                 </>
                             )}
 
-                            <SectionHeader title="Malkhana Assets & Inventory" />
+                            <SectionHeader title={tu("malkhanaSection")} />
                             {malkhanaItems.map((item, idx) => (
                                 <ReportCard key={idx} {...item} data={item.value} />
                             ))}
 
-                            <SectionHeader title="Seized Vehicles Registry" />
+                            <SectionHeader title={tu("vehicleSection")} />
                             {vehicleItems.map((item, idx) => (
                                 <ReportCard key={idx} {...item} data={item.value} />
                             ))}

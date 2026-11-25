@@ -3,6 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { useSeizedVehicleStore } from "@/store/siezed-vehical/seizeStore";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useFieldLabel } from "@/utils/useFieldLabel";
 import { useParams, useRouter } from "next/navigation";
 // Removed: import { useReactToPrint } from "react-to-print";
 
@@ -12,6 +14,8 @@ import { useEffect, useRef, useState } from "react";
 export default function EntryReportDetail() {
     const { id } = useParams();
     const router = useRouter();
+    const tc = useTranslations("ui.common");
+    const fl = useFieldLabel();
     const [data, setData] = useState<any>(null);
     const [fieldsToDisplay, setFieldsToDisplay] = useState<any[]>([]);
 
@@ -123,7 +127,7 @@ export default function EntryReportDetail() {
 
         // Write a complete HTML document into the iframe
         iframeDoc.open();
-        iframeDoc.write('<!DOCTYPE html><html><head><title>Print Report</title>');
+        iframeDoc.write(`<!DOCTYPE html><html><head><title>${tc('printReport')}</title>`);
 
         // Copy all style links and style tags from the main document's head
         const headElements = document.querySelectorAll('head > link[rel="stylesheet"], head > style');
@@ -158,16 +162,16 @@ export default function EntryReportDetail() {
     };
     // ----------------------------------------------------------------------
 
-    if (!data) return <div className="p-4 text-center h-screen text-white">Loading..</div>;
+    if (!data) return <div className="p-4 text-center h-screen text-white">{tc("loading")}</div>;
 
     return (
         <div className="p-8 min-h-screen flex flex-col items-center">
             <div className="flex mb-2 gap-4">
                 <Button onClick={() => router.back()} className="cursor-pointer">
-                    <span><ArrowLeft /></span>Back
+                    <span><ArrowLeft /></span>{tc("back")}
                 </Button>
                 {/* Now using the fixed iframe print handler */}
-                <Button onClick={handlePrintWithIframe} className="cursor-pointer">Print</Button>
+                <Button onClick={handlePrintWithIframe} className="cursor-pointer">{tc("print")}</Button>
             </div>
             <div ref={divRef}
                 id="printable-area"
@@ -176,12 +180,13 @@ export default function EntryReportDetail() {
                     <div className="flex  p-4 justify-around items-center  ">
                         <Logo width={100} height={100} />
                         <div className="text-center  ">
-                            <h1 className="text-3xl font-bold text-gray-800">DIGITAL MALKHANA</h1>
-                            <h2 className="text-lg font-semibold text-gray-600">Entry Detail</h2>
+                            <h1 className="text-3xl font-bold text-gray-800">{tc("digitalMalkhana")}</h1>
+                            <h2 className="text-lg font-semibold text-gray-600">{tc("entryDetail")}</h2>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                        {fieldsToDisplay.map(({ key, label }) => {
+                        {fieldsToDisplay.map(({ key, label: enLabel }) => {
+                            const label = fl(key, enLabel);
                             const value = data[key];
 
                             if (key === "photoUrl") {
@@ -190,7 +195,7 @@ export default function EntryReportDetail() {
                                         <h3 className="text-lg font-semibold text-gray-700 mb-2">{label}</h3>
                                         <img
                                             src={String(value)}
-                                            alt="Entry"
+                                            alt={label}
                                             className="max-h-80 mx-auto rounded-lg shadow-md"
                                         />
                                     </div>
@@ -208,7 +213,7 @@ export default function EntryReportDetail() {
                                             rel="noopener noreferrer"
                                             className="text-blue-600 underline"
                                         >
-                                            View Document
+                                            {tc("viewDocument")}
                                         </a>
                                     </div>
                                 );
@@ -218,7 +223,7 @@ export default function EntryReportDetail() {
                                 <div key={key} className="flex flex-row gap-4  border-b pb-2">
                                     <span className="text-sm font-semibold ">{label}:</span>
                                     {/* Using flex-wrap to handle long content */}
-                                    <span className="text-sm text-gray-800 flex-wrap">{String(value)}</span>
+                                    <span className="text-sm text-gray-800 flex-wrap">{typeof value === "boolean" ? (value ? tc("yes") : tc("no")) : String(value)}</span>
                                 </div>
                             );
                         })}

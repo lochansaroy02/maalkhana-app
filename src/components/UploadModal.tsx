@@ -1,284 +1,249 @@
 "use client";
-
-import { expectedSchemas } from "@/constants/schemas";
 import { useAuthStore } from "@/store/authStore";
-import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
-import { baghpat } from "@/utils/headerMap";
-import { parseExcelDate } from "@/utils/parseDate";
-import { validateAndMapExcelSchema } from "@/utils/validateSchemas";
-import { X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useDistrictStore } from "@/store/districtStore";
+import { downloadMalkhanaTemplate, ImportOwner, prepareMalkhanaImport, PreparedImport } from "@/utils/malkhanaImport";
+import { useFieldLabel } from "@/utils/useFieldLabel";
+import axios from "axios";
+import { AlertTriangle, CheckCircle2, Download, FileSpreadsheet, Loader2, Upload, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import * as XLSX from "xlsx";
 import { Button } from "./ui/button";
 
 interface UploadModalProps {
-    schemaType: keyof typeof expectedSchemas;
     isOpen: boolean;
     onClose: () => void;
-    addEntry: (data: any) => Promise<void>;
     onSuccess: (message: string) => void;
+    /** kept for older callers; the import always creates Malkhana entries */
+    schemaType?: string;
+    addEntry?: unknown;
 }
 
-const UploadModal = ({ schemaType, isOpen, onClose, onSuccess }: UploadModalProps) => {
+const BATCH_SIZE = 300;
+const PREVIEW_KEYS = ["srNo", "firNo", "gdNo", "gdDate", "Year", "underSection", "description", "entryType", "category", "caseProperty"];
 
-
-    const exportMap = baghpat
-
+/**
+ * Excel import for Malkhana entries using the universal format
+ * (download the empty format → fill → upload → check → import).
+ */
+const UploadModal = ({ isOpen, onClose, onSuccess }: UploadModalProps) => {
+    const t = useTranslations("ui.importModal");
+    const fl = useFieldLabel();
     const { user } = useAuthStore();
-    const { addMaalkhanaEntry } = useMaalkhanaStore();
+    const { userId: selectedStationId, getAllUsers } = useDistrictStore();
 
+    const [fileName, setFileName] = useState("");
+    const [prepared, setPrepared] = useState<PreparedImport | null>(null);
     const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
-
-    const [uploadedData, setUploadedData] = useState<any[] | null>(null);
+    const [busy, setBusy] = useState<"" | "reading" | "saving">("");
+    const [progress, setProgress] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const integerFields = ["srNo", "gdNo", "boxNo", "Year", "cash", "wine"];
-    const allDatabaseKeys = Object.values(exportMap);
+    // Stop the long report behind the window from scrolling while it is open.
+    useEffect(() => {
+        if (!isOpen) return;
+        const previous = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = previous;
+        };
+    }, [isOpen]);
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isOpen || typeof document === "undefined") return null;
+
+    /** Whose entries these become: the station login, or the station picked in the header. */
+    const resolveOwner = async (): Promise<ImportOwner | null> => {
+        if (!user) return null;
+        if (user.role === "policeStation") {
+            return { userId: user.id, districtId: user.districtId, policeStation: user.policeStation };
+        }
+        if (!selectedStationId) return null;
+        const districtId = user.role === "district" ? user.id : user.districtId;
+        const stations: { id: string; policeStation?: string; name?: string }[] = (await getAllUsers(districtId)) || [];
+        const station = stations.find((s) => s.id === selectedStationId);
+        return { userId: selectedStationId, districtId, policeStation: station?.policeStation || station?.name };
+    };
+
+    const reset = () => {
+        setPrepared(null);
+        setFileName("");
+        setError("");
+        setProgress(0);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
         setError("");
-        setLoading(true);
-        setUploadedData(null); // Clear previous data
-
-        const reader = new FileReader();
-
-        reader.onload = async (evt) => {
-            try {
-                const workbook = XLSX.read(evt.target?.result, { type: "binary" });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rawJsonData: any[] = XLSX.utils.sheet_to_json(sheet);
-
-                if (rawJsonData.length === 0) {
-                    setError("❌ The uploaded file is empty.");
-                    setLoading(false);
-                    return;
-                }
-
-                // ⭐ STEP 1: Map Excel headers → DB keys
-                const mappedData = rawJsonData.map((row) => {
-                    const newRow: any = {};
-
-                    for (const excelHeader in row) {
-                        const cleaned = excelHeader.trim();
-
-                        // @ts-ignore
-                        const dbKey = exportMap[cleaned];
-
-                        if (dbKey) {
-                            newRow[dbKey] = row[excelHeader];
-                        }
-                    }
-                    return newRow;
-                });
-
-                // ⭐ STEP 2: Validate schema
-                const { error, data: validatedData } = validateAndMapExcelSchema(
-                    mappedData,
-                    "MalkhanaEntry",
-                    user?.id
-                );
-
-                if (error) {
-                    setError(error);
-                    setLoading(false);
-                    return;
-                }
-
-                // ⭐ STEP 3: Final data cleanup
-                const fixedData = validatedData.map((entry: any) => {
-                    const newEntry: any = {};
-
-                    if (user?.id) newEntry.userId = user.id;
-
-                    for (const key of allDatabaseKeys) {
-                        let rawValue = entry[key];
-
-                        // Handle gdDate specifically
-                        if (key === "gdDate") {
-                            const value = rawValue?.toString() || "";
-                            const trimmedValue = value.includes("/") ? value.split("/").pop().trim() : value;
-                            newEntry[key] = parseExcelDate(trimmedValue);
-                            continue;
-                        }
-
-                        // Integer fields
-                        if (integerFields.includes(key)) {
-                            const str = rawValue ? String(rawValue).trim() : "";
-                            const parsed = parseInt(str, 10);
-                            newEntry[key] =
-                                !str || isNaN(parsed) || String(parsed) !== str
-                                    ? null
-                                    : parsed;
-                            continue;
-                        }
-
-                        // String fields
-                        newEntry[key] = rawValue ? String(rawValue).trim() : "";
-                    }
-
-                    return newEntry;
-                });
-
-                // ⭐ NEW: Store the cleaned data and show the confirmation modal
-                setUploadedData(fixedData);
-                // Note: Loading is set to false in finally block, but we keep it true
-                // until the user confirms or cancels the submission.
-
-            } catch (err) {
-                console.error(err);
-                setError("❌ Failed to process Excel file.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        reader.readAsBinaryString(file);
-    };
-
-    const handleClearFile = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-            setError("");
-            setUploadedData(null); // Clear data on file clear
-        }
-    };
-
-    // ⭐ NEW FUNCTION: Handles the final API submission
-    const handleConfirmUpload = async () => {
-        if (!uploadedData || uploadedData.length === 0) return;
-
-        setLoading(true);
-        setError("");
-
+        setPrepared(null);
+        setFileName(file.name);
+        setBusy("reading");
         try {
-            // ⭐ STEP 4: Submit to backend
-            const isSuccess = await addMaalkhanaEntry(uploadedData);
-
-            if (isSuccess) {
-                onSuccess("✅ Data imported successfully!");
-                onClose();
-            } else {
-                setError("❌ Failed to import data.");
+            const owner = await resolveOwner();
+            if (!owner) {
+                setError(t("chooseStation"));
+                return;
             }
+            const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+            const result = prepareMalkhanaImport(wb, owner);
+            if (result.matched.length === 0) {
+                setError(t("noColumns"));
+                return;
+            }
+            if (result.rows.length === 0) {
+                setError(t("emptyFile"));
+                return;
+            }
+            setPrepared(result);
         } catch (err) {
-            console.error(err);
-            setError("❌ An unexpected error occurred during submission.");
+            console.error("Excel read failed:", err);
+            setError(t("processFailed"));
         } finally {
-            setLoading(false);
-            setUploadedData(null); // Clear data after submission attempt
+            setBusy("");
         }
     };
 
-    const handleCancelUpload = () => {
-        setUploadedData(null); // Close confirmation modal
-        setLoading(false);
-        // Optionally clear the file input as well
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
+    const handleImport = async () => {
+        if (!prepared) return;
+        setBusy("saving");
+        setError("");
+        let saved = 0;
+        try {
+            for (let i = 0; i < prepared.rows.length; i += BATCH_SIZE) {
+                const batch = prepared.rows.slice(i, i + BATCH_SIZE);
+                const res = await axios.post("/api/entry", batch);
+                saved += res.data?.count ?? batch.length;
+                setProgress(Math.min(prepared.rows.length, i + batch.length));
+            }
+            onSuccess(t("saved", { count: saved }));
+            reset();
+            onClose();
+        } catch (err) {
+            console.error("Import failed:", err);
+            setError(saved > 0 ? t("partial", { saved, total: prepared.rows.length }) : t("submitFailed"));
+        } finally {
+            setBusy("");
         }
     };
 
-    if (!isOpen) return null;
+    const close = () => {
+        if (busy === "saving") return;
+        reset();
+        onClose();
+    };
 
-    // --- Confirmation Modal Display ---
-    if (uploadedData) {
-        return (
-            <div className="fixed z-50 inset-0 bg-black/60  flex justify-center items-center">
-                <div className="bg-blue rounded-xl p-6 relative  w-full max-w-xl max-h-[80vh] overflow-y-auto">
-                    <h2 className="text-xl text-blue-100 font-bold mb-4">
-                        Confirm Data Import
+    // Portal to <body>: the report sits inside glass panels (backdrop-filter),
+    // which would otherwise make this "fixed" window scroll away with the table.
+    return createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-3" onClick={close}>
+            <div
+                role="dialog"
+                aria-modal="true"
+                className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl border border-white/30 bg-blue shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-center justify-between bg-maroon px-5 py-3">
+                    <h2 className="flex items-center gap-2 text-lg font-bold text-cream">
+                        <FileSpreadsheet size={20} /> {t("heading")}
                     </h2>
-                    <p className="text-blue-200 mb-4">
-                        A total of
-                        <span className="font-bold mx-2 ">
+                    <button onClick={close} aria-label="close" className="rounded-full bg-white/15 p-1.5 text-cream hover:bg-white/25">
+                        <X size={16} />
+                    </button>
+                </div>
 
-                            {uploadedData.length}
-                        </span>
-                        records are ready to be imported. Please review the first few records:
-                    </p>
+                <div className="flex-1 space-y-4 overflow-y-auto p-5 text-blue-100">
+                    {/* Step 1 */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/20 bg-white/5 p-4">
+                        <div>
+                            <p className="font-semibold">{t("step1")}</p>
+                            <p className="text-sm text-blue-100/70">{t("step1Hint")}</p>
+                        </div>
+                        <Button onClick={downloadMalkhanaTemplate} className="bg-green-700 text-white hover:bg-green-600">
+                            <Download size={16} /> {t("downloadFormat")}
+                        </Button>
+                    </div>
 
-                    {/* Display first 3 records for review */}
-                    <div className="bg-blue-100 p-3 rounded-lg text-xs font-mono max-h-60 overflow-y-auto mb-4">
-                        {uploadedData.slice(0, 10).map((item, index) => (
-                            <pre key={index} className="mb-2 p-1 border-b border-gray-300 last:border-b-0 overflow-x-auto">
-                                {JSON.stringify(item, null, 2)}
-                            </pre>
-                        ))}
-                        {uploadedData.length > 3 && (
-                            <p className="text-center text-gray-500 mt-2">
-                                ... and {uploadedData.length - 10} more records.
+                    {/* Step 2 */}
+                    <div className="rounded-lg border border-white/20 bg-white/5 p-4">
+                        <p className="font-semibold">{t("step2")}</p>
+                        <p className="mb-3 text-sm text-blue-100/70">{t("step2Hint")}</p>
+                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-white/40 px-4 py-3 hover:bg-white/10">
+                            {busy === "reading" ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
+                            <span className="truncate">{fileName || t("chooseFile")}</span>
+                            <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} className="hidden" disabled={!!busy} />
+                        </label>
+                    </div>
+
+                    {error && (
+                        <p className="flex items-start gap-2 rounded-lg bg-red-900/40 px-4 py-3 text-sm text-red-100">
+                            <AlertTriangle size={16} className="mt-0.5 shrink-0" /> {error}
+                        </p>
+                    )}
+
+                    {/* Step 3: check */}
+                    {prepared && (
+                        <div className="space-y-3 rounded-lg border border-white/20 bg-white/5 p-4">
+                            <p className="flex items-center gap-2 font-semibold">
+                                <CheckCircle2 size={18} className="text-green-400" />
+                                {t("ready", { count: prepared.rows.length })}
                             </p>
-                        )}
-                    </div>
+                            <p className="text-sm text-blue-100/80">
+                                {t("matchedCols", { count: prepared.matched.length })}
+                                {prepared.skippedEmpty > 0 && ` · ${t("skippedEmpty", { count: prepared.skippedEmpty })}`}
+                            </p>
+                            {prepared.unknown.length > 0 && (
+                                <p className="text-sm text-amber-200">{t("unknownCols")}: {prepared.unknown.join(", ")}</p>
+                            )}
+                            {prepared.warnings.length > 0 && (
+                                <details className="text-sm text-amber-200">
+                                    <summary className="cursor-pointer">{t("warnings", { count: prepared.warnings.length })}</summary>
+                                    <ul className="mt-1 max-h-32 list-disc overflow-y-auto pl-5">
+                                        {prepared.warnings.map((w) => <li key={w}>{w}</li>)}
+                                    </ul>
+                                </details>
+                            )}
 
-                    <div className="flex justify-end space-x-3">
-                        <Button
-                            onClick={handleCancelUpload}
-                            disabled={loading}
-                            className="bg-gray-500 hover:bg-gray-600 text-white"
-                        >
-                            No, Cancel
-                        </Button>
-                        <Button
-                            onClick={handleConfirmUpload}
-                            disabled={loading}
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                            {loading ? "Importing..." : "Yes, Import Data"}
-                        </Button>
-                    </div>
-
-                    {error && <p className="text-red-500 whitespace-pre-wrap mt-4">{error}</p>}
-                </div>
-            </div>
-        );
-    }
-
-    // --- Initial File Upload Modal Display ---
-    return (
-        <div className="fixed inset-0 z-50 bg-black/70 flex justify-center items-center">
-            <div className="bg-blue p-6 relative rounded w-full max-w-md">
-                <h2 className="text-xl text-blue-100 font-bold mb-4">
-                    Import Excel - {schemaType}
-                </h2>
-
-                <div className="p-4   rounded-lg">
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".xlsx, .xls"
-                        onChange={handleFileUpload}
-                        className="mb-4 text-blue-200/90 border border-dotted border-gray-400/70 px-4 py-2 rounded-xl w-full"
-                        disabled={loading}
-                    />
-                    <div className="flex justify-end space-x-3">
-                        <Button
-                            onClick={handleClearFile}
-                            disabled={loading}
-                            className=" border border-blue-100/70 cursor-pointer  text-blue-50"
-                        >
-                            Clear File
-                        </Button>
-                    </div>
+                            <p className="text-sm font-semibold">{t("preview")}</p>
+                            <div className="max-h-64 overflow-auto rounded border border-white/20">
+                                <table className="w-full min-w-[900px] text-xs">
+                                    <thead className="sticky top-0 bg-blue-dark text-left">
+                                        <tr>{PREVIEW_KEYS.map((k) => <th key={k} className="px-2 py-2 font-semibold">{fl(k)}</th>)}</tr>
+                                    </thead>
+                                    <tbody>
+                                        {prepared.rows.slice(0, 10).map((row, i) => (
+                                            <tr key={i} className="border-t border-white/10 even:bg-white/5">
+                                                {PREVIEW_KEYS.map((k) => (
+                                                    <td key={k} className="max-w-[260px] truncate px-2 py-1.5" title={String(row[k] ?? "")}>
+                                                        {String(row[k] ?? "")}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {prepared.rows.length > 10 && <p className="text-xs text-blue-100/60">{t("more", { count: prepared.rows.length - 10 })}</p>}
+                        </div>
+                    )}
                 </div>
 
-                <div className="absolute top-0 right-2 mt-4">
-                    <Button
-                        className="rounded-full bg-red-700 hover:bg-red-500 p-2"
-                        onClick={onClose}
-                    >
-                        <X size={16} className="text-white" />
+                <div className="flex items-center justify-end gap-3 border-t border-white/20 px-5 py-3">
+                    {busy === "saving" && prepared && (
+                        <span className="mr-auto text-sm text-blue-100/80">{t("saving", { done: progress, total: prepared.rows.length })}</span>
+                    )}
+                    <Button onClick={prepared ? reset : close} disabled={busy === "saving"} className="border border-white/40 bg-transparent text-blue-50 hover:bg-white/10">
+                        {prepared ? t("clearFile") : t("cancel")}
+                    </Button>
+                    <Button onClick={handleImport} disabled={!prepared || !!busy} className="bg-green-600 text-white hover:bg-green-700">
+                        {busy === "saving" ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                        {busy === "saving" ? t("importing") : t("confirm", { count: prepared?.rows.length ?? 0 })}
                     </Button>
                 </div>
-
-                {loading && <p className="text-blue-500 mt-4">Processing file...</p>}
-                {error && <p className="text-red-500 whitespace-pre-wrap mt-4">{error}</p>}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

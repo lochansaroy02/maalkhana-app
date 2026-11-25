@@ -12,6 +12,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
+import { itemCategoryLabel } from "@/utils/itemCategories";
+import { useLocale, useTranslations } from "next-intl";
+import { useFieldLabel } from "@/utils/useFieldLabel";
+import MediaCell from "./MediaCell";
 import { Button } from "./ui/button";
 
 interface ReportProps {
@@ -129,7 +133,12 @@ const reportFieldLabels: Record<string, string> = {
     depositDate: "Deposit Date",
     depositReason: "Deposit Reason",
     rackNo: "Rack No",
+    category: "Category",
+    malkhanaRackNo: "Malkhana Rack No",
 };
+
+/** Long free-text columns wrap onto several lines instead of stretching the table. */
+const isWrapColumn = (key: string) => /description|purpose|reason|caseproperty/i.test(key);
 
 const normalizeHeader = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -167,6 +176,8 @@ const knownReportKeys = [
     "depositDate",
     "depositReason",
     "rackNo",
+    "category",
+    "malkhanaRackNo",
 ];
 
 const resolveHeaderKey = (header: string) => {
@@ -230,7 +241,14 @@ const Report = ({
 
     // --- UTILITIES ---
 
+    const locale = useLocale();
+    const tr = useTranslations("ui.reportTable");
+    const fieldLabel = useFieldLabel();
+    // heading doubles as an id ("Malkhana Data" / "Seized Vehicles Report"); translate only for display
+    const headingLabel = heading === "Malkhana Data" ? tr("malkhanaHeading") : heading === "Seized Vehicles Report" ? tr("vehiclesHeading") : heading;
     const formatValue = (key: string, value: any) => {
+        // Saved as a key ("weapon"); older entries may hold free text.
+        if (key === "category") return value ? itemCategoryLabel(String(value), locale) || String(value) : "-";
 
         if (key.toLowerCase().includes("date") || key.toLowerCase().includes("returndate") || key.toLowerCase().includes("movedate")) {
             if (!value) return "-";
@@ -349,19 +367,19 @@ const Report = ({
 
     const handleDeleteSelected = async () => {
         if (selectedIds.length === 0) {
-            toast.error("No entries selected");
+            toast.error(tr("noneSelected"));
             return;
         }
         try {
-            if (!window.confirm("Are you sure you want to delete the selected entries?")) return;
+            if (!window.confirm(tr("confirmDelete"))) return;
 
             await axios.post("/api/entry/delete-multiple", { ids: selectedIds });
-            toast.success("Deleted successfully");
+            toast.success(tr("deleted"));
             setSelectedIds([]);
             fetchData && fetchData();
         } catch (error) {
             console.error("Delete error:", error);
-            toast.error("Error deleting entries");
+            toast.error(tr("deleteError"));
         }
     };
 
@@ -370,7 +388,7 @@ const Report = ({
         const selectedData = data.filter((item) => selectedIds.includes(item.id));
 
         if (selectedData.length === 0) {
-            toast.error("No entries selected");
+            toast.error(tr("noneSelected"));
             return;
         }
         // Vehicles are stored with dbName "v", which is what /api/barcode expects.
@@ -415,18 +433,8 @@ const Report = ({
     // =================================================================
     const renderCellContent = (key: string, value: any, entry: any) => {
         if (isFileUrlField(key, value)) {
-            return (
-                <a
-                    href={value}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(event) => event.stopPropagation()}
-                    className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
-                >
-                    <Download className="h-3.5 w-3.5" />
-                    Download
-                </a>
-            );
+            const ref = [entry?.firNo, entry?.srNo].filter(Boolean).join("-");
+            return <MediaCell url={value} label={[getHeaderLabel(key), ref].filter(Boolean).join(" ")} />;
         }
 
         let formattedValue = formatValue(key, value);
@@ -452,7 +460,7 @@ const Report = ({
 
     const handleExport = () => {
         if (selectedIds.length === 0) {
-            toast.error("No entries selected for export.");
+            toast.error(tr("noneSelected"));
             return;
         }
 
@@ -463,7 +471,7 @@ const Report = ({
             const rows = selectedData.map((item) => {
                 const row: Record<string, unknown> = {};
                 exportColumns.forEach((key) => {
-                    row[getHeaderLabel(key)] = isFileUrlField(key, item[key]) ? item[key] : formatValue(key, item[key]);
+                    row[fieldLabel(resolveHeaderKey(key), getHeaderLabel(key))] = isFileUrlField(key, item[key]) ? item[key] : formatValue(key, item[key]);
                 });
                 return row;
             });
@@ -471,7 +479,7 @@ const Report = ({
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Report");
             XLSX.writeFile(wb, `${heading.replace(/\s/g, "-")}-selected-report.xlsx`);
-            toast.success("Data exported successfully to XLSX.");
+            toast.success(tr("exported"));
             return;
         }
 
@@ -482,7 +490,7 @@ const Report = ({
                 const dbKey = exportMap[header];
                 //@ts-ignore
                 // Use the converted value for export if applicable
-                row[header] = isFileUrlField(dbKey, item[dbKey])
+                row[fieldLabel(dbKey, header)] = isFileUrlField(dbKey, item[dbKey])
                     ? item[dbKey]
                     : formatValue(dbKey, item[dbKey]);
             });
@@ -495,7 +503,7 @@ const Report = ({
 
         XLSX.writeFile(workbook, `${heading.replace(/\s/g, "-")}-selected-report.xlsx`);
 
-        toast.success("Data exported successfully to XLSX.");
+        toast.success(tr("exported"));
     };
 
     const handleSelectAll = () => {
@@ -547,7 +555,7 @@ const Report = ({
             <div className="flex justify-between items-center mt-4">
                 <div className="flex items-center space-x-2">
                     {/* Entries Per Page Dropdown */}
-                    <span className="text-white text-sm">Entries per page:</span>
+                    <span className="text-white text-sm">{tr("entriesPerPage")}</span>
                     <select
                         value={entriesPerPage}
                         onChange={(e) => {
@@ -570,7 +578,7 @@ const Report = ({
                         className="p-2 text-sm"
                         variant="outline"
                     >
-                        Previous
+                        {tr("previous")}
                     </Button>
 
                     {startPage > 1 && <span className="text-white">...</span>}
@@ -593,21 +601,11 @@ const Report = ({
                         className="p-2 text-sm"
                         variant="outline"
                     >
-                        Next
+                        {tr("next")}
                     </Button>
                 </nav>
                 <div className="text-white text-sm">
-                    Showing <span className="font-bold mx-1 ">
-                        {indexOfFirstEntry + 1}
-                    </span> to
-                    <span className="font-bold mx-1 ">
-                        {Math.min(indexOfLastEntry, sortedData.length)}
-                    </span>
-                    of
-                    <span className="font-bold mx-1 ">
-
-                        {sortedData.length}
-                    </span> entries
+                    {tr("showing", { from: indexOfFirstEntry + 1, to: Math.min(indexOfLastEntry, sortedData.length), total: sortedData.length })}
                 </div>
             </div>
         );
@@ -658,25 +656,25 @@ const Report = ({
     return (
         <div className="p-4 relative ">
             <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold text-white">{heading}</h1>
+                <h1 className="text-2xl font-bold text-white">{headingLabel}</h1>
                 {/* Year range filter moved to the report filter bar */}
                 <div className="flex gap-4 items-center">
 
                     {/* Kurtidev controls REMOVED */}
                     {onImportClick && <Button onClick={onImportClick}>
                         <Download />
-                        Import</Button>}
+                        {tr("import")}</Button>}
                     <Button onClick={handleExport}>
                         <Upload />
-                        Export</Button>
+                        {tr("export")}</Button>
                     <Button className="cursor-pointer" onClick={handleDeleteSelected} variant="destructive">
                         <Trash />
-                        Delete
+                        {tr("delete")}
                     </Button>
                     {selectedIds.length > 0 && (
                         <Button onClick={handleGenerateBarcodePDF} className="bg-green-600 cursor-pointer text-white hover:bg-green-700">
                             <Barcode />
-                            Barcode
+                            {tr("barcode")}
                         </Button>
                     )}
                 </div>
@@ -694,20 +692,20 @@ const Report = ({
                                         onChange={handleSelectAll}
                                     />
                                     <div className="text-xs mt-1 font-normal">
-                                        {selectedIds.length} Selected
+                                        {tr("selected", { count: selectedIds.length })}
                                     </div>
                                 </th>
-                                <th className="px-4 py-2 text-left capitalize">Sr. No.</th>
+                                <th className="px-4 py-2 text-left capitalize">{tr("srNo")}</th>
                                 {/* MODIFIED: Add conditional class for wider header */}
                                 {headerKeysToRender.map((item) => (
                                     <th
                                         key={item.key}
                                         className={`px-4 py-2 text-left capitalize cursor-pointer hover:bg-gray-600/50 transition duration-150 
-                                            ${item.key.toLowerCase().includes("description") ? 'min-w-[250px]' : ''} `}
+                                            ${isWrapColumn(item.key) ? 'min-w-[260px] max-w-[420px]' : ''} `}
                                         onClick={() => requestSort(item.key)}
                                     >
                                         <div className="flex items-center">
-                                            {item.header}
+                                            {fieldLabel(item.key, item.header)}
                                             {getSortIndicator(item.key)}
                                         </div>
                                     </th>
@@ -750,7 +748,7 @@ const Report = ({
                                                 key={finalKey}
                                                 className={`px-4 border border-black py-2 
                                                     ${shouldApplyKurtidevClass && isKurtidevCell(finalKey) ? 'font-kurtidev' : ''}
-                                                    ${finalKey.toLowerCase().includes("description") ? 'min-w-[250px] whitespace-normal' : 'whitespace-nowrap'}`}
+                                                    ${isWrapColumn(finalKey) ? 'min-w-[260px] max-w-[420px] whitespace-pre-line break-words align-top' : 'whitespace-nowrap'}`}
                                             >
                                                 {renderCellContent(finalKey, item[finalKey], item)}
                                             </td>
@@ -764,7 +762,7 @@ const Report = ({
             ) : (
                 <div className="h-80 flex items-center glass-effect justify-center w-full rounded-lg mt-4">
                     <div className="text-center">
-                        <h1 className="text-blue-100 text-2xl">{emptyState?.title ?? "No data available"}</h1>
+                        <h1 className="text-blue-100 text-2xl">{emptyState?.title ?? tr("noData")}</h1>
                         {emptyState?.hint && <p className="mt-2 text-blue-100/70">{emptyState.hint}</p>}
                     </div>
                 </div>

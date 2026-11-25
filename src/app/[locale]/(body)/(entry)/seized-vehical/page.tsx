@@ -5,7 +5,7 @@ import DatePicker from '@/components/ui/datePicker';
 import DropDown from '@/components/ui/DropDown';
 import { useAuthStore } from '@/store/authStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
-import { uploadToImageKit } from '@/utils/imagekit';
+import { uploadFile } from '@/utils/media';
 import { Trash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
@@ -13,6 +13,7 @@ import { LoaderIcon, toast } from 'react-hot-toast';
 
 const Page = () => {
     const t = useTranslations('seizedVehicleForm');
+    const tu = useTranslations("ui.forms");
     const baseKey = 'seizedVehicleForm';
     const tCommon = useTranslations('entry.malkhanaEntryForm');
     const { user } = useAuthStore();
@@ -78,7 +79,7 @@ const Page = () => {
         if (!file) return;
         setIsLoading(true);
         try {
-            const uploadedUrl = await uploadToImageKit(file, "seized-vehicle");
+            const uploadedUrl = await uploadFile(file, "seized-vehicle");
             SetPhotoUrl(uploadedUrl);
             toast.success(t('toasts.photoUploadSuccess') || "Photo Uploaded");
         } catch (err) {
@@ -213,7 +214,7 @@ const Page = () => {
     };
 
     const handleGetByFir = async () => {
-        if (!formData.firNo) return toast.error("Enter FIR No");
+        if (!formData.firNo) return toast.error(tu("enterFir"));
         setSearchResults([]);
         setSelectedResultId('');
         try {
@@ -228,7 +229,7 @@ const Page = () => {
                     setSelectedResultId(data[0].id || data[0]._id);
                 }
             } else {
-                toast.error("No records found");
+                toast.error(tu("noRecords"));
             }
         } catch (error) {
             toast.error(t('toasts.fetchFailed'));
@@ -236,13 +237,13 @@ const Page = () => {
     };
 
     const handleGetBySR = async () => {
-        if (!formData.srNo) return toast.error("Enter SR No");
+        if (!formData.srNo) return toast.error(tu("enterSr"));
         try {
             const response = await getBySR(user?.id, formData.srNo);
             if (response?.success && response.data) {
                 formFill(response.data);
             } else {
-                toast.error("Record not found");
+                toast.error(tu("notFound"));
             }
         } catch (error) {
             toast.error(t('toasts.fetchFailed'));
@@ -389,7 +390,7 @@ const Page = () => {
                 <div className='w-full mt-6'>
                     <div className='flex flex-row gap-4 items-start'>
                         <div className='w-1/2'>
-                            <label className='text-blue-100 block mb-2' htmlFor="photo">{"Vehicle Photo"}</label>
+                            <label className='text-blue-100 block mb-2' htmlFor="photo">{tu("vehiclePhoto")}</label>
                             <input
                                 ref={photoRef}
                                 className='text-blue-100 w-full rounded-xl glass-effect px-2 py-1 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue file:text-white hover:file:bg-blue/80'
@@ -401,7 +402,7 @@ const Page = () => {
                         <div className='relative w-40 h-40 group'>
                             {photoUrl && (
                                 <>
-                                    <img src={photoUrl} className='w-full h-full object-cover rounded-md border border-white/20' alt="Vehicle preview" />
+                                    <img src={photoUrl} className='w-full h-full object-cover rounded-md border border-white/20' alt={tu("vehiclePhoto")} />
                                     <Button
                                         onClick={() => { SetPhotoUrl(""); if (photoRef.current) photoRef.current.value = ''; }}
                                         className='absolute -top-2 -right-2 bg-red-600 hover:bg-red-500 p-2 h-8 w-8 rounded-full shadow-lg'

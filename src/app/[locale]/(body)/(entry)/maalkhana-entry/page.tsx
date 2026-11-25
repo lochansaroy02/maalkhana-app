@@ -10,12 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/store/authStore';
 import { useMaalkhanaStore } from '@/store/malkhana/maalkhanaEntryStore';
 import { convertUnicodeToKurtidev, kurtidevKeys } from '@/utils/font';
-import { uploadToImageKit } from '@/utils/imagekit';
+import { uploadFile } from '@/utils/media';
 import { Mic, Trash } from 'lucide-react';
 
 import { isNewFeaturePeriod } from '@/components/NewBadge';
 import { categoryForEntryType, isPlainCategorySpelling } from '@/utils/maalCategories';
-import { useTranslations } from 'next-intl';
+import { ITEM_CATEGORIES, itemCategoryOf, UNSET_CATEGORY } from '@/utils/itemCategories';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
 import SpeechRecognition, {
@@ -41,6 +42,8 @@ interface FormData {
     boxNo: number;
     courtNo: string;
     courtName: string;
+    category: string;
+    malkhanaRackNo: number | string;
 }
 
 const Page = () => {
@@ -50,6 +53,10 @@ const Page = () => {
     // --- End Speech Recognition Setup ---
 
     const t = useTranslations('entry');
+    const tSeized = useTranslations('seizedVehicleForm');
+    const tu = useTranslations("ui.forms");
+    const tc = useTranslations("ui.common");
+    const locale = useLocale();
     const baseKey = 'malkhanaEntryForm';
 
     const { user } = useAuthStore();
@@ -99,6 +106,8 @@ const Page = () => {
         boxNo: 0,
         courtNo: '',
         courtName: '',
+        category: '',
+        malkhanaRackNo: '',
     });
 
     useEffect(() => {
@@ -110,7 +119,7 @@ const Page = () => {
 
     const toggleListening = () => {
         if (!browserSupportsSpeechRecognition) {
-            toast.error("Sorry, your browser doesn't support speech recognition.");
+            toast.error(tu("speechUnsupported"));
             return;
         }
 
@@ -138,6 +147,8 @@ const Page = () => {
         value: key,
         label: t(`${baseKey}.statusOptions.${key}`)
     }));
+
+    const categoryOptions = ITEM_CATEGORIES.map(c => ({ value: c.key, label: locale === 'hi' ? c.hi : c.en }));
 
     const wineTypeOptions = [
         { value: 'desi', label: t(`${baseKey}.wineSection.options.desi`) },
@@ -167,6 +178,9 @@ const Page = () => {
             boxNo: data.boxNo || 0,
             courtNo: data.courtNo || '',
             courtName: data.courtName || '',
+            // older entries hold free text; map it to a dropdown key
+            category: itemCategoryOf(data.category) === UNSET_CATEGORY ? '' : itemCategoryOf(data.category),
+            malkhanaRackNo: data.malkhanaRackNo ?? '',
         });
 
         setStatus(data.status || '');
@@ -217,7 +231,7 @@ const Page = () => {
     const clearSpecificFields = () => {
         setFormData(prev => ({
             ...prev,
-            srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: 2025, policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: 0, courtNo: '', courtName: ''
+            srNo: '', gdNo: '', caseProperty: '', underSection: '', Year: 2025, policeStation: '', IOName: '', vadiName: '', HM: '', accused: '', place: '', boxNo: 0, courtNo: '', courtName: '', category: '', malkhanaRackNo: ''
         }));
         setStatus(''); setWine(0); setCash(0); setWineType(''); setYellowItemPrice(0); setDropdownSelection(''); setEntryType(''); setDescription('');
         // FIX 3 (cont.): Clear gdDate to undefined
@@ -247,7 +261,7 @@ const Page = () => {
         }
 
         // This existing logic correctly converts numeric fields from string input to number/empty string
-        if (['srNo', 'gdNo', 'Year', 'boxNo'].includes(field)) {
+        if (['srNo', 'gdNo', 'Year', 'boxNo', 'malkhanaRackNo'].includes(field)) {
             // Using Number(finalValue) allows '0' to be valid, but handles empty string gracefully.
             setFormData(prev => ({ ...prev, [field]: finalValue === '' ? '' : Number(finalValue) }));
         } else {
@@ -299,7 +313,7 @@ const Page = () => {
                     populateForm(dataArray[0]);
                     setSelectedSrNo(String(dataArray[0].srNo));
                 } else {
-                    toast.success(`multiple Entries Found`);
+                    toast.success(tu("multipleFound"));
                 }
             } else {
                 setFirData([]);
@@ -319,7 +333,7 @@ const Page = () => {
         if (!file) return;
         setLoading(true);
         try {
-            const uploadedUrl = await uploadToImageKit(file, "malkhana-entry");
+            const uploadedUrl = await uploadFile(file, "malkhana-entry");
             SetPhotoUrl(uploadedUrl);
             toast.success(t(`${baseKey}.toasts.photoUploadSuccess`));
         } catch (err) {
@@ -372,11 +386,11 @@ const Page = () => {
                 toast.success(isUpdate ? "Updated Entry" : t(`${baseKey}.toasts.newEntryWithNewSrNo`));
                 clearForm();
             } else {
-                toast.error("cant added entry");
+                toast.error(tu("addFailed"));
             }
         } catch (error) {
             console.error("Save licensed weapon error:", error);
-            toast.error("Error while saving entry");
+            toast.error(tu("saveError"));
         } finally {
             setLoading(false);
         }
@@ -449,6 +463,8 @@ const Page = () => {
                 description,
                 yellowItemPrice: Number(yellowItemPrice),
                 gdNo: formData.gdNo ? Number(formData.gdNo) : 0, // Ensure gdNo is also a number
+                category: formData.category.trim() || null,
+                malkhanaRackNo: formData.malkhanaRackNo === '' ? null : Number(formData.malkhanaRackNo),
                 // FIX 5: CRUCIAL - Only send gdDate if it is a valid Date object (not undefined)
                 gdDate: dateFields.gdDate instanceof Date && !isNaN(dateFields.gdDate.getTime())
                     ? dateFields.gdDate.toISOString()
@@ -464,7 +480,7 @@ const Page = () => {
                 response = await updateMalkhanaEntry(existingId, fullData);
 
                 if (response) {
-                    toast.success("Updated Entry");
+                    toast.success(tu("updated"));
                 }
             } else if (String(currentSrNo) !== originalSrNo || !existingId) {
                 // CREATE NEW: existingId is present but SR No changed (implying a new entry) 
@@ -477,7 +493,7 @@ const Page = () => {
                 // CREATE NEW: No existingId (brand new entry) - Fallback for clarity
                 response = await addMaalkhanaEntry(fullData);
                 if (response) {
-                    toast.success("entry added with new SR No ");
+                    toast.success(tu("addedNewSr"));
                 }
             }
 
@@ -485,11 +501,11 @@ const Page = () => {
                 clearForm();
             } else {
                 // Use a more specific error from the backend if available
-                toast.error("cant added entry");
+                toast.error(tu("addFailed"));
             }
         } catch (error) {
             console.error("Save error:", error);
-            toast.error(t(`Error while saving entry `));
+            toast.error(tu("saveError"));
         } finally {
             setLoading(false);
         }
@@ -497,13 +513,13 @@ const Page = () => {
 
 
     const fieldKeyMap: { [key: string]: string } = {
-        firNo: 'firNo', srNo: 'srNo', caseProperty: 'caseProperty', gdNo: 'gdNo', gdDate: 'gdDate', Year: 'year', policeStation: 'policeStation', IOName: 'ioName', vadiName: 'vadiName', status: 'status', HM: 'hm', accused: 'accused', underSection: 'underSection', description: 'description', place: 'place', boxNo: 'boxNo', courtNo: 'courtNo', courtName: 'courtName'
+        firNo: 'firNo', srNo: 'srNo', caseProperty: 'caseProperty', gdNo: 'gdNo', gdDate: 'gdDate', Year: 'year', policeStation: 'policeStation', IOName: 'ioName', vadiName: 'vadiName', status: 'status', HM: 'hm', accused: 'accused', underSection: 'underSection', description: 'description', place: 'place', boxNo: 'boxNo', category: 'category', malkhanaRackNo: 'malkhanaRackNo', courtNo: 'courtNo', courtName: 'courtName'
     };
 
     const fields = Object.keys(fieldKeyMap).map(fieldName => ({
         name: fieldName,
         label: t(`${baseKey}.fields.${fieldKeyMap[fieldName]}`),
-        type: (fieldName === 'gdDate') ? 'date' : (fieldName === 'status') ? 'dropdown' : (fieldName === 'description') ? 'textarea' : ['srNo', 'gdNo', 'Year', 'boxNo'].includes(fieldName) ? 'number' : 'text',
+        type: (fieldName === 'gdDate') ? 'date' : (fieldName === 'status') ? 'dropdown' : (fieldName === 'description') ? 'textarea' : ['srNo', 'gdNo', 'Year', 'boxNo', 'malkhanaRackNo'].includes(fieldName) ? 'number' : 'text',
         options: (fieldName === 'status') ? statusOptions : undefined
     }));
 
@@ -543,18 +559,7 @@ const Page = () => {
                     </div>
 
                 </div>
-                <div className='my-2 '>
-                    <h1 className='text-blue-100/60'>
-                        Current Status : <span className='text-blue-100'>
-                            {status}
-                        </span>
-                    </h1>
-                    <h1 className='text-blue-100/60'>
-                        Current Entry Type : <span className='text-blue-100'>
-                            {currentEntryType}
-                        </span>
-                    </h1>
-                </div>
+             
 
 
                 {isLicensedWeapon && <LicenseWeaponForm value={licenseData} onChange={setLicenseData} />}
@@ -602,6 +607,9 @@ const Page = () => {
                         }
                         // --- CHANGED LOGIC END ---
 
+                        if (field.name === 'category') {
+                            return <DropDown key={field.name} label={field.label} selectedValue={formData.category} options={categoryOptions} handleSelect={(v) => handleInputChange('category', v)} />;
+                        }
                         if (field.type === 'dropdown') {
                             return <DropDown key={field.name} label={field.label} selectedValue={status} options={field.options || []} handleSelect={setStatus} />;
                         }
@@ -654,7 +662,7 @@ const Page = () => {
                         );
                     })}
                     {status === 'other' && (
-                        <InputComponent label='Other Status' setInput={(e) => setOtherStatus(e.target.value)} value={otherStatus} />
+                        <InputComponent label={tSeized('options.status.otherStatus')} setInput={(e) => setOtherStatus(e.target.value)} value={otherStatus} />
                     )}
                 </div>
 
@@ -671,7 +679,7 @@ const Page = () => {
 
                             }} className='absolute right-0 bg-red-800 hover:bg-red-500 cursor-pointer'><Trash /></Button>}
                             {photoUrl && <img src={photoUrl} className='rounded-md 
-                            border' alt="upload preview" />}
+                            border' alt={tc("preview")} />}
                         </div>
                     </div>
                 </div>

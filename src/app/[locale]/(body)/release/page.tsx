@@ -6,7 +6,7 @@ import DatePicker from '@/components/ui/datePicker';
 import DropDown from '@/components/ui/DropDown';
 import { useAuthStore } from '@/store/authStore';
 import { useReleaseStore } from '@/store/releaseStore';
-import { uploadToImageKit } from '@/utils/imagekit';
+import { uploadFile } from '@/utils/media';
 import axios from 'axios';
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
@@ -183,12 +183,12 @@ const Page = () => {
         try {
             let releasePhotoUrl = "";
             if (photoRef.current?.files?.[0]) {
-                releasePhotoUrl = await uploadToImageKit(photoRef.current.files[0], "photo");
+                releasePhotoUrl = await uploadFile(photoRef.current.files[0], "photo");
             }
 
             let releaseDocumentUrl = "";
             if (documentRef.current?.files?.[0]) {
-                releaseDocumentUrl = await uploadToImageKit(documentRef.current.files[0], "doc");
+                releaseDocumentUrl = await uploadFile(documentRef.current.files[0], "doc");
             }
 
             const updateData = {
@@ -233,7 +233,7 @@ const Page = () => {
         label: t(`options.type.${key}`)
     }));
 
-    const unclaimedOptions = [{ value: 'unclaimed', label: "Unclaimed" }];
+    const unclaimedOptions = [{ value: 'unclaimed', label: t('labels.unclaimed') }];
 
     const fields = [
         { name: "releaseItemName", label: `${t('labels.releaseItemName')} *` },

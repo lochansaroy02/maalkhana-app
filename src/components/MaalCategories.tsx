@@ -1,6 +1,7 @@
 "use client";
 
 import { exportItemsToExcel, exportItemsToPDF, ExportColumn } from "@/utils/exportCategoryItems";
+import { ITEM_CATEGORY_BUCKETS, itemCategoryLabel, UNSET_CATEGORY } from "@/utils/itemCategories";
 import { ENTRY_TYPE_CATEGORIES, ITEM_STATUS_KEYS, isPlainCategorySpelling, MaalCategoryKey } from "@/utils/maalCategories";
 import axios from "axios";
 import { FileSpreadsheet, FileText, Layers, Loader2, X } from "lucide-react";
@@ -15,7 +16,7 @@ interface CategoryItem {
     firNo: string;
     srNo: string;
     malkhanaNo: string;
-    category: MaalCategoryKey;
+    category: string;
     entryType: string;
     description: string;
     statusKey: string;
@@ -40,6 +41,9 @@ const fieldClass =
     "h-10 rounded-lg border border-white/30 bg-white/10 px-3 text-sm text-blue-100 placeholder:text-blue-100/50 " +
     "focus:outline-none focus:ring-2 focus:ring-blue-300/60 [color-scheme:dark] [&>option]:bg-blue [&>option]:text-blue-100";
 
+/** "entryType": one chip per entry type; "category": one chip per item category (श्रेणी). */
+type GroupBy = "entryType" | "category";
+
 const buildParams = (scope: Record<string, string | undefined>, category: string, filters: Filters, extra: Record<string, string>) => {
     const params = new URLSearchParams();
     Object.entries(scope).forEach(([k, v]) => v && params.set(k, v));
@@ -49,31 +53,39 @@ const buildParams = (scope: Record<string, string | undefined>, category: string
     return params.toString();
 };
 
-/** Translated label for a category key (reuses the entry-type dropdown labels). */
-const useCategoryLabel = () => {
+/** Translated label for a group key (entry types reuse the entry-type dropdown labels). */
+const useCategoryLabel = (by: GroupBy) => {
     const tType = useTranslations("entry.malkhanaEntryForm.entryType.options");
-    return (key: MaalCategoryKey) => tType(key);
+    const t = useTranslations("categories");
+    const locale = useLocale();
+    return (key: string) => by === "category"
+        ? (key === UNSET_CATEGORY ? t("unset") : itemCategoryLabel(key, locale))
+        : tType(key as MaalCategoryKey);
 };
+
+const groupKeys = (by: GroupBy): string[] => (by === "category" ? ITEM_CATEGORY_BUCKETS : [...ENTRY_TYPE_CATEGORIES]);
 
 // ----------------------------------------------------------------- modal
 
 const CategoryModal = ({
+    by,
     initialCategory,
     scope,
     counts,
     onClose,
 }: {
-    initialCategory: MaalCategoryKey;
+    by: GroupBy;
+    initialCategory: string;
     scope: Record<string, string | undefined>;
     counts: Record<string, number>;
     onClose: () => void;
 }) => {
     const t = useTranslations("categories");
     const locale = useLocale();
-    const categoryLabel = useCategoryLabel();
+    const categoryLabel = useCategoryLabel(by);
     const nf = new Intl.NumberFormat(locale === "hi" ? "hi-IN" : "en-IN");
 
-    const [category, setCategory] = useState<MaalCategoryKey>(initialCategory);
+    const [category, setCategory] = useState<string>(initialCategory);
     const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -99,7 +111,7 @@ const CategoryModal = ({
         let cancelled = false;
         setLoading(true);
         axios
-            .get(`/api/report/categories?${buildParams(scope, category, activeFilters, { page: String(page), pageSize: String(PAGE_SIZE) })}`)
+            .get(`/api/report/categories?${buildParams({ ...scope, by: by === "category" ? "category" : undefined }, category, activeFilters, { page: String(page), pageSize: String(PAGE_SIZE) })}`)
             .then((res) => {
                 if (cancelled) return;
                 setItems(res.data.items || []);
@@ -123,7 +135,7 @@ const CategoryModal = ({
     const statusLabel = (key: string) => (ITEM_STATUS_KEYS as readonly string[]).includes(key) ? t(`statuses.${key}`) : key;
     // For "other", show the custom text the user typed when adding the entry.
     const rowCategory = (item: CategoryItem) =>
-        !isPlainCategorySpelling(item.entryType)
+        by === "entryType" && !isPlainCategorySpelling(item.entryType)
             ? `${categoryLabel(item.category)} · ${item.entryType}`
             : categoryLabel(item.category);
 
@@ -142,7 +154,7 @@ const CategoryModal = ({
         if (exporting) return;
         setExporting(kind);
         try {
-            const res = await axios.get(`/api/report/categories?${buildParams(scope, category, activeFilters, { all: "1" })}`);
+            const res = await axios.get(`/api/report/categories?${buildParams({ ...scope, by: by === "category" ? "category" : undefined }, category, activeFilters, { all: "1" })}`);
             const rows = (res.data.items as CategoryItem[]).map((i) => ({
                 ...i,
                 categoryLabel: rowCategory(i),
@@ -230,12 +242,12 @@ const CategoryModal = ({
                         aria-label={t("category")}
                         value={category}
                         onChange={(e) => {
-                            setCategory(e.target.value as MaalCategoryKey);
+                            setCategory(e.target.value);
                             setFilter("subType", "");
                         }}
                         className={fieldClass}
                     >
-                        {ENTRY_TYPE_CATEGORIES.map((c) => (
+                        {groupKeys(by).filter((c) => c !== UNSET_CATEGORY || counts[c] > 0).map((c) => (
                             <option key={c} value={c}>{categoryLabel(c)} ({nf.format(counts[c] || 0)})</option>
                         ))}
                     </select>
@@ -313,23 +325,28 @@ const CategoryModal = ({
 // ----------------------------------------------------------------- chips
 
 /**
- * Category chip bar, one chip per entry type. Pass userId for a
- * police-station view, or nothing for the district/admin view.
+ * Category chip bar: one chip per entry type (default) or, with
+ * by="category", one per item category. Pass userId for a police-station
+ * view, or nothing for the district/admin view.
  */
-const MaalCategories = ({ userId }: { userId?: string }) => {
+const MaalCategories = ({ userId, by = "entryType" }: { userId?: string; by?: GroupBy }) => {
     const t = useTranslations("categories");
     const locale = useLocale();
-    const categoryLabel = useCategoryLabel();
+    const categoryLabel = useCategoryLabel(by);
     const nf = new Intl.NumberFormat(locale === "hi" ? "hi-IN" : "en-IN");
     const [counts, setCounts] = useState<Record<string, number> | null>(null);
-    const [open, setOpen] = useState<MaalCategoryKey | null>(null);
+    const [open, setOpen] = useState<string | null>(null);
+    const keys = groupKeys(by);
     const scope = { userId };
 
     useEffect(() => {
         // Ignore stale responses when userId changes (e.g. after auth rehydrates).
         let cancelled = false;
         setCounts(null);
-        const qs = userId ? `?userId=${encodeURIComponent(userId)}` : "";
+        const params = new URLSearchParams();
+        if (userId) params.set("userId", userId);
+        if (by === "category") params.set("by", "category");
+        const qs = params.toString() ? `?${params}` : "";
         axios
             .get(`/api/report/categories${qs}`)
             .then((res) => !cancelled && setCounts(res.data.counts || {}))
@@ -340,18 +357,18 @@ const MaalCategories = ({ userId }: { userId?: string }) => {
         return () => {
             cancelled = true;
         };
-    }, [userId]);
+    }, [userId, by]);
 
     return (
-        <div id="maal-categories" className={`glass-effect mb-4 flex scroll-mt-4 flex-wrap items-center gap-2 px-4 py-3 transition-shadow ${isNewFeaturePeriod() ? "ring-1 ring-amber-300/60 shadow-[0_0_18px_rgba(251,191,36,0.25)]" : ""}`}>
+        <div id={by === "category" ? "item-categories" : "maal-categories"} className={`glass-effect mb-4 flex scroll-mt-4 flex-wrap items-center gap-2 px-4 py-3 transition-shadow ${isNewFeaturePeriod() ? "ring-1 ring-amber-300/60 shadow-[0_0_18px_rgba(251,191,36,0.25)]" : ""}`}>
             <span className="mr-1 flex items-center gap-2 text-sm font-semibold text-blue-100">
                 <span className="h-5 border-l-4 border-maroon" />
-                <Layers size={16} /> {t("title")}:
+                <Layers size={16} /> {by === "category" ? t("itemTitle") : t("title")}:
                 <NewBadge />
             </span>
             {counts === null
-                ? ENTRY_TYPE_CATEGORIES.map((c) => <span key={c} className="h-8 w-24 animate-pulse rounded-lg bg-white/10" />)
-                : ENTRY_TYPE_CATEGORIES.map((c) => (
+                ? keys.map((c) => <span key={c} className="h-8 w-24 animate-pulse rounded-lg bg-white/10" />)
+                : keys.filter((c) => c !== UNSET_CATEGORY || (counts[c] || 0) > 0).map((c) => (
                     <button
                         key={c}
                         onClick={() => setOpen(c)}
@@ -363,7 +380,7 @@ const MaalCategories = ({ userId }: { userId?: string }) => {
                 ))}
             {/* Portal: ancestors use backdrop-filter, which would otherwise trap position:fixed */}
             {open && typeof document !== "undefined" && createPortal(
-                <CategoryModal initialCategory={open} scope={scope} counts={counts || {}} onClose={() => setOpen(null)} />,
+                <CategoryModal by={by} initialCategory={open} scope={scope} counts={counts || {}} onClose={() => setOpen(null)} />,
                 document.body
             )}
         </div>

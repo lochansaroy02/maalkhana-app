@@ -28,13 +28,15 @@ export const matchesActivity = (row: Row, activity: string) => {
     }
 };
 
-export const STATUS_KEYS = ["pending", "released", "destroy", "nilami", "auctioned", "onCourt", "other"] as const;
+export const STATUS_KEYS = ["pending", "movement", "released", "destroy", "nilami", "auctioned", "onCourt", "other"] as const;
 
 export const matchesStatus = (row: Row, filter: string) => {
     const status = norm(row.status);
     const f = norm(filter);
     if (status === f) return true;
     switch (f) {
+        case "movement":
+            return row.isMovement === true;
         case "released":
             return row.isRelease === true || Boolean(row.releaseDate);
         case "nilami":

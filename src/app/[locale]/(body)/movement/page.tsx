@@ -9,7 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import type { MovementEntry } from "@/store/movementStore";
 import { useMovementStore } from "@/store/movementStore";
 import { useSeizedVehicleStore } from "@/store/siezed-vehical/seizeStore";
-import { uploadToImageKit } from "@/utils/imagekit";
+import { uploadFile } from "@/utils/media";
 import { LoaderIcon, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import React, { useEffect, useRef, useState } from "react";
@@ -17,6 +17,7 @@ import toast from "react-hot-toast";
 
 const Page: React.FC = () => {
     const t = useTranslations('malkhanaMovementForm');
+    const tc = useTranslations("ui.common");
 
     // --- STATE MANAGEMENT ---
     const { user } = useAuthStore();
@@ -27,7 +28,8 @@ const Page: React.FC = () => {
     const [isFetching, setIsFetching] = useState(false);
     const [existingEntryId, setExistingEntryId] = useState<string | null>(null);
 
-    const [type, setType] = useState<string>("");
+    // Vehicles can only be released or auctioned, so this page is Malkhana only.
+    const [type, setType] = useState<string>("malkhana");
     const [searchFirNo, setSearchFirNo] = useState("");
     const [searchSrNo, setSearchSrNo] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -110,7 +112,7 @@ const Page: React.FC = () => {
     };
 
     const resetAll = () => {
-        setIsLoading(false); setIsFetching(false); setExistingEntryId(null); setType(''); setSearchFirNo(''); setSearchSrNo(''); setSearchResults([]); setSelectedResultId('');
+        setIsLoading(false); setIsFetching(false); setExistingEntryId(null); setType('malkhana'); setSearchFirNo(''); setSearchSrNo(''); setSearchResults([]); setSelectedResultId('');
         setFormData({ srNo: "", name: "", moveDate: "", policeStation: "", firNo: "", underSection: "", takenOutBy: "", moveTrackingNo: "", movePurpose: "", receivedBy: "", returnDate: "", });
         setDateFields({ moveDate: new Date(), returnDate: new Date() });
         setReturnBackFrom(""); setCaseProperty(""); setIsReturned(false);
@@ -163,12 +165,12 @@ const Page: React.FC = () => {
         let documentUrl = undefined;
 
         if (photoRef.current?.files?.[0]) {
-            photoUrl = await uploadToImageKit(photoRef.current.files[0], "movement-data");
+            photoUrl = await uploadFile(photoRef.current.files[0], "movement-data");
             if (!photoUrl) throw new Error("Photo upload failed");
         }
 
         if (documentRef.current?.files?.[0]) {
-            documentUrl = await uploadToImageKit(documentRef.current.files[0], "movement-docs");
+            documentUrl = await uploadFile(documentRef.current.files[0], "movement-docs");
             if (!documentUrl) throw new Error("Document upload failed");
         }
 
@@ -209,7 +211,7 @@ const Page: React.FC = () => {
             }
         } catch (error) {
             console.error("Save error:", error);
-            toast.error("Failed to upload files or save data.");
+            toast.error(tc("uploadFailed"));
         } finally {
             setIsLoading(false);
         }
@@ -227,7 +229,7 @@ const Page: React.FC = () => {
         { name: "receivedBy", label: t('labels.receivedBy') },
     ];
 
-    const typeOptions = Object.keys(t.raw('options.type')).map(key => ({
+    const typeOptions = Object.keys(t.raw('options.type')).filter(key => key !== 'seizedVehicle').map(key => ({
         value: key,
         label: t(`options.type.${key}`)
     }));
@@ -311,7 +313,7 @@ const Page: React.FC = () => {
                                     <input ref={photoRef} onChange={(e) => handleFileChange(e, 'photo')} className="text-blue-100 rounded-xl glass-effect px-2 py-1" type="file" accept="image/*" />
                                     {photoPreview && (
                                         <div className="relative mt-2 w-32 h-32 rounded-lg overflow-hidden border border-white/20">
-                                            <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                            <img src={photoPreview} alt={tc("preview")} className="w-full h-full object-cover" />
                                             <button onClick={() => clearPreview('photo')} className="absolute top-1 right-1 bg-black/50 rounded-full text-red-500 hover:text-red-400">
                                                 <XCircle size={20} />
                                             </button>
@@ -326,9 +328,9 @@ const Page: React.FC = () => {
                                     {documentPreview && (
                                         <div className="relative mt-2 w-32 h-32 rounded-lg overflow-hidden border border-white/20 flex items-center justify-center bg-white/5">
                                             {documentRef.current?.files?.[0]?.type === 'application/pdf' ? (
-                                                <div className="text-xs text-center p-2 text-cream">PDF File Selected</div>
+                                                <div className="text-xs text-center p-2 text-cream">{tc("pdfSelected")}</div>
                                             ) : (
-                                                <img src={documentPreview} alt="Doc Preview" className="w-full h-full object-cover" />
+                                                <img src={documentPreview} alt={tc("preview")} className="w-full h-full object-cover" />
                                             )}
                                             <button onClick={() => clearPreview('document')} className="absolute top-1 right-1 bg-black/50 rounded-full text-red-500 hover:text-red-400">
                                                 <XCircle size={20} />

@@ -46,3 +46,4 @@ bhadoi-data.json
 next-env.d.ts
 
 /src/generated/prisma
+prisma/.dummy-seed-ids.json
