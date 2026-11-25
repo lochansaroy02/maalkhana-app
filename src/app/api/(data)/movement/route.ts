@@ -1,5 +1,6 @@
 // app/api/movement/route.ts
 import { prisma } from "@/lib/prisma";
+import { convertMalkhanaDataTypes } from "@/utils/entryDataTypes";
 import { NextRequest, NextResponse } from "next/server";
 
 
@@ -120,7 +121,8 @@ export const PUT = async (req: NextRequest) => {
         const id = searchParams.get("id");
         const type = searchParams.get("type")
         const body = await req.json();
-        const { ...movementData } = body;
+        const { id: _ignoredId, ...rest } = body;
+        const movementData = convertMalkhanaDataTypes(rest);
 
         if (!id) {
             return NextResponse.json({ success: false, message: "FIR No. is required" }, { status: 400 });

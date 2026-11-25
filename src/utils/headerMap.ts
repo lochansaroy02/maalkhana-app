@@ -113,7 +113,7 @@ export const sre = {
 
 export const mirzapur = {
     "FirNo": "firNo",
-    "क्र0स0": "srNo",
+    "srNo": "srNo",
     "दाखिल मालखाना (ENTRY TYPE)": "entryType",
     "case property": "caseProperty",
     "धारा": "underSection",
@@ -194,7 +194,7 @@ export const baghpat = {
     "caseProperty": "caseProperty",
     "underSection": "underSection",
     "policeStation": "policeStation",
-    "Year": "Year",
+    "year": "Year",
     "gdNo": "gdNo",
     "gdDate": "gdDate",
     "description": "description",

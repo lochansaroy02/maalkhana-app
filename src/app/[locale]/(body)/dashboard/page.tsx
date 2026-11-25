@@ -1,6 +1,8 @@
 "use client";
 
+import MaalCategories from "@/components/MaalCategories";
 import ReportCard from "@/components/ReportCard";
+import WhatsNewBanner from "@/components/WhatsNewBanner";
 import { useAuthStore } from "@/store/authStore";
 import { useTotalEntriesStore } from "@/store/dashboardStore";
 import { useDistrictStore } from "@/store/districtStore";
@@ -105,6 +107,20 @@ const Page = () => {
             </div>
 
             <div className="p-6">
+                {/* Highlights for newly added features */}
+                <WhatsNewBanner
+                    onShowCategories={() => {
+                        const el = document.getElementById("maal-categories");
+                        if (!el) return;
+                        el.scrollIntoView({ behavior: "smooth", block: "center" });
+                        el.classList.add("animate-pulse");
+                        setTimeout(() => el.classList.remove("animate-pulse"), 2400);
+                    }}
+                />
+
+                {/* Property categories, one per entry type */}
+                <MaalCategories userId={user?.role === "policeStation" ? user?.id : userId || undefined} />
+
                 {/* Global Stats Grid */}
                 <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 gap-4">
                     {loading ? (

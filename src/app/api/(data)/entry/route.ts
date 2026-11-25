@@ -1,54 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { convertMalkhanaDataTypes } from "@/utils/entryDataTypes";
 import { NextRequest, NextResponse } from "next/server";
 
 
 
-// Helper function to handle type conversion based on the schema
-const convertDataTypes = (data: any) => {
-    const convertedData = { ...data };
-
-    // Fields that should be numbers (Int in Prisma schema)
-    const numberFields = [
-        "wine", "srNo", "gdNo", "Year", "boxNo", "cash", "yellowItemPrice"
-    ];
-
-    // Fields that should be booleans
-    const booleanFields = [
-        "isReturned", "isMovement", "isRelease"
-    ];
-
-    // Convert number fields
-    numberFields.forEach(field => {
-        if (typeof convertedData[field] === "string" && convertedData[field] !== "") {
-            const parsed = parseInt(convertedData[field], 10);
-            if (!isNaN(parsed)) {
-                convertedData[field] = parsed;
-            } else {
-                // If parsing fails, set to null to match schema 'Int?'
-                convertedData[field] = null;
-            }
-        }
-    });
-
-    // Convert boolean fields
-    booleanFields.forEach(field => {
-        if (typeof convertedData[field] === "string") {
-            convertedData[field] = convertedData[field].toLowerCase() === "true";
-        }
-    });
-
-    // Handle string conversion for 'firNo' to avoid 'null' string
-    if (convertedData.firNo === null || convertedData.firNo === "null") {
-        convertedData.firNo = null;
-    }
-
-    // Handle string conversion for 'releaseOrderedBy' to avoid 'null' string
-    if (convertedData.releaseOrderedBy === null || convertedData.releaseOrderedBy === "null") {
-        convertedData.releaseOrderedBy = null;
-    }
-
-    return convertedData;
-};
+// Shared with the movement PUT handler.
+const convertDataTypes = convertMalkhanaDataTypes;
 
 export const POST = async (req: NextRequest) => {
     try {
@@ -117,7 +74,9 @@ export const PUT = async (req: NextRequest) => {
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
         const body = await req.json();
-        const { ...data } = body;
+        // Drop the id so a stray id in the body can never rewrite the primary key.
+        const { id: _ignoredId, ...rest } = body;
+        const data = convertMalkhanaDataTypes(rest);
 
         if (!id) {
             return NextResponse.json({ success: false, message: "FIR No. is required" }, { status: 400 });

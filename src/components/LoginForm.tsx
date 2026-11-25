@@ -7,10 +7,14 @@ import toast from 'react-hot-toast';
 import { Button } from './ui/button';
 import DropDown from './ui/DropDown';
 import { Input } from './ui/input';
+// Optional: Using Lucide icons for an elegant eye icon. 
+// If you don't have lucide-react installed, you can replace them with text like "Show"/"Hide".
+import { Eye, EyeOff } from 'lucide-react';
 
 const LoginForm = () => {
     const [email, setEmail] = useState<string>("");
     const [password, setPassword] = useState<string>("");
+    const [showPassword, setShowPassword] = useState<boolean>(false);
     // Default role is "Police Station", user can change it via the dropdown
     const [role, setRole] = useState<string>("Police Station");
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -67,10 +71,29 @@ const LoginForm = () => {
                 <label className='text-blue-100' htmlFor="email">Email</label>
                 <Input id="email" type="email" className='text-blue-100' value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
+
             <div className='flex flex-col gap-2'>
                 <label className='text-blue-100' htmlFor="password">Password</label>
-                <Input id="password" type="password" className='text-blue-100' value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <div className="relative w-full flex items-center">
+                    <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        className='text-blue-100 pr-10 w-full'
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 text-blue-100/70 hover:text-blue-100 focus:outline-none cursor-pointer"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                </div>
             </div>
+
             <div className='flex justify-center mt-2'>
                 <Button type="submit" className='bg-blue cursor-pointer w-full' disabled={isLoading}>
                     {isLoading ? "Logging in..." : "Login"}

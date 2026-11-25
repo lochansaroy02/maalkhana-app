@@ -11,12 +11,15 @@ export async function GET(req: NextRequest) {
         const srNo = searchParams.get("srNo");
         const userId = searchParams.get("userId");
 
-        if (!dbName || !firNo || !userId) {
+        // Licensed-weapon and unclaimed entries have no FIR; their labels encode
+        // "m--<srNo>", so an empty firNo is allowed when srNo is present.
+        if (!dbName || !userId || (!firNo && !srNo)) {
             return NextResponse.json(
-                { success: false, error: "Missing required parameters: userID , dbName and firNo" },
+                { success: false, error: "Missing required parameters: userID , dbName and firNo or srNo" },
                 { status: 400 }
             );
         }
+        const firFilter = firNo ? { firNo: String(firNo) } : { OR: [{ firNo: null }, { firNo: "" }] };
 
         let data = null;
 
@@ -25,7 +28,7 @@ export async function GET(req: NextRequest) {
                 if (srNo && srNo.length > 0) {
                     data = await prisma.malkhanaEntry.findMany({
                         where: {
-                            firNo: String(firNo), srNo: Number(srNo),
+                            ...firFilter, srNo: Number(srNo),
                             userId
                         },
                     });

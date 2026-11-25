@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/authStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
+import { useBarcodeLabels } from "@/utils/useBarcodeLabels";
 import { useState } from "react";
 
 // Helper Component for Checkbox Row (Optional, but cleaner)
@@ -37,6 +38,7 @@ const page = () => {
     // Main array for items added to the barcode generation list
     const [data, setData] = useState<any[]>([])
     const { user } = useAuthStore()
+    const barcodeLabels = useBarcodeLabels();
     const { getByFIR } = useMaalkhanaStore()
 
     // State to hold multiple search results for selection
@@ -133,7 +135,7 @@ const page = () => {
             from: "",
             to: ""
         }
-        await generateBarcodePDF(data, "m", year, user?.policeStation,);
+        await generateBarcodePDF(data, "m", year, user?.policeStation, undefined, barcodeLabels);
 
     }
     return (

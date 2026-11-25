@@ -140,12 +140,12 @@ const Page = () => {
             const updateData = {
                 destroyOrderedBy: formData.destroyOrderedBy,
                 destroyPurpose: formData.destroyPurpose,
-                photoUrl,
-                documentUrl,
+                destroyPhotoUrl: photoUrl,
+                destroyDocumentUrl: documentUrl,
             };
 
             // Call the dedicated destroy store function
-            const success = await updateDestroyEntry(existingId, updateData);
+            const success = await updateDestroyEntry(existingId, updateData, type);
 
             if (success) {
                 toast.success(t('toasts.updateSuccess'));

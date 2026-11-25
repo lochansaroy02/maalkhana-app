@@ -4,17 +4,15 @@ import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
 import { useSearchStore } from "@/store/searchStore";
 import { convertUnicodeToKurtidev, isLikelyKurtidev, kurtidevKeys } from "@/utils/font"; // Assuming convertUnicodeToKurtidev and isLikelyKurtidev are now correctly exported from "@/utils/font"
 import { generateBarcodePDF } from "@/utils/generateBarcodePDF";
+import { useBarcodeLabels } from "@/utils/useBarcodeLabels";
 import { exportMap, orderedKeys } from "@/utils/map";
 import axios from "axios";
 import { Barcode, ChevronDown, ChevronUp, Download, Trash, Upload } from "lucide-react"; // Import for sort icons
-import Image from "next/image";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { Button } from "./ui/button";
-import DropDown from "./ui/DropDown";
 
 interface ReportProps {
     data: any[];
@@ -23,6 +21,10 @@ interface ReportProps {
     onImportClick?: () => void;
     fetchData?: () => void;
     headers?: string[];
+    /** Shown instead of "No data available" when filters hide every row. */
+    emptyState?: { title: string; hint?: string };
+    /** Export these columns (labels from the table) instead of the default export map. */
+    exportColumns?: string[];
 }
 
 // =================================================================
@@ -63,6 +65,134 @@ const isEntryInLegacyYearRange = (entry: any): boolean => {
 // =================================================================
 // -----------------------------------------------------------------
 
+const reportFieldLabels: Record<string, string> = {
+    firNo: "FIR No",
+    srNo: "Sr No",
+    gdNo: "GD No",
+    gdDate: "GD Date",
+    underSection: "Under Section",
+    caseProperty: "Case Property",
+    policeStation: "Police Station",
+    IOName: "IO Name",
+    vadiName: "Vadi Name",
+    accused: "Accused",
+    status: "Status",
+    entryType: "Entry Type",
+    place: "Place",
+    boxNo: "Box No",
+    courtNo: "Court No",
+    courtName: "Court Name",
+    address: "Address",
+    fathersName: "Father's Name",
+    mobile: "Mobile No",
+    releaseDate: "Release Date",
+    releaseItemName: "Release Item",
+    releaseOrderedBy: "Release Ordered By",
+    receiverName: "Receiver Name",
+    releasePhotoUrl: "Release Photo",
+    releaseDocumentUrl: "Release Document",
+    moveDate: "Move Date",
+    movePurpose: "Move Purpose",
+    moveTrackingNo: "Move Tracking No",
+    takenOutBy: "Taken Out By",
+    returnBackFrom: "Return Back From",
+    returnDate: "Return Date",
+    movementPhotoUrl: "Movement Photo",
+    movementDocumentUrl: "Movement Document",
+    receivedBy: "Received By",
+    nilamiDate: "Nilami Date",
+    nilamiItemName: "Nilami Item",
+    nilamiValue: "Nilami Value",
+    nilamiOrderedBy: "Nilami Ordered By",
+    nilamiPhotoUrl: "Nilami Photo",
+    nilamiDocumentUrl: "Nilami Document",
+    destroyDate: "Destroy Date",
+    destroyPurpose: "Destroy Purpose",
+    destroyOrderedBy: "Destroy Ordered By",
+    destroyPhotoUrl: "Destroy Photo",
+    destroyDocumentUrl: "Destroy Document",
+    photoUrl: "Photo",
+    documentUrl: "Document",
+    description: "Description",
+    Year: "Year",
+    HM: "HM",
+    cash: "Cash",
+    wine: "Wine",
+    wineType: "Wine Type",
+    yellowItemPrice: "Yellow Item Price",
+    // Licensed weapon (लाइसेंसी शस्त्र) deposit fields
+    receiptNo: "Receipt No",
+    licenseNo: "License No",
+    ownerName: "Owner Name",
+    weaponName: "Weapon",
+    weaponNo: "Weapon No",
+    depositDate: "Deposit Date",
+    depositReason: "Deposit Reason",
+    rackNo: "Rack No",
+};
+
+const normalizeHeader = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const reportHeaderAliases: Record<string, string> = Object.entries(reportFieldLabels).reduce((acc, [key, label]) => {
+    acc[normalizeHeader(key)] = key;
+    acc[normalizeHeader(label)] = key;
+    return acc;
+}, {} as Record<string, string>);
+
+const knownReportKeys = [
+    ...orderedKeys,
+    "releaseDate",
+    "releaseOrderedBy",
+    "releasePhotoUrl",
+    "releaseDocumentUrl",
+    "movementPhotoUrl",
+    "movementDocumentUrl",
+    "nilamiDate",
+    "nilamiItemName",
+    "nilamiValue",
+    "nilamiOrderedBy",
+    "nilamiPhotoUrl",
+    "nilamiDocumentUrl",
+    "destroyDate",
+    "destroyPurpose",
+    "destroyOrderedBy",
+    "destroyPhotoUrl",
+    "destroyDocumentUrl",
+    "document",
+    "receiptNo",
+    "licenseNo",
+    "ownerName",
+    "weaponName",
+    "weaponNo",
+    "depositDate",
+    "depositReason",
+    "rackNo",
+];
+
+const resolveHeaderKey = (header: string) => {
+    const normalized = normalizeHeader(header);
+    if (reportHeaderAliases[normalized]) return reportHeaderAliases[normalized];
+
+    const foundKey = knownReportKeys.find(key => normalizeHeader(key) === normalized);
+    if (foundKey) return foundKey;
+
+    return header;
+};
+
+const getHeaderLabel = (headerOrKey: string) => {
+    const key = resolveHeaderKey(headerOrKey);
+    if (reportFieldLabels[key]) return reportFieldLabels[key];
+    return headerOrKey
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/^./, char => char.toUpperCase());
+};
+
+const isFileUrlField = (key: string, value: any) => {
+    if (!value || typeof value !== "string") return false;
+    const lowerKey = key.toLowerCase();
+    return value.startsWith("http") && (lowerKey.includes("url") || lowerKey.includes("photo") || lowerKey.includes("document"));
+};
+
 
 // Type definition for sorting state
 type SortConfig = {
@@ -77,6 +207,8 @@ const Report = ({
     onImportClick,
     fetchData,
     headers,
+    emptyState,
+    exportColumns,
 }: ReportProps) => {
     const router = useRouter();
 
@@ -87,19 +219,14 @@ const Report = ({
     // ✅ NEW STATE: Sorting configuration
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: '', direction: 'descending' });
     const { user } = useAuthStore();
+    const barcodeLabels = useBarcodeLabels();
     // --- PAGINATION STATES ---
     // MODIFIED: Default entriesPerPage from 25 to 20
     const [currentPage, setCurrentPage] = useState(1);
     const [entriesPerPage, setEntriesPerPage] = useState(20);
     // -------------------------
 
-    const { setYear, year } = useSearchStore();
-    const currentYear = new Date().getFullYear();
-
-    const yearOptions = Array.from({ length: (currentYear) - 1980 + 1 }, (_, i) => {
-        const year = 1980 + i;
-        return { value: String(year), label: String(year) };
-    }).reverse();
+    const { year } = useSearchStore();
 
     // --- UTILITIES ---
 
@@ -246,8 +373,9 @@ const Report = ({
             toast.error("No entries selected");
             return;
         }
-        let dbName = pathName.includes("entry-report") ? "m" : "s";
-        await generateBarcodePDF(selectedData, dbName, year, user?.policeStation,);
+        // Vehicles are stored with dbName "v", which is what /api/barcode expects.
+        let dbName = pathName.includes("entry-report") ? "m" : "v";
+        await generateBarcodePDF(selectedData, dbName, year, user?.policeStation, undefined, barcodeLabels);
     };
 
     const handleDoubleClick = (item: any) => {
@@ -286,23 +414,18 @@ const Report = ({
     // ✅ VERIFIED AND FIXED: Conversion is strictly conditional on 1991-2021 Year.
     // =================================================================
     const renderCellContent = (key: string, value: any, entry: any) => {
-        if (key === "photoUrl" && value) {
+        if (isFileUrlField(key, value)) {
             return (
-                <div className="flex justify-center items-center h-full w-24 relative">
-                    <Image
-                        src={value}
-                        alt="Case Property Photo"
-                        layout="fill"
-                        objectFit="contain"
-                    />
-                </div>
-            );
-        }
-        if (key === "documentUrl" && value) {
-            return (
-                <Link href={value} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                <a
+                    href={value}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(event) => event.stopPropagation()}
+                    className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                >
+                    <Download className="h-3.5 w-3.5" />
                     Download
-                </Link>
+                </a>
             );
         }
 
@@ -335,6 +458,23 @@ const Report = ({
 
         const selectedData = data.filter((item) => selectedIds.includes(item.id));
 
+        if (exportColumns?.length) {
+            // Column-specific export (e.g. the licensed-weapon view)
+            const rows = selectedData.map((item) => {
+                const row: Record<string, unknown> = {};
+                exportColumns.forEach((key) => {
+                    row[getHeaderLabel(key)] = isFileUrlField(key, item[key]) ? item[key] : formatValue(key, item[key]);
+                });
+                return row;
+            });
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, `${heading.replace(/\s/g, "-")}-selected-report.xlsx`);
+            toast.success("Data exported successfully to XLSX.");
+            return;
+        }
+
         const exportedData = selectedData.map((item) => {
             const row = {};
             Object.keys(exportMap).forEach((header) => {
@@ -342,7 +482,9 @@ const Report = ({
                 const dbKey = exportMap[header];
                 //@ts-ignore
                 // Use the converted value for export if applicable
-                row[header] = renderCellContent(dbKey, item[dbKey], item);
+                row[header] = isFileUrlField(dbKey, item[dbKey])
+                    ? item[dbKey]
+                    : formatValue(dbKey, item[dbKey]);
             });
             return row;
         });
@@ -503,9 +645,9 @@ const Report = ({
 
         // If 'headers' prop is provided, map them back to database keys if possible
         return headers.map(header => {
-            const foundKey = orderedKeys.find(key => key.toLowerCase() === header.replace(/\s/g, '').toLowerCase() || header.toLowerCase().includes(key.toLowerCase()));
+            const foundKey = resolveHeaderKey(header);
             return {
-                header: header,
+                header: getHeaderLabel(header),
                 key: foundKey || (header === "ID" ? "id" : header),
             };
         }).filter(item => !!item.key);
@@ -517,22 +659,7 @@ const Report = ({
         <div className="p-4 relative ">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold text-white">{heading}</h1>
-                {heading === "Maalkhana Data" && (
-                    <div className="flex gap-4">
-                        <DropDown
-                            label="From"
-                            selectedValue={year.from}
-                            handleSelect={(val) => setYear({ ...year, from: val })}
-                            options={yearOptions}
-                        />
-                        <DropDown
-                            label="to"
-                            selectedValue={year.to}
-                            handleSelect={(val) => setYear({ ...year, to: val })}
-                            options={yearOptions}
-                        />
-                    </div>
-                )}
+                {/* Year range filter moved to the report filter bar */}
                 <div className="flex gap-4 items-center">
 
                     {/* Kurtidev controls REMOVED */}
@@ -636,7 +763,10 @@ const Report = ({
                 </div>
             ) : (
                 <div className="h-80 flex items-center glass-effect justify-center w-full rounded-lg mt-4">
-                    <h1 className="text-blue-100 text-2xl">No data available</h1>
+                    <div className="text-center">
+                        <h1 className="text-blue-100 text-2xl">{emptyState?.title ?? "No data available"}</h1>
+                        {emptyState?.hint && <p className="mt-2 text-blue-100/70">{emptyState.hint}</p>}
+                    </div>
                 </div>
             )}
 

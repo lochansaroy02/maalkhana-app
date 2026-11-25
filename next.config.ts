@@ -8,7 +8,12 @@ const nextConfig: NextConfig = {
   assetPrefix: '',
   basePath: '',
   images: {
-    domains: ["res.cloudinary.com"],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '"res.cloudinary.com"',
+      },
+    ],
   },
   typescript: {
     // ignoreBuildErrors: true,

@@ -152,6 +152,16 @@ model MalkhanaEntry {
   description     String?
   dbName          String?
 
+  // --- Licensed Weapon (लाइसेंसी शस्त्र) Fields ---
+  receiptNo     String? // रसीद नं
+  licenseNo     String? // लाइसेंस नं.
+  ownerName     String? // मालिक का नाम
+  weaponName    String? // हथियार
+  weaponNo      String? // हथियार नं.
+  depositDate   String? // जमा तिथि
+  depositReason String? // कारण
+  rackNo        String? // रैक
+
   // --- Release Fields ---
   isRelease          Boolean?  @default(false)
   releaseDate        DateTime?

@@ -1,77 +1,64 @@
 "use client";
 
 import Report from '@/components/Report';
-import { Checkbox } from '@/components/ui/checkbox';
+import ReportFilterBar, { FilterDef } from '@/components/report/ReportFilterBar';
 import UploadModal from '@/components/UploadModal';
 import { useAuthStore } from '@/store/authStore';
 import { useDistrictStore } from '@/store/districtStore';
 import { useSearchStore } from '@/store/searchStore';
 import { useSeizedVehicleStore } from '@/store/siezed-vehical/seizeStore';
 import { useOpenStore } from '@/store/store';
+import { ACTIVITY_KEYS, matchesActivity, matchesSearch, matchesYearRange, rowYear } from '@/utils/reportFilters';
+import { Activity, Car, FolderOpen } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-// Define a type for the data entries to improve type safety
-interface SeizedVehicleEntry {
-    id?: string;
-    firNo: string;
-    srNo: string;
-    caseProperty: string;
-    underSection: string;
-    policeStation: string;
-    gdNo?: string;
-    gdDate?: string;
-    Year?: string;
-    vadiName?: string;
-    isMovement?: boolean;
-    moveDate?: string;
-    takenOutBy?: string;
-    movePurpose?: string;
-    moveTrackingNo?: string;
-    isRelease?: boolean;
-    courtName?: string;
-    courtNo?: string;
-    receiverName?: string;
-    status?: string;
-    description?: string;
-    isReturned?: boolean;
-    returnDate?: string;
-    receivedBy?: string;
-    returnBackFrom?: string;
-    // Add other fields as necessary from your data structure
-}
+type SeizedVehicleEntry = Record<string, any>;
 
-const casePropertyOptions = [
-    'mv act', 'arto seized', 'BNS/IPC', 'EXCISE', 'SEIZED', 'UNCLAMMED VEHICLE'
-];
-
-// Define a type for the report data and headers
-type ReportData = {
-    data: SeizedVehicleEntry[]; // Updated to use SeizedVehicleEntry[] for better type safety
-    headers: string[];
+// Columns per activity (unchanged from before).
+const HEADER_CONFIG: Record<string, string[]> = {
+    movement: ["FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"],
+    release: ["FIR No", "Sr No", "Case Property", "Court Name", "Court No", "Receiver Name"],
+    destroy: ["FIR No", "Sr No", "Status", "Case Property", "Description"],
+    nilami: ["FIR No", "Sr No", "Status", "Case Property", "Description"],
+    return: ["FIR No", "Sr No", "Return Date", "Received By", "Return Back From", "Is Returned"],
+    all: ["FIR No", "Sr No", "underSection", "description", "vehicleType", "Case Property", "GD No", "GD Date", "Year", "status", "Police Station", "colour", "registrationNo", "seizedBy", ""],
 };
 
+// Fields the search box looks in (every word typed must match one of them).
+const SEARCHABLE_FIELDS = [
+    "firNo", "srNo", "gdNo", "gdDate", "registrationNo", "engineNo", "vehicleType", "colour", "ownerName", "fathersName",
+    "description", "caseProperty", "underSection", "policeStation", "seizedBy", "rtoName", "status", "mobile", "address",
+];
+
 const Page = () => {
+    const t = useTranslations("reports");
     const { reportType, setReportType } = useOpenStore();
     const { user } = useAuthStore();
-    const { userId } = useDistrictStore()
+    const { userId } = useDistrictStore();
     const { vehicles, addVehicle, fetchVehicles } = useSeizedVehicleStore();
-    const { searchData } = useSearchStore()
+    const { searchData } = useSearchStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedCaseProperty, setSelectedCaseProperty] = useState<string | null>(null);
+
+    const [keyword, setKeyword] = useState("");
+    const onSearch = useCallback((q: string) => setKeyword(q), []);
+    const [activities, setActivities] = useState<string[]>([]);
+    const [caseProperties, setCaseProperties] = useState<string[]>([]);
+    const [vehicleTypes, setVehicleTypes] = useState<string[]>([]);
+    const [years, setYears] = useState({ from: "", to: "" });
 
     const searchParams = useSearchParams();
 
-    // Set initial report type from URL on component mount
+    // ?reportType=movement etc. (dashboard cards link here)
     useEffect(() => {
         const urlReportType = searchParams.get('reportType');
-        if (urlReportType && urlReportType !== reportType) {
+        if (urlReportType) {
             setReportType(urlReportType);
+            setActivities(urlReportType !== 'all' && (ACTIVITY_KEYS as readonly string[]).includes(urlReportType) ? [urlReportType] : []);
         }
-    }, [searchParams, reportType, setReportType]);
+    }, [searchParams, setReportType]);
 
-
-    // Fetch all vehicle data when the component loads
     useEffect(() => {
         if (user?.role === "policeStation" && user?.id) {
             fetchVehicles(user.id, user.role);
@@ -80,100 +67,81 @@ const Page = () => {
         }
     }, [user?.id, fetchVehicles, userId, user?.role]);
 
-    // Use useMemo to handle all filtering logic and return both data and headers
-    const reportContent: ReportData = useMemo(() => {
-        let headers: string[] = [];
+    const source: SeizedVehicleEntry[] = useMemo(
+        () => (Array.isArray(searchData) && searchData.length > 0 ? searchData : Array.isArray(vehicles) ? vehicles : []),
+        [searchData, vehicles]
+    );
 
-        // Apply filters based on the report type
-        const applyFilters = (): ReportData => {
-            let dataToShow: SeizedVehicleEntry[] = [...vehicles];
+    const reportContent = useMemo(() => {
+        const lc = (v: unknown) => String(v ?? "").trim().toLowerCase();
+        const data = source.filter((v) =>
+            (activities.length === 0 || activities.some((a) => matchesActivity(v, a))) &&
+            (caseProperties.length === 0 || caseProperties.includes(lc(v.caseProperty))) &&
+            (vehicleTypes.length === 0 || vehicleTypes.includes(lc(v.vehicleType))) &&
+            matchesYearRange(v, years.from, years.to, "gdDate") &&
+            matchesSearch(v, keyword, SEARCHABLE_FIELDS)
+        );
+        const headerKey = activities.length === 1 ? activities[0] : reportType && reportType !== 'all' && activities.length === 0 ? reportType : 'all';
+        return { data, headers: HEADER_CONFIG[headerKey] || HEADER_CONFIG.all };
+    }, [source, activities, caseProperties, vehicleTypes, years, keyword, reportType]);
 
-            switch (reportType) {
-                case "movement":
-                    dataToShow = dataToShow.filter(vehicle => vehicle.isMovement === true);
-                    headers = ["FIR No", "Sr No", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"];
-                    break;
-                case "release":
-                    dataToShow = dataToShow.filter(vehicle => vehicle.isRelease === true);
-                    // NOTE: 'releaseItemName' is not in the interface, check if it's correct.
-                    headers = ["FIR No", "Sr No", "Case Property", "Court Name", "Court No", "Receiver Name"];
-                    break;
-                case "destroy":
-                // Fallthrough is implied here: If status is 'destroy' or 'nilami'
-                case "nilami":
-                    dataToShow = dataToShow.filter(vehicle =>
-                        vehicle.status?.toLowerCase() === 'destroy' || vehicle.status?.toLowerCase() === 'nilami'
-                    );
-                    headers = ["FIR No", "Sr No", "Status", "Case Property", "Description"];
-                    break;
-                case "return":
-                    dataToShow = dataToShow.filter(vehicle => vehicle.isReturned === true);
-                    headers = ["FIR No", "Sr No", "Return Date", "Received By", "Return Back From", "Is Returned"];
-                    break;
-                default: // 'all' or default view
-                    dataToShow = vehicles;
-                    // NOTE: 'I O Name' is not explicitly in the interface, check if it's correct.
-                    headers = ["FIR No", "Sr No", "underSection", "description", "vehicleType", "Case Property", "GD No", "GD Date", "Year", "status", "Police Station", "colour", "registrationNo", "seizedBy", ""];
-                    break;
-            }
-
-            // Further filter the result by the selected case property checkbox
-            if (selectedCaseProperty) {
-                dataToShow = dataToShow.filter(
-                    (item) => item.caseProperty?.toLowerCase() === selectedCaseProperty.toLowerCase()
-                );
-            }
-
-            // Apply search filter if searchData is available
-            if (searchData.length > 0) {
-                // Assuming searchData is already filtered and formatted correctly
-                // NOTE: This assumes searchData is an array of SeizedVehicleEntry objects
-                return { data: searchData as SeizedVehicleEntry[], headers: headers };
-            }
-
-            return { data: dataToShow, headers: headers };
-        };
-
-        return applyFilters();
-    }, [reportType, selectedCaseProperty, vehicles, searchData]); // Re-run when a filter or the data changes
-
-
-    const handleImportSuccess = () => {
-        if (user?.id) {
-            // Refresh data after a successful import
-            fetchVehicles(user.id, user.role);
-        }
+    // Filter options are built from the data itself, with counts.
+    const distinct = (field: string) => {
+        const map = new Map<string, { label: string; count: number }>();
+        source.forEach((v) => {
+            const label = String(v[field] ?? "").trim();
+            if (!label) return;
+            const key = label.toLowerCase();
+            const cur = map.get(key);
+            map.set(key, { label: cur?.label ?? label, count: (cur?.count ?? 0) + 1 });
+        });
+        return [...map.entries()].sort((a, b) => b[1].count - a[1].count).map(([value, o]) => ({ value, label: o.label, count: o.count }));
     };
 
+    const filters: FilterDef[] = [
+        {
+            key: "activity", label: t("filters.type"), icon: <Activity size={15} />,
+            options: ACTIVITY_KEYS.map((k) => ({ value: k, label: t(`activities.${k}`), count: source.filter((v) => matchesActivity(v, k)).length })),
+            selected: activities,
+            onChange: (values) => {
+                setActivities(values);
+                setReportType(values.length === 1 ? values[0] : 'all');
+            },
+        },
+        { key: "caseProperty", label: t("filters.caseProperty"), icon: <FolderOpen size={15} />, options: distinct("caseProperty"), selected: caseProperties, onChange: setCaseProperties },
+        { key: "vehicleType", label: t("filters.vehicleType"), icon: <Car size={15} />, options: distinct("vehicleType"), selected: vehicleTypes, onChange: setVehicleTypes },
+    ];
 
+    const yearOptions = useMemo(() => {
+        const ys = new Set<string>();
+        source.forEach((v) => {
+            const y = rowYear(v, "gdDate");
+            if (y) ys.add(String(y));
+        });
+        return [...ys].sort((a, b) => Number(b) - Number(a));
+    }, [source]);
+
+    const handleImportSuccess = () => {
+        if (user?.id) fetchVehicles(user.id, user.role);
+    };
 
     return (
         <>
-            <div className="glass-effect my-4 p-4">
-                <div className="flex flex-wrap gap-4 items-center">
-                    <h1 className="text-lg font-semibold text-white">Filter by Case Property:</h1>
-                    {casePropertyOptions.map((property) => (
-                        <div key={property} className="flex items-center space-x-2">
-                            <Checkbox
-                                id={`checkbox-${property}`}
-                                checked={selectedCaseProperty?.toLowerCase() === property.toLowerCase()}
-                                onCheckedChange={(checked) =>
-                                    setSelectedCaseProperty(checked ? property : null)
-                                }
-                            />
-                            <label htmlFor={`checkbox-${property}`} className="text-blue-100 capitalize cursor-pointer">
-                                {property}
-                            </label>
-                        </div>
-                    ))}
-                </div>
-            </div>
+            <ReportFilterBar
+                search={keyword}
+                onSearch={onSearch}
+                placeholder={t("search.placeholderVehicles")}
+                filters={filters}
+                year={yearOptions.length ? { ...years, options: yearOptions, onChange: setYears } : undefined}
+                shown={reportContent.data.length}
+                total={source.length}
+            />
 
             <Report
                 onImportClick={() => setIsModalOpen(true)}
                 data={reportContent.data}
-                // Pass headers dynamically from the useMemo hook
                 headers={reportContent.headers}
+                emptyState={source.length > 0 ? { title: t("results.none"), hint: t("results.noneHint") } : undefined}
                 heading="Seized Vehicles Report"
                 detailsPathPrefix="/report/siezed-report"
             />

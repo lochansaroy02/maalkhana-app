@@ -1,66 +1,48 @@
 "use client";
 
-import InputComponent from "@/components/InputComponent";
 import Report from "@/components/Report";
-import { MultiSelectDropdown } from "@/components/ui/MultiSelectDropdown";
+import ReportFilterBar, { FilterDef } from "@/components/report/ReportFilterBar";
 import UploadModal from "@/components/UploadModal";
 import { useAuthStore } from "@/store/authStore";
 import { useDistrictStore } from "@/store/districtStore";
 import { useMaalkhanaStore } from "@/store/malkhana/maalkhanaEntryStore";
 import { useSearchStore } from "@/store/searchStore";
 import { useOpenStore } from "@/store/store";
+import { ENTRY_TYPE_CATEGORIES, categoryForEntryType } from "@/utils/maalCategories";
+import { ACTIVITY_KEYS, STATUS_KEYS, matchesActivity, matchesEntryType, matchesSearch, matchesStatus, matchesYearRange } from "@/utils/reportFilters";
+import { Activity, CircleDot, Layers } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 // --- CONFIGURATION: ADD OR REMOVE HEADERS HERE ---
 const HEADER_CONFIG: Record<string, string[]> = {
-    movement: ["FIR No", "Sr No", "Status", "Case Property", "Under Section", "Police Station", "Move Date", "Taken Out By", "Move Purpose", "Move Tracking No"],
-    release: ["FIR No", "Sr No", "Status", "Case Property", "Under Section", "Court Name", "Court No", "Box No", "Release Date", "Release Item Name", "Father's Name", "Address", "Receiver Name"],
-    destroy: ["FIR No", "Sr No", "Status", "Case Property", "Description", "Destroy Ordered By", "Destroy Date"],
-    return: ["FIR No", "Sr No", "Status", "Case Property", "Description", "Return Date", "Received By"],
-    nilami: ["FIR No", "Sr No", "Status", "Case Property", "Description", "Nilami Date", "Nilami Value", "Nilami Ordered By"],
-    all: ["FIR No", "Sr No", "Entry Type", "Status", "underSection", "Description", "Case Property", "GD No", "GD Date", "Year", "Police Station", "HM", "Vadi Name", "IOName", "box No", "court No", "court Name"]
+    movement: ["firNo", "srNo", "entryType", "status", "caseProperty", "underSection", "policeStation", "moveDate", "takenOutBy", "returnBackFrom", "returnDate", "movePurpose", "moveTrackingNo", "movementPhotoUrl", "movementDocumentUrl"],
+    release: ["firNo", "srNo", "entryType", "status", "caseProperty", "underSection", "courtName", "courtNo", "boxNo", "releaseDate", "releaseItemName", "releaseOrderedBy", "receiverName", "fathersName", "address", "mobile", "releasePhotoUrl", "releaseDocumentUrl"],
+    destroy: ["firNo", "srNo", "entryType", "status", "caseProperty", "description", "destroyOrderedBy", "destroyDate", "destroyPurpose", "destroyPhotoUrl", "destroyDocumentUrl"],
+    return: ["firNo", "srNo", "entryType", "status", "caseProperty", "description", "returnDate", "receivedBy", "returnBackFrom"],
+    nilami: ["firNo", "srNo", "entryType", "status", "caseProperty", "description", "nilamiDate", "nilamiItemName", "nilamiValue", "nilamiOrderedBy", "nilamiPhotoUrl", "nilamiDocumentUrl"],
+    licensedWeapon: ["receiptNo", "licenseNo", "ownerName", "address", "mobile", "weaponName", "weaponNo", "depositDate", "depositReason", "rackNo", "policeStation", "status", "photoUrl"],
+    all: ["firNo", "srNo", "entryType", "status", "underSection", "description", "caseProperty", "gdNo", "gdDate", "Year", "policeStation", "HM", "vadiName", "IOName", "accused", "boxNo", "courtNo", "courtName", "photoUrl", "documentUrl", "releaseDate", "releaseItemName", "releasePhotoUrl", "releaseDocumentUrl", "moveDate", "movementPhotoUrl", "movementDocumentUrl", "nilamiDate", "destroyDate"]
 };
 
 interface MaalkhanaEntry {
     [key: string]: any; // Allows dynamic access for search and headers
 }
 
-const statusOptions = [
-    { label: 'Destroy', value: 'destroy' },
-    { label: 'Nilami', value: 'nilami' },
-    { label: 'Pending', value: 'pending' },
-    { label: 'On court', value: 'onCourt' },
-    { label: 'Other', value: 'other' },
+// Fields the search box looks in (every word typed must match one of them).
+const SEARCHABLE_FIELDS = [
+    "firNo", "srNo", "Year", "gdNo", "gdDate", "description", "caseProperty", "entryType", "status", "policeStation",
+    "underSection", "vadiName", "accused", "IOName", "HM", "place", "boxNo", "courtName", "registrationNo",
+    "receiptNo", "licenseNo", "ownerName", "weaponName", "weaponNo", "receiverName", "releaseItemName",
 ];
-
-const entryTypeOptions = [
-    { label: 'Malkhana Entry', value: 'malkhana' },
-    { label: 'FSL', value: 'fsl' },
-    { label: 'Kurki', value: 'kurki' },
-    { label: 'Wine/Daru', value: 'wine' },
-    { label: 'Cash Entry', value: 'cash' },
-    { label: 'Unclaimed', value: 'unclaimed' },
-];
-
-const reportTypeOptions = ["movement", "release", "return", "nilami", "destroy"].map(item => ({
-    value: item,
-    label: item.charAt(0).toUpperCase() + item.slice(1)
-}));
-
-const SEARCHABLE_FIELDS = ["firNo", "srNo", "Year", "description", "entryType", "policeStation", "caseProperty", "vadiName", "status"];
-
-const HINDI_VALUE_MAP: Record<string, string[]> = {
-    'malkhana': ['मालखाना'],
-    'pending': ['लंबित']
-};
 
 const Page = () => {
     const { reportType, setReportType } = useOpenStore();
     const { user } = useAuthStore();
     const { userId } = useDistrictStore();
     const { entries, fetchMaalkhanaEntry, addMaalkhanaEntry } = useMaalkhanaStore();
-    const { year, searchData } = useSearchStore();
+    const { year, setYear, searchData } = useSearchStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [selectedEntryTypes, setSelectedEntryTypes] = useState<string[]>([]);
@@ -69,6 +51,9 @@ const Page = () => {
 
     const searchParams = useSearchParams();
     const [keyword, setKeyword] = useState<string>('');
+    const onSearch = useCallback((q: string) => setKeyword(q), []);
+    const t = useTranslations("reports");
+    const tType = useTranslations("entry.malkhanaEntryForm.entryType.options");
 
     useEffect(() => {
         const urlReportType = searchParams.get('reportType');
@@ -91,64 +76,21 @@ const Page = () => {
     }, [user?.id, fetchMaalkhanaEntry, userId, user?.role]);
 
     const reportContent = useMemo(() => {
-        let filteredData = [...entries];
+        const sourceEntries = Array.isArray(searchData) && searchData.length > 0
+            ? searchData
+            : Array.isArray(entries)
+                ? entries
+                : Array.isArray((entries as any)?.data)
+                    ? (entries as any).data
+                    : [];
 
-        // 1. Filter by Report Types (Movement, Release, etc.)
-        if (selectedReportTypes.length > 0) {
-            filteredData = filteredData.filter(entry => {
-                return selectedReportTypes.some(type => {
-                    switch (type.toLowerCase()) {
-                        case "movement": return entry.isMovement === true;
-                        case "release": return entry.isRelease === true;
-                        case "return": return entry.isReturned === true;
-                        case "destroy": return entry.isDestroy === true || entry.status?.toLowerCase() === 'destroy';
-                        case "nilami": return entry.status === "nilami" || entry.isNilami === true;
-                        default: return true;
-                    }
-                });
-            });
-        }
-
-        // 2. Filter by Year
-        if (year?.from || year?.to) {
-            const fromYear = year.from ? parseInt(year.from, 10) : null;
-            const toYear = year.to ? parseInt(year.to, 10) : null;
-            filteredData = filteredData.filter(item => {
-                const entryYear = item.Year ? parseInt(item.Year) : null;
-                if (!entryYear) return false;
-                if (fromYear && toYear) return entryYear >= fromYear && entryYear <= toYear;
-                if (fromYear) return entryYear === fromYear;
-                if (toYear) return entryYear <= toYear;
-                return true;
-            });
-        }
-
-        // 3. Filter by Entry Types
-        if (selectedEntryTypes.length > 0) {
-            filteredData = filteredData.filter(item => {
-                const itemType = item.entryType?.toLowerCase();
-                return selectedEntryTypes.some(sel => {
-                    const selLower = sel.toLowerCase();
-                    return itemType === selLower || HINDI_VALUE_MAP[selLower]?.includes(item.entryType);
-                });
-            });
-        }
-
-        // 4. Filter by Statuses
-        if (selectedStatuses.length > 0) {
-            const lowerStatuses = selectedStatuses.map(s => s.toLowerCase());
-            filteredData = filteredData.filter(item =>
-                item.status && lowerStatuses.includes(item.status.toLowerCase())
-            );
-        }
-
-        // 5. Keyword Search
-        const kw = keyword.trim().toLowerCase();
-        if (kw) {
-            filteredData = filteredData.filter((entry: any) =>
-                SEARCHABLE_FIELDS.some((field: any) => String(entry[field] || "").toLowerCase().includes(kw))
-            );
-        }
+        const filteredData = sourceEntries.filter((entry: MaalkhanaEntry) =>
+            (selectedReportTypes.length === 0 || selectedReportTypes.some(type => matchesActivity(entry, type))) &&
+            matchesYearRange(entry, year?.from, year?.to) &&
+            (selectedEntryTypes.length === 0 || selectedEntryTypes.some(type => matchesEntryType(entry, type))) &&
+            (selectedStatuses.length === 0 || selectedStatuses.some(status => matchesStatus(entry, status))) &&
+            matchesSearch(entry, keyword, SEARCHABLE_FIELDS)
+        );
 
         // --- DETERMINE HEADERS ---
         // If one specific type is selected in dropdown, use those headers. 
@@ -160,11 +102,48 @@ const Page = () => {
             activeHeaderKey = reportType;
         }
 
-        const headers = HEADER_CONFIG[activeHeaderKey] || HEADER_CONFIG.all;
+        let headers = HEADER_CONFIG[activeHeaderKey] || HEADER_CONFIG.all;
 
-        if (searchData.length > 0) return { data: searchData, headers };
-        return { data: filteredData, headers };
+        // Licensed weapons have their own fields (receipt, licence, owner, weapon…).
+        // Show them whenever "Licensed Weapon" is the only entry type selected;
+        // with an activity (release, movement…) add that activity's columns.
+        if (selectedEntryTypes.length === 1 && selectedEntryTypes[0] === "licensedWeapon") {
+            const licenceCore = ["receiptNo", "licenseNo", "ownerName", "weaponName", "weaponNo"];
+            headers = activeHeaderKey === "all"
+                ? HEADER_CONFIG.licensedWeapon
+                : [...licenceCore, ...headers.filter(h => !["firNo", "srNo", "entryType", "caseProperty", "underSection"].includes(h))];
+        }
+
+        return { data: filteredData, headers, total: sourceEntries.length, source: sourceEntries as MaalkhanaEntry[] };
     }, [entries, year, searchData, selectedEntryTypes, selectedStatuses, keyword, selectedReportTypes, reportType]);
+
+    // Option counts come from all records, so users can see what each filter holds.
+    const countBy = (pred: (e: MaalkhanaEntry) => boolean) => reportContent.source.filter(pred).length;
+    const filters: FilterDef[] = [
+        {
+            key: "entryType", label: t("filters.entryType"), icon: <Layers size={15} />,
+            options: ENTRY_TYPE_CATEGORIES.map(k => ({ value: k, label: tType(k), count: countBy(e => categoryForEntryType(e.entryType) === k) })),
+            selected: selectedEntryTypes, onChange: setSelectedEntryTypes,
+        },
+        {
+            key: "status", label: t("filters.status"), icon: <CircleDot size={15} />,
+            options: STATUS_KEYS.map(k => ({ value: k, label: t(`statuses.${k}`), count: countBy(e => matchesStatus(e, k)) })),
+            selected: selectedStatuses, onChange: setSelectedStatuses,
+        },
+        {
+            key: "activity", label: t("filters.type"), icon: <Activity size={15} />,
+            options: ACTIVITY_KEYS.map(k => ({ value: k, label: t(`activities.${k}`), count: countBy(e => matchesActivity(e, k)) })),
+            selected: selectedReportTypes,
+            onChange: (values) => {
+                setSelectedReportTypes(values);
+                setReportType(values.length === 1 ? values[0] : 'all');
+            },
+        },
+    ];
+    const yearOptions = useMemo(() => {
+        const now = new Date().getFullYear();
+        return Array.from({ length: now - 1980 + 1 }, (_, i) => String(now - i));
+    }, []);
 
     const handleImportSuccess = () => {
         if (user?.id) fetchMaalkhanaEntry(user.id, user.role);
@@ -172,40 +151,15 @@ const Page = () => {
 
     return (
         <>
-            <div className="p-4 mx-2 flex gap-3 glass-effect">
-                <h1 className="text-lg font-semibold text-white">Filter:</h1>
-                <div className="flex flex-wrap gap-4 w-full justify-between items-center">
-                    <div className="flex gap-2 items-center">
-                        <MultiSelectDropdown
-                            label="Entry Type"
-                            options={entryTypeOptions}
-                            selectedValues={selectedEntryTypes}
-                            onChange={setSelectedEntryTypes}
-                        />
-                        <MultiSelectDropdown
-                            label="Status"
-                            options={statusOptions}
-                            selectedValues={selectedStatuses}
-                            onChange={setSelectedStatuses}
-                        />
-                        <MultiSelectDropdown
-                            label="Type"
-                            options={reportTypeOptions}
-                            selectedValues={selectedReportTypes}
-                            onChange={setSelectedReportTypes}
-                        />
-                    </div>
-
-                    <div className="flex gap-4">
-                        <InputComponent
-                            label="search"
-                            value={keyword}
-                            isLabel={false}
-                            setInput={(e: any) => setKeyword(e.target.value)}
-                        />
-                    </div>
-                </div>
-            </div>
+            <ReportFilterBar
+                search={keyword}
+                onSearch={onSearch}
+                placeholder={t("search.placeholderMalkhana")}
+                filters={filters}
+                year={{ from: year.from, to: year.to, options: yearOptions, onChange: (next) => setYear(next) }}
+                shown={reportContent.data.length}
+                total={reportContent.total}
+            />
 
             {user?.role !== 'asp' && (
                 <UploadModal
@@ -220,6 +174,8 @@ const Page = () => {
             <Report
                 data={reportContent.data}
                 headers={reportContent.headers}
+                exportColumns={selectedEntryTypes.length === 1 && selectedEntryTypes[0] === "licensedWeapon" ? reportContent.headers : undefined}
+                emptyState={reportContent.total > 0 ? { title: t("results.none"), hint: t("results.noneHint") } : undefined}
                 onImportClick={() => setIsModalOpen(true)}
                 heading="Malkhana Data"
                 detailsPathPrefix="/report/entry-report"

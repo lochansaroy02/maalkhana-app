@@ -46,6 +46,12 @@ interface TotalEntriesStore {
     fetchAdminEntries: () => Promise<void>;
 }
 
+// Only the most recent request may update the store. On a page reload the
+// dashboard fires the admin request before the logged-in user is restored
+// from storage; without this guard that slower, stale response could
+// overwrite the police-station data (cards showed 0).
+let latestRequest = 0;
+
 export const useTotalEntriesStore = create<TotalEntriesStore>((set) => ({
     data: null,
     loading: false,
@@ -53,14 +59,17 @@ export const useTotalEntriesStore = create<TotalEntriesStore>((set) => ({
 
     fetchTotalEntries: async (userId: string | undefined) => {
         if (!userId) return;
+        const requestId = ++latestRequest;
         set({ loading: true, error: null });
         try {
             const response = await axios.get(`/api/report?userId=${userId}`);
+            if (requestId !== latestRequest) return;
             set({
                 data: response.data,
                 loading: false,
             });
         } catch (err: any) {
+            if (requestId !== latestRequest) return;
             set({
                 error: err.response?.data?.message || err.message || 'Something went wrong',
                 loading: false
@@ -69,14 +78,17 @@ export const useTotalEntriesStore = create<TotalEntriesStore>((set) => ({
     },
 
     fetchAdminEntries: async () => {
+        const requestId = ++latestRequest;
         set({ loading: true, error: null });
         try {
             const response = await axios.get(`/api/report/get-all`);
+            if (requestId !== latestRequest) return;
             set({
                 data: response.data,
                 loading: false,
             });
         } catch (err: any) {
+            if (requestId !== latestRequest) return;
             set({
                 error: err.response?.data?.message || err.message || 'Something went wrong',
                 loading: false

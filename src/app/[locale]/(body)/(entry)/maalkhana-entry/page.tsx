@@ -1,5 +1,6 @@
 "use client";
 import InputComponent from '@/components/InputComponent';
+import LicenseWeaponForm, { EMPTY_LICENSE_DATA, LICENSE_REQUIRED_FIELDS, LicenseWeaponData, licenseDataFromEntry, licenseDataToPayload } from '@/components/LicenseWeaponForm';
 
 import { Button } from '@/components/ui/button';
 import DatePicker from '@/components/ui/datePicker';
@@ -12,6 +13,8 @@ import { convertUnicodeToKurtidev, kurtidevKeys } from '@/utils/font';
 import { uploadToImageKit } from '@/utils/imagekit';
 import { Mic, Trash } from 'lucide-react';
 
+import { isNewFeaturePeriod } from '@/components/NewBadge';
+import { categoryForEntryType, isPlainCategorySpelling } from '@/utils/maalCategories';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import toast, { LoaderIcon } from 'react-hot-toast';
@@ -70,6 +73,8 @@ const Page = () => {
     // Store originalSrNo as string for strict comparison with form input
     const [originalSrNo, setOriginalSrNo] = useState<string>("");
     const [yellowItemPrice, setYellowItemPrice] = useState<number>(0);
+    const [licenseData, setLicenseData] = useState<LicenseWeaponData>(EMPTY_LICENSE_DATA);
+    const isLicensedWeapon = dropdownSelection === 'licensedWeapon';
 
     // FIX 1: Initialize gdDate to 'undefined' so it doesn't default to the current date.
     const [dateFields, setDateFields] = useState<{ gdDate?: Date }>({
@@ -119,10 +124,13 @@ const Page = () => {
     };
 
 
-    const entryOptionKeys = ["malkhana", "fsl", "kurki", "cash", "wine", "unclaimed", "other", "yellowItem"];
+    const entryOptionKeys = ["malkhana", "fsl", "kurki", "cash", "wine", "unclaimed", "other", "yellowItem", "licensedWeapon"];
+    const tNew = useTranslations('whatsNew');
     const entryOptions = entryOptionKeys.map(key => ({
         value: key,
-        label: t(`${baseKey}.entryType.options.${key}`)
+        label: key === 'licensedWeapon' && isNewFeaturePeriod()
+            ? `${t(`${baseKey}.entryType.options.${key}`)}  ✦ ${tNew('badge')}`
+            : t(`${baseKey}.entryType.options.${key}`)
     }));
 
     const statusOptionKeys = ["destroy", "nilami", "pending", "other", "onCourt"];
@@ -169,7 +177,11 @@ const Page = () => {
 
         // Determine the correct dropdown key from the fetched entryType
         const fetchedEntryType = data.entryType || '';
-        const entryTypeKey = entryOptionKeys.find(key => key === fetchedEntryType) || (fetchedEntryType ? 'other' : '');
+        // Old/imported spellings ("मालखाना", "Malkhana Entry") select the matching option;
+        // genuinely custom text (e.g. "आयुद्ध अधि0") stays under "Other".
+        const entryTypeKey = entryOptionKeys.find(key => key === fetchedEntryType)
+            || (fetchedEntryType && isPlainCategorySpelling(fetchedEntryType) ? categoryForEntryType(fetchedEntryType) : '')
+            || (fetchedEntryType ? 'other' : '');
 
         setCurrentEntryType(fetchedEntryType);
         setDropdownSelection(entryTypeKey);
@@ -181,6 +193,8 @@ const Page = () => {
             // Otherwise, clear the custom text field
             setEntryType('');
         }
+
+        setLicenseData(entryTypeKey === 'licensedWeapon' ? licenseDataFromEntry(data) : EMPTY_LICENSE_DATA);
 
         setDescription(data.description || '');
         // FIX 2: Only create a Date object if gdDate exists, otherwise set to 'undefined'
@@ -208,6 +222,7 @@ const Page = () => {
         setStatus(''); setWine(0); setCash(0); setWineType(''); setYellowItemPrice(0); setDropdownSelection(''); setEntryType(''); setDescription('');
         // FIX 3 (cont.): Clear gdDate to undefined
         setDateFields({ gdDate: undefined });
+        setLicenseData(EMPTY_LICENSE_DATA);
         SetPhotoUrl("");
         setFirData([]);
         setSelectedSrNo('');
@@ -246,6 +261,9 @@ const Page = () => {
 
     const handleEntryTypeSelect = (value: string) => {
         setDropdownSelection(value);
+        if (value === 'licensedWeapon') {
+            setLicenseData(prev => ({ ...prev, policeStation: prev.policeStation || user?.policeStation || '' }));
+        }
         if (value !== 'other') {
             setEntryType('');
         }
@@ -313,11 +331,11 @@ const Page = () => {
     };
 
     const handlePrint = () => {
-        const fullData = {
+        const fullData = isLicensedWeapon ? { ...licenseDataToPayload(licenseData), photoUrl } : {
             ...formData,
             status, wine, cash, wineType, entryType: dropdownSelection === 'other' ? entryType : dropdownSelection, photoUrl, description, gdDate: dateFields.gdDate?.toISOString() ?? '',
         };
-        if (!fullData.firNo && !fullData.srNo) {
+        if (!fullData.firNo && !fullData.srNo && !(isLicensedWeapon && licenseData.receiptNo)) {
             toast.error(t(`${baseKey}.toasts.printError`));
             return;
         }
@@ -327,8 +345,46 @@ const Page = () => {
 
 
 
+    const handleSaveLicensedWeapon = async () => {
+        const lt = (k: string) => t(`${baseKey}.licenseForm.${k}`);
+        const missing = LICENSE_REQUIRED_FIELDS.filter(k => {
+            const v = licenseData[k];
+            return v instanceof Date ? isNaN(v.getTime()) : !String(v ?? '').trim();
+        });
+        if (missing.length > 0) {
+            toast.error(`${lt('required')}${missing.map(lt).join(', ')}`);
+            return;
+        }
+        if (licenseData.mobile && !/^\+?\d[\d -]{8,14}$/.test(licenseData.mobile.trim())) {
+            toast.error(`${lt('mobile')}: ${lt('invalidMobile')}`);
+            return;
+        }
+        setLoading(true);
+        try {
+            const payload = { ...licenseDataToPayload(licenseData), userId: user?.id, photoUrl, isRelease, isReturned };
+            // Only update when the loaded entry is itself a licensed weapon, so switching
+            // a fetched normal entry to this form never overwrites it.
+            const isUpdate = Boolean(existingId) && currentEntryType === 'licensedWeapon';
+            const response = isUpdate
+                ? await updateMalkhanaEntry(existingId, payload)
+                : await addMaalkhanaEntry(payload);
+            if (response) {
+                toast.success(isUpdate ? "Updated Entry" : t(`${baseKey}.toasts.newEntryWithNewSrNo`));
+                clearForm();
+            } else {
+                toast.error("cant added entry");
+            }
+        } catch (error) {
+            console.error("Save licensed weapon error:", error);
+            toast.error("Error while saving entry");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSave = async () => {
         if (loading) return;
+        if (isLicensedWeapon) return handleSaveLicensedWeapon();
         setLoading(true);
 
         const requiredFields: { key: keyof FormData | 'gdDate', value: any }[] = [
@@ -501,7 +557,9 @@ const Page = () => {
                 </div>
 
 
-                <div className='grid lg:grid-cols-2 gap-2'>
+                {isLicensedWeapon && <LicenseWeaponForm value={licenseData} onChange={setLicenseData} />}
+
+                <div className={`grid lg:grid-cols-2 gap-2 ${isLicensedWeapon ? 'hidden' : ''}`}>
 
                     {fields.map(field => {
                         if (field.name === 'firNo' && dropdownSelection === "unclaimed") return null;

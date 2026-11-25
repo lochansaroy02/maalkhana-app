@@ -1,36 +1,110 @@
 import JsBarcode from "jsbarcode";
 import { jsPDF } from "jspdf";
+import QRCode from "qrcode";
+import { ensureFontsReady, fitText, font, toPrintable, wrapText } from "./hindiCanvas";
+import { categoryForEntryType, isPlainCategorySpelling } from "./maalCategories";
 
-/**
- * Helper function to remove non-ASCII characters (like Hindi).
- * FIX: Explicitly converts input to String() to handle numbers safely.
- */
-const sanitizeString = (str: any) => {
-    if (str === null || str === undefined) return "";
-    // Force convert to string to prevent "str.replace is not a function" error on numbers
-    const stringValue = String(str);
-    // Keep only ASCII printable characters (regex: range x20 to x7E)
-    return stringValue.replace(/[^\x20-\x7E]/g, '').trim();
+/** Translated words printed on the label; callers pass them from i18n. */
+export interface BarcodeLabels {
+    /** Label for an entry-type key, e.g. t("entry.malkhanaEntryForm.entryType.options.<key>") */
+    entryType: (key: string) => string;
+    receipt: string;
+    license: string;
+    vehicle: string;
+    weaponNo: string;
+}
+
+const DEFAULT_LABELS: BarcodeLabels = {
+    entryType: (key) => key,
+    receipt: "Receipt",
+    license: "Licence",
+    vehicle: "Vehicle",
+    weaponNo: "No.",
+};
+
+/** Entry-type label; custom "other" types print the text the user typed. */
+const typeLabel = (entryType: string | undefined, labels: BarcodeLabels) => {
+    // Custom text / crime heads ("आयुद्ध अधि0") print as typed; plain spellings print the category label.
+    return isPlainCategorySpelling(entryType) ? labels.entryType(categoryForEntryType(entryType)) : toPrintable(entryType || "");
 };
 
 /**
- * Generates a PDF document with barcodes arranged on A4 sheets.
+ * Keeps only printable ASCII. The scan value must stay ASCII because both the
+ * web app and the mobile scanner split it as `dbName-firNo-srNo`.
+ */
+const sanitizeString = (str: any) => {
+    if (str === null || str === undefined) return "";
+    return String(str).replace(/[^\x20-\x7E]/g, "").trim();
+};
+
+/** The value encoded in both the barcode and the QR code (unchanged format). */
+export const buildScanValue = (entry: any, dbName: string) =>
+    `${sanitizeString(entry.dbName || dbName)}-${sanitizeString(entry.firNo)}-${sanitizeString(entry.srNo)}`;
+
+const displayFir = (firNo: any) =>
+    String(firNo || "")
+        .replace(/@/g, "/")
+        .replace(/]/g, ",")
+        .replace(/&/g, "-")
+        .trim();
+
+interface LabelText {
+    title: string;
+    subtitle: string;
+    station: string;
+    details: string;
+}
+
+const labelText = (entry: any, dbName: string, labels: BarcodeLabels, policeStation?: string): LabelText => {
+    const isVehicle = (entry.dbName || dbName) === "s" || entry.vehicleType !== undefined;
+    const fir = displayFir(entry.firNo);
+    const year = entry.Year ? ` / ${entry.Year}` : "";
+
+    if (isVehicle) {
+        return {
+            title: toPrintable(entry.registrationNo) || `Sr. ${toPrintable(entry.srNo)}`,
+            subtitle: [fir && `FIR ${fir}`, labels.vehicle].filter(Boolean).join(" · "),
+            station: toPrintable(entry.policeStation || policeStation),
+            details: [toPrintable(entry.vehicleType), toPrintable(entry.description)].filter(Boolean).join(" "),
+        };
+    }
+
+    const category = typeLabel(entry.entryType, labels);
+    if (entry.entryType === "licensedWeapon") {
+        return {
+            title: `${labels.receipt} ${toPrintable(entry.receiptNo || entry.srNo)}${year}`,
+            subtitle: [entry.licenseNo && `${labels.license} ${toPrintable(entry.licenseNo)}`, category].filter(Boolean).join(" · "),
+            station: toPrintable(entry.policeStation || policeStation),
+            details: [toPrintable(entry.weaponName), entry.weaponNo && `${labels.weaponNo} ${toPrintable(entry.weaponNo)}`, toPrintable(entry.ownerName)]
+                .filter(Boolean).join(" · "),
+        };
+    }
+
+    return {
+        title: `Sr. ${toPrintable(entry.srNo) || "-"}${year}`,
+        subtitle: [fir && `FIR ${fir}`, category].filter(Boolean).join(" · "),
+        station: toPrintable(entry.policeStation || policeStation),
+        details: toPrintable(entry.description) || toPrintable(entry.caseProperty),
+    };
+};
+
+/**
+ * Generates an A4 PDF of barcode stickers (4 × 10 grid, 48 × 27 mm each).
+ * Each sticker has a QR code, the item details (Hindi supported) and a
+ * CODE128 barcode with the scan value printed below it.
  */
 export const generateBarcodePDF = async (
     entries: any,
     dbName: string,
-    year: {
-        from: string,
-        to: string
-    },
+    _year: { from: string; to: string },
     policseStation: string | undefined,
-    firNo?: string
+    _firNo?: string,
+    labels: BarcodeLabels = DEFAULT_LABELS
 ) => {
-    // --- Page and Label Layout Configuration (A4 Dimensions: 210mm x 297mm) ---
+    // --- Sticker sheet layout (unchanged so existing sticker paper still lines up) ---
     const LABELS_PER_ROW = 4;
     const LABELS_PER_COLUMN = 10;
     const LABELS_PER_PAGE = LABELS_PER_ROW * LABELS_PER_COLUMN;
-
     const PAGE_MARGIN_TOP = 8.5; // mm
     const PAGE_MARGIN_LEFT = 4.5; // mm
     const LABEL_WIDTH = 48; // mm
@@ -38,107 +112,106 @@ export const generateBarcodePDF = async (
     const HORIZONTAL_GAP = 3; // mm
     const VERTICAL_GAP = 0; // mm
 
-    const BARCODE_WIDTH = 40; // mm
-    const BARCODE_HEIGHT = 15; // mm
+    // --- Label content layout, rendered at ~300 dpi ---
+    const PX = 12; // px per mm
+    const W = LABEL_WIDTH * PX;
+    const H = LABEL_HEIGHT * PX;
+    const PAD = 1.2 * PX;
+    const QR = 13.5 * PX;
+    const TEXT_X = PAD + QR + 1.2 * PX;
+    const TEXT_W = W - TEXT_X - PAD;
+    const BAR_Y = 16.4 * PX;
+    const BAR_H = 6.6 * PX;
+    const BAR_W = W - PAD * 2;
 
-    // --- PDF Document Initialization ---
-    const doc = new jsPDF({
-        orientation: "p",
-        unit: "mm",
-        format: "a4",
-    });
+    await ensureFontsReady();
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
+    const doc = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
+    const label = document.createElement("canvas");
+    label.width = W;
+    label.height = H;
+    const ctx = label.getContext("2d");
+    if (!ctx) throw new Error("Canvas not available");
 
-    let fileName;
-    let count = 0;
+    const barCanvas = document.createElement("canvas");
+    const qrCanvas = document.createElement("canvas");
 
-    // --- Barcode Generation Loop ---
     for (let i = 0; i < entries.length; i++) {
         const entry = entries[i];
+        if (i > 0 && i % LABELS_PER_PAGE === 0) doc.addPage();
 
-        count++;
-        if (i > 0 && i % LABELS_PER_PAGE === 0) {
-            doc.addPage();
-        }
-
-        // --- Calculate Current Label Position ---
         const indexOnPage = i % LABELS_PER_PAGE;
         const row = Math.floor(indexOnPage / LABELS_PER_ROW);
         const col = indexOnPage % LABELS_PER_ROW;
-
         const labelX = PAGE_MARGIN_LEFT + col * (LABEL_WIDTH + HORIZONTAL_GAP);
         const labelY = PAGE_MARGIN_TOP + row * (LABEL_HEIGHT + VERTICAL_GAP);
 
-        // --- Draw Sticker Grid for Alignment ---
+        const scanValue = buildScanValue(entry, dbName);
+        const text = labelText(entry, dbName, labels, policseStation);
+
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#000000";
+        ctx.textBaseline = "top";
+        ctx.textAlign = "left";
+
+        // 1. QR code (same value as the barcode, so either can be scanned)
+        try {
+            await QRCode.toCanvas(qrCanvas, scanValue, { margin: 0, width: QR, errorCorrectionLevel: "M" });
+            ctx.drawImage(qrCanvas, PAD, PAD, QR, QR);
+        } catch (err) {
+            console.error("QR generation failed for:", scanValue, err);
+        }
+
+        // 2. Details
+        let y = PAD - 0.2 * PX;
+        ctx.font = font(2.9 * PX, "bold");
+        ctx.fillText(fitText(ctx, text.title, TEXT_W), TEXT_X, y);
+        y += 3.5 * PX;
+
+        ctx.font = font(2.3 * PX);
+        if (text.subtitle) {
+            ctx.fillText(fitText(ctx, text.subtitle, TEXT_W), TEXT_X, y);
+            y += 2.9 * PX;
+        }
+        if (text.station) {
+            ctx.font = font(2.3 * PX, "600");
+            ctx.fillText(fitText(ctx, text.station, TEXT_W), TEXT_X, y);
+            y += 2.9 * PX;
+        }
+        ctx.font = font(2.1 * PX);
+        const remainingLines = Math.max(1, Math.floor((BAR_Y - 0.6 * PX - y) / (2.6 * PX)));
+        wrapText(ctx, text.details, TEXT_W, remainingLines).forEach((line) => {
+            ctx.fillText(line, TEXT_X, y);
+            y += 2.6 * PX;
+        });
+
+        // 3. Barcode + human-readable value
+        try {
+            JsBarcode(barCanvas, scanValue, { format: "CODE128", width: 2, height: 80, displayValue: false, margin: 0 });
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(barCanvas, PAD, BAR_Y, BAR_W, BAR_H);
+            ctx.imageSmoothingEnabled = true;
+        } catch (error) {
+            console.error("Barcode generation failed for:", scanValue, error);
+            ctx.font = font(2.4 * PX, "bold");
+            ctx.textAlign = "center";
+            ctx.fillText("INVALID DATA", W / 2, BAR_Y + 2 * PX);
+        }
+        ctx.font = font(2 * PX);
+        ctx.textAlign = "center";
+        ctx.fillText(fitText(ctx, scanValue, BAR_W), W / 2, BAR_Y + BAR_H + 0.4 * PX);
+
+        // JPEG on a white background: PNG would embed an alpha mask and make
+        // the file ~15 MB per 20 labels; at ~300 dpi q=0.92 the bars stay crisp.
+        doc.addImage(label.toDataURL("image/jpeg", 0.92), "JPEG", labelX, labelY, LABEL_WIDTH, LABEL_HEIGHT, undefined, "FAST");
+
+        // Light outline to help align the sticker sheet
         doc.setLineWidth(0.1);
         doc.setDrawColor(200, 200, 200);
         doc.rect(labelX, labelY, LABEL_WIDTH, LABEL_HEIGHT);
-
-        // --- Place Content within the Label ---
-        const barcodeX = labelX + (LABEL_WIDTH - BARCODE_WIDTH) / 2;
-        const srNoY = labelY + 4;
-        const barcodeY = srNoY + 2;
-        const firNoY = barcodeY + BARCODE_HEIGHT + 4;
-
-        // 1. Print SrNo (Visual Text)
-        // sanitizeString now handles Numbers safely
-        const cleanSrNo = sanitizeString(entry.srNo);
-        doc.text(cleanSrNo, labelX + LABEL_WIDTH / 2, srNoY, { align: 'center' });
-
-        // 2. Generate Canvas for Barcode Image
-        const canvas = document.createElement("canvas");
-
-        // --- PREPARE DATA ---
-        const attachedFir = entry.firNo; // Don't force string yet, let helper do it
-
-        // Clean all parts using the fixed helper
-        const cleanFirForBarcode = sanitizeString(attachedFir);
-        const cleanDbName = sanitizeString(entry.dbName || dbName);
-        const cleanSrForBarcode = sanitizeString(entry.srNo);
-
-        // Construct Value: dbName-FIR-SR
-        const barcodeValue = `${cleanDbName}-${cleanFirForBarcode}-${cleanSrForBarcode}`;
-
-        try {
-            JsBarcode(canvas, barcodeValue, {
-                format: "CODE128",
-                width: 2,
-                height: 80,
-                displayValue: false,
-                margin: 0
-            });
-
-            const imageData = canvas.toDataURL("image/png");
-            doc.addImage(imageData, "PNG", barcodeX, barcodeY, BARCODE_WIDTH, BARCODE_HEIGHT);
-        } catch (error) {
-            console.error("Barcode generation failed for:", barcodeValue, error);
-            doc.setFontSize(6);
-            doc.text("INVALID DATA", labelX + LABEL_WIDTH / 2, barcodeY + 5, { align: 'center' });
-            doc.setFontSize(8);
-        }
-
-        // 3. Print FirNo (Visual Text)
-        // Convert to string safely for regex operations
-        const originalFirNo = String(entry.firNo || '');
-
-        // Replace special chars for display
-        const firNo1 = originalFirNo.replace(/@/g, '/');
-        const displayFirNo = firNo1.replace(/]/g, ',').replace(/&/g, '-');
-
-        // Sanitize for PDF printing (removes Hindi/Symbols)
-        const safeDisplayFirNo = sanitizeString(displayFirNo);
-
-        // Combine with Year
-        let finalDisplayName = safeDisplayFirNo;
-
-        doc.text(finalDisplayName, labelX + LABEL_WIDTH / 2, firNoY, { align: 'center' });
     }
 
-    console.log(`Total barcodes generated: ${count}`);
-    const cleanStationName = sanitizeString(policseStation || 'download');
-    fileName = `${cleanStationName}-barcodes.pdf`;
-
-    doc.save(fileName);
+    const cleanStationName = sanitizeString(policseStation || "download") || "download";
+    doc.save(`${cleanStationName}-barcodes.pdf`);
 };

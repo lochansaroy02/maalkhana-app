@@ -6,7 +6,7 @@ import { create } from 'zustand';
 
 type DestroyStore = {
     fetchByFIR: (userId: string | undefined, type: string, firNo?: string, srNo?: string) => Promise<any | null>;
-    updateDestroyEntry: (id: string, updatedData: any) => Promise<boolean>;
+    updateDestroyEntry: (id: string, updatedData: any, type?: string) => Promise<boolean>;
 };
 
 
@@ -32,9 +32,9 @@ export const useDestroyStore = create<DestroyStore>(() => ({
     },
 
 
-    updateDestroyEntry: async (id: string, updatedData: any) => {
+    updateDestroyEntry: async (id: string, updatedData: any, type: string = "malkhana") => {
         try {
-            const response = await axios.put(`/api/destroy?id=${id}`, updatedData);
+            const response = await axios.put(`/api/destroy?id=${id}&type=${encodeURIComponent(type)}`, updatedData);
 
             if (response.data.success) {
                 return true;

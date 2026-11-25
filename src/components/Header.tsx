@@ -1,196 +1,142 @@
 "use client";
 
 import { useAuthStore } from "@/store/authStore";
-import { useBackupStore } from "@/store/backupStore";
 import { useDistrictStore } from "@/store/districtStore";
 import { useSidebarStore } from "@/store/sidebarStore";
-import { DatabaseBackup, Loader2, LogOut, Menu } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Building2, ChevronDown, DatabaseBackup, LogOut, Menu, UserRound } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { Button } from "./ui/button";
-import DropDown from "./ui/DropDown";
+import BackupModal from "./BackupModal";
+import LanguageSwitch from "./LanguageSwitch";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+
+const iconBtn =
+    "inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-white/30 bg-white/10 px-2.5 text-sm font-medium text-blue-100 " +
+    "transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 disabled:opacity-60";
 
 const Header = () => {
-    const { createBackup } = useBackupStore();
+    const t = useTranslations("Header");
     const { getAllUsers, setUserId, userId } = useDistrictStore();
     const { isLoggedIn, logout, user } = useAuthStore();
-    const router = useRouter();
-    const pathname = usePathname();
-    const [hasHydrated, setHasHydrated] = useState(false);
-    const [userData, setUserData] = useState([]);
-    const [userOptions, setUserOptions] = useState<any[]>([]);
-    const [selectedUser, setselectedUser] = useState("");
-    const [isBackingUp, setIsBackingUp] = useState(false);
     const { toggleOpen } = useSidebarStore();
-    // 💡 New state for online status
-    const [isOnline, setIsOnline] = useState(true);
+    const router = useRouter();
 
+    const [hasHydrated, setHasHydrated] = useState(false);
+    const [stations, setStations] = useState<{ id: string; policeStation: string }[]>([]);
+    const [backupOpen, setBackupOpen] = useState(false);
+
+    useEffect(() => setHasHydrated(true), []);
+
+    useEffect(() => {
+        if (hasHydrated && !isLoggedIn) router.push("/");
+    }, [hasHydrated, isLoggedIn, router]);
+
+    // District admins can switch between their police stations.
+    useEffect(() => {
+        if (user?.role !== "district") return;
+        (async () => {
+            const data = await getAllUsers(user.id);
+            setStations(Array.isArray(data) ? data : data?.data || []);
+        })();
+    }, [user, getAllUsers]);
+
+    if (!hasHydrated) return null;
 
     const handleLogout = () => {
         logout();
         router.replace("/");
-        router.refresh(); // Refreshes the current route (server components too)
-    };
-    const getUserData = async () => {
-        if (user?.role === "district") {
-            const data = await getAllUsers(user?.id);
-            // 👀 check shape
-            setUserData(Array.isArray(data) ? data : data.data || []);
-        }
+        router.refresh();
     };
 
-    useEffect(() => {
-        if (user?.role === 'district') {
-            getUserData()
-        }
-    }, [user])
-
-    useEffect(() => {
-        if (hasHydrated && !isLoggedIn) {
-            router.push("/");
-        }
-    }, [hasHydrated, isLoggedIn, router]);
-
-    useEffect(() => {
-        setHasHydrated(true);
-    }, []);
-
-    // 💡 Effect to check and manage online status
-    useEffect(() => {
-        // Initial check
-        setIsOnline(window.navigator.onLine);
-
-        // Handlers for online/offline events
-        const handleOnline = () => setIsOnline(true);
-        const handleOffline = () => setIsOnline(false);
-
-        // Add event listeners
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        // Cleanup: remove event listeners when component unmounts
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
-    }, []);
-
-
-    if (!hasHydrated) {
-        return null;
-    }
-
-    const handleBackup = async () => {
-        setIsBackingUp(true); // Start loader
-        try {
-            const { message, success } = await createBackup(user?.id);
-
-            if (success) {
-                toast.success(message || 'Backup sent to Email');
-            } else {
-                toast.error(message || 'Failed to create backup.');
-            }
-        } catch (backupError) {
-            console.error("Backup failed:", backupError);
-            toast.error('An unexpected error occurred during backup.');
-        } finally {
-            setIsBackingUp(false);
-        }
-    }
-
-    const handleClick = () => {
-        toggleOpen();
-    };
-
-    // remove first segment if it is a locale (en or hi)
-    const getPathWithoutLocale = () => {
-        const parts = pathname.split("/");
-        if (["en", "hi"].includes(parts[1])) {
-            return "/" + parts.slice(2).join("/");
-        }
-        return pathname;
-    };
-
-    const handleLocaleChange = (locale: string) => {
-        const newPath = `/${locale}${getPathWithoutLocale()}`;
-        router.push(newPath);
-    };
+    const roleLabel = user?.role ? t(`roles.${user.role}`) : "";
+    const subtitle = [user?.policeStation, roleLabel].filter(Boolean).join(" · ");
+    const initials = (user?.name || "?")
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0]?.toUpperCase())
+        .join("");
 
     return (
-        <div className="fixed w-full lg:w-[80%] glass-effect z-40  flex">
-            <div className="flex items-center p-4 justify-between  w-full">
-                <button className="lg:hidden" onClick={toggleOpen}>
-                    <Menu className="text-blue-100" />
-                </button>
-
-                <div className="flex items-center gap-2"> {/* 💡 Added flex container for title and dot */}
-                    <h1 className="lg:text-xl text-base font-bold text-blue-300">
-                        Digital Malkhana
-                    </h1>
-                    {/* 💡 Online Status Dot */}
-                    <div
-                        className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-500'}`}
-                        title={isOnline ? 'Online' : 'Offline'}
-                    />
+        <header className="glass-effect fixed z-40 flex w-full lg:w-[80%]">
+            <div className="flex w-full items-center justify-between gap-3 px-3 py-2.5 sm:px-5">
+                {/* Left: menu + brand */}
+                <div className="flex min-w-0 items-center gap-3">
+                    <button className={`${iconBtn} lg:hidden`} onClick={toggleOpen} aria-label={t("menu")}>
+                        <Menu size={18} />
+                    </button>
+                    <div className="min-w-0">
+                        <h1 className="truncate text-base font-bold leading-tight text-blue-100 lg:text-xl">{t("appName")}</h1>
+                        {subtitle && <p className="truncate text-xs text-blue-100/60">{subtitle}</p>}
+                    </div>
                 </div>
 
-                <div className="flex w-1/2 gap-4 px-2  items-center">
-                    {user?.role === 'district' && (
-                        <DropDown
-                            selectValueLabel="Select Police station"
-                            options={userData.map((item: any) => ({
-                                value: item.id,
-                                label: item.policeStation,
-                            }))}
-                            selectedValue={userId}
-                            handleSelect={setUserId}
-                        />
-                    )}
-                    <div className="w-1/2">
-                        <select
-                            className="rounded-lg w-fit glass-effect text-blue-100  px-2 py-1"
-                            onChange={(e) => handleLocaleChange(e.target.value)}
-                            defaultValue={pathname.split("/")[1] || "en"}
-                        >
-
-                            <option className=" bg-blue " value="en">english</option>
-                            <option className=" bg-blue " value="hi">हिंदी</option>
-                        </select>
-                    </div>
-                    <Button
-                        onClick={handleLogout}
-                        className="bg-blue-500 hover:bg-blue-600 cursor-pointer"
-                    >
-                        {isLoggedIn ? "Logout" : "Login"}
-                        <LogOut />
-                    </Button>
-
-                    {isLoggedIn && user?.id && (
-                        <Link href={`/${user.id}`} passHref>
-                            <Button asChild className="rounded-full bg-blue hover:bg-blue/50 cursor-pointer">
-                                <h1>{user.name.charAt(0).toUpperCase()}</h1>
-                            </Button>
-                        </Link>
+                {/* Right: controls */}
+                <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                    {user?.role === "district" && (
+                        <label className="relative hidden items-center md:flex" title={t("station")}>
+                            <Building2 size={15} className="pointer-events-none absolute left-2.5 text-blue-100/70" />
+                            <select
+                                aria-label={t("station")}
+                                value={userId}
+                                onChange={(e) => setUserId(e.target.value)}
+                                className="h-9 max-w-[220px] appearance-none truncate rounded-lg border border-white/30 bg-white/10 pl-8 pr-8 text-sm text-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-300 [&>option]:bg-blue"
+                            >
+                                <option value="">{t("selectStation")}</option>
+                                {stations.map((s) => (
+                                    <option key={s.id} value={s.id}>{s.policeStation}</option>
+                                ))}
+                            </select>
+                            <ChevronDown size={15} className="pointer-events-none absolute right-2.5 text-blue-100/70" />
+                        </label>
                     )}
 
-                    <div>
-                        <Button onClick={handleBackup} disabled={isBackingUp}>
-                            <DatabaseBackup />
-                            {isBackingUp ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Creating Backup...
-                                </>
-                            ) : (
-                                'Backup'
-                            )}
-                        </Button>
-                    </div>
+                    <LanguageSwitch />
+
+                    {isLoggedIn && user && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className={`${iconBtn} rounded-full pl-1 pr-2`} aria-label={t("account")}>
+                                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-maroon text-xs font-bold text-cream ring-1 ring-white/30">
+                                        {initials}
+                                    </span>
+                                    <ChevronDown size={14} className="text-blue-100/70" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-60 border-white/20 bg-blue-dark text-blue-100">
+                                <DropdownMenuLabel className="font-normal">
+                                    <p className="truncate font-semibold text-blue-100">{user.name}</p>
+                                    <p className="truncate text-xs text-blue-100/60">{user.email}</p>
+                                    {roleLabel && (
+                                        <span className="mt-1.5 inline-block rounded-md bg-maroon px-1.5 py-0.5 text-[11px] font-semibold text-cream">{roleLabel}</span>
+                                    )}
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-white/15" />
+                                <DropdownMenuItem onSelect={() => router.push(`/${user.id}`)} className="cursor-pointer text-blue-100 focus:bg-white/10 focus:text-blue-100">
+                                    <UserRound size={16} /> {t("profile")}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setBackupOpen(true)} className="cursor-pointer text-blue-100 focus:bg-white/10 focus:text-blue-100">
+                                    <DatabaseBackup size={16} /> {t("backup")}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-white/15" />
+                                <DropdownMenuItem onSelect={handleLogout} className="cursor-pointer text-red-300 focus:bg-red-500/15 focus:text-red-200">
+                                    <LogOut size={16} /> {t("logout")}
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                 </div>
             </div>
-        </div >
+            {backupOpen && user && <BackupModal userId={user.id} role={user.role} onClose={() => setBackupOpen(false)} />}
+        </header>
     );
 };
 

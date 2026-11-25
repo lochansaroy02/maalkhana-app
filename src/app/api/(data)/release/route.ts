@@ -83,33 +83,66 @@ export const POST = async (req: NextRequest) => {
 };
 
 
+
 export const GET = async (req: NextRequest) => {
     const { searchParams } = new URL(req.url);
     const firNo = searchParams.get("firNo");
 
     if (!firNo) {
-        return NextResponse.json({ success: false, message: "Please enter FIR No." }, { status: 400 });
+        return NextResponse.json(
+            { success: false, message: "Please enter FIR No." },
+            { status: 400 }
+        );
     }
+
     try {
         const data = await prisma.malkhanaEntry.findMany({
             where: { firNo },
             select: {
                 id: true,
                 srNo: true,
+                firNo: true,
+                // Core photo and document fields
+                photoUrl: true,
+                documentUrl: true,
+                document: true,
+                // Movement specific files (if you need them)
+                movementPhotoUrl: true,
+                movementDocumentUrl: true,
+                releaseDocumentUrl:true,
+                releasePhotoUrl:true,
+                releaseDate:true,
+                fathersName:true,
+                
+                // Fetching the relation via select
+                attachments: {
+                    select: {
+                        id: true,
+                        url: true,
+                        fileType: true,
+                        category: true,
+                    }
+                }
             }
         });
 
-        if (!data) {
-            return NextResponse.json({ success: false, message: "No record found" }, { status: 404 });
+        // findMany returns an array. Check if the array is empty.
+        if (!data || data.length === 0) {
+            return NextResponse.json(
+                { success: false, message: "No record found" },
+                { status: 404 }
+            );
         }
 
         return NextResponse.json({ success: true, data }, { status: 200 });
     } catch (error) {
         console.error("GET /api/movement error:", error);
-        return NextResponse.json({ success: false, error: "Failed to fetch data" }, { status: 500 });
+        return NextResponse.json(
+            { success: false, error: "Failed to fetch data" },
+            { status: 500 }
+        );
     }
 };
-
 export const PUT = async (req: NextRequest) => {
     try {
         const { searchParams } = new URL(req.url);

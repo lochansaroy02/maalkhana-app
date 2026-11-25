@@ -4,10 +4,11 @@ import Logo from '@/assets/Logo';
 import Spycore from '@/assets/Spycore';
 import { useAuthStore } from '@/store/authStore';
 import { useSidebarStore } from '@/store/sidebarStore';
-import { Barcode, Bus, Clipboard, LayoutDashboard, Megaphone, Package, PackageOpen, Shredder, UploadIcon, Users } from 'lucide-react';
+import { Barcode, Clipboard, LayoutDashboard, Megaphone, Package, PackageOpen, Shredder, UploadIcon, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo } from 'react';
+import NewBadge from './NewBadge';
 
 const Sidebar = () => {
     const path = usePathname();
@@ -18,9 +19,9 @@ const Sidebar = () => {
 
     const sidebarData = useMemo(() => {
         const baseRoutes = [
-            { name: t("dashboard"), link: "/dashboard", icon: <LayoutDashboard size={16} /> },
-            { name: t("malkhana"), link: "/maalkhana-entry", icon: < Package size={16} /> },
-            { name: t("vehicles"), link: "/seized-vehical", icon: <Bus size={16} /> },
+            { name: t("dashboard"), link: "/dashboard", icon: <LayoutDashboard size={16} />, isNew: true },
+            // One "Entry" item; the page itself switches between Malkhana and Seized vehicles.
+            { name: t("entry"), link: "/maalkhana-entry", match: ["maalkhana-entry", "seized-vehical"], icon: <Package size={16} />, isNew: true },
             { name: t("movement"), link: "/movement", icon: <UploadIcon size={16} /> },
             { name: t("release"), link: "/release", icon: <PackageOpen size={16} /> },
             { name: t("nilami"), link: "/nilami", icon: <Megaphone size={16} /> },
@@ -47,7 +48,9 @@ const Sidebar = () => {
                         {sidebarData.map((item, index) => {
                             if (!item) return null;
                             const baseLink = item.link.split('/').pop() || item.link;
-                            const isActive = path.includes(baseLink);
+                            const isActive = 'match' in item && item.match
+                                ? item.match.some((m) => path.includes(m))
+                                : path.includes(baseLink);
                             return (
                                 <div
                                     key={index}
@@ -63,6 +66,7 @@ const Sidebar = () => {
                                             {item.icon}
                                         </span>
                                         <h1 className='text-sm text-blue-100'>{item.name}</h1>
+                                        {'isNew' in item && item.isNew && <NewBadge className='ml-auto' />}
                                     </div>
                                 </div>
                             );

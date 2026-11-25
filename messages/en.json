@@ -13,6 +13,7 @@
     },
     "Sidebar": {
         "dashboard": "Dashboard",
+        "entry": "Entry",
         "malkhana": "Malkhana Entry",
         "vehicles": "Seized vehicles",
         "movement": "movement",
@@ -54,7 +55,8 @@
                     "wine": "Wine",
                     "unclaimed": "Unclaimed Entry",
                     "other": "Other Entry",
-                    "yellowItem": "Yellow Item"
+                    "yellowItem": "Yellow Item",
+                    "licensedWeapon": "Licensed Weapon"
                 },
                 "specifyOther": "Specify Other Entry",
                 "yellowItemPrice": "Enter Yellow Item Price"
@@ -122,6 +124,22 @@
                 "photoUploadSuccess": "Photo uploaded successfully",
                 "photoUploadError": "Failed to upload photo",
                 "printError": "Please fill in the form or fetch data before printing."
+            },
+            "licenseForm": {
+                "title": "Licensed Weapon Deposit",
+                "receiptNo": "Receipt No",
+                "policeStation": "Police Station",
+                "licenseNo": "License No",
+                "ownerName": "Owner Name",
+                "address": "Address",
+                "mobile": "Mobile",
+                "weaponName": "Weapon",
+                "weaponNo": "Weapon No",
+                "depositDate": "Deposit Date",
+                "depositReason": "Reason",
+                "rackNo": "Rack",
+                "required": "Please fill: ",
+                "invalidMobile": "Enter a valid 10-digit mobile number"
             }
         }
     },
@@ -385,5 +403,171 @@
             "updateSuccess": "Item successfully marked for Nilami!",
             "saveError": "An error occurred during the Nilami process."
         }
+    },
+    "categories": {
+        "title": "Malkhana categories",
+        "total": "Total {count}",
+        "close": "Close",
+        "search": "Search — FIR, Malkhana no., description…",
+        "category": "Category",
+        "subType": "Sub-type — all",
+        "status": "Status — all",
+        "from": "From date",
+        "to": "To date",
+        "excel": "Excel",
+        "pdf": "PDF",
+        "prev": "‹ Previous",
+        "next": "Next ›",
+        "noRecords": "No records found",
+        "loadError": "Could not load data",
+        "exportEmpty": "No records to export",
+        "exportDone": "{count} records exported",
+        "exportFailed": "Export failed",
+        "searchLabel": "Search",
+        "columns": {
+            "index": "#",
+            "firNo": "FIR No.",
+            "malkhanaNo": "Malkhana No.",
+            "category": "Category",
+            "description": "Property description",
+            "policeStation": "Police Station",
+            "status": "Status",
+            "date": "Seizure date"
+        },
+        "statuses": {
+            "inStation": "In Police Station",
+            "movement": "In Movement",
+            "released": "Released",
+            "destroyed": "Destroyed",
+            "nilami": "Auctioned"
+        },
+        "barcode": {
+            "receipt": "Receipt",
+            "license": "Licence",
+            "vehicle": "Vehicle",
+            "weaponNo": "No."
+        }
+    },
+    "whatsNew": {
+        "badge": "New",
+        "title": "What's new",
+        "subtitle": "New features added to Digital Malkhana",
+        "dismiss": "Dismiss",
+        "gotIt": "Got it, don't show again",
+        "categories": {
+            "title": "Malkhana categories",
+            "text": "See items grouped by entry type on the dashboard. Click a category to search, filter by status/date and export to Excel or PDF.",
+            "action": "Show categories"
+        },
+        "license": {
+            "title": "Licensed weapon deposit",
+            "text": "Record licensed weapons deposited at the station: choose 'Licensed Weapon' as the entry type to open the new form.",
+            "action": "Add entry"
+        },
+        "barcode": {
+            "title": "QR barcode labels",
+            "text": "Barcode stickers now include a QR code, FIR, entry type, police station and item details.",
+            "action": "Open report"
+        }
+    },
+    "Header": {
+        "appName": "Digital Malkhana",
+        "language": "Language",
+        "selectStation": "All police stations",
+        "station": "Police station",
+        "backup": "Backup",
+        "profile": "My profile",
+        "logout": "Logout",
+        "menu": "Open menu",
+        "account": "Account menu",
+        "roles": {
+            "district": "District Admin",
+            "policeStation": "Police Station",
+            "asp": "ASP"
+        }
+    },
+    "backup": {
+        "title": "Backup data",
+        "close": "Close",
+        "sendTo": "Backup will be sent to",
+        "sendToHint": "Backups are always sent to the email of the logged-in account.",
+        "entries": "Malkhana entries",
+        "vehicles": "Seized vehicles",
+        "scope": "Data of: {name}",
+        "filesLegend": "Files to attach",
+        "bak": {
+            "title": ".bak — Full backup",
+            "text": "Compressed copy of every record, kept for restoring data."
+        },
+        "csv": {
+            "title": ".csv — Spreadsheet",
+            "text": "Malkhana entries and seized vehicles as CSV files that open in Excel."
+        },
+        "pickOne": "Choose at least one file type.",
+        "send": "Send backup",
+        "sending": "Creating & sending…",
+        "retry": "Try again",
+        "cancel": "Cancel",
+        "failed": "Backup could not be sent",
+        "summaryFailed": "Could not load backup details. Please try again.",
+        "sentTitle": "Backup sent",
+        "sentTo": "The backup was emailed to {email}.",
+        "checkSpam": "If you don't see it within a few minutes, check the Spam folder.",
+        "done": "Done"
+    },
+    "reports": {
+        "tabs": {
+            "malkhana": "Malkhana Entry",
+            "vehicles": "Seized Vehicles",
+            "label": "Report type"
+        },
+        "filters": {
+            "title": "Filters",
+            "entryType": "Entry type",
+            "status": "Status",
+            "type": "Activity",
+            "caseProperty": "Case property",
+            "vehicleType": "Vehicle type",
+            "year": "Year",
+            "yearFrom": "From",
+            "yearTo": "To",
+            "any": "Any",
+            "clear": "Clear",
+            "clearAll": "Clear all",
+            "selected": "{count} selected",
+            "noOptions": "No options"
+        },
+        "search": {
+            "placeholderMalkhana": "Search FIR, Sr No, description, accused, licence no…",
+            "placeholderVehicles": "Search FIR, registration, engine no, owner, description…",
+            "clear": "Clear search",
+            "hint": "Press / to search"
+        },
+        "results": {
+            "showing": "Showing {shown} of {total}",
+            "none": "No records match these filters",
+            "noneHint": "Try removing a filter or changing the search."
+        },
+        "statuses": {
+            "pending": "Pending",
+            "released": "Released",
+            "destroy": "Destroyed",
+            "nilami": "Nilami",
+            "auctioned": "Auctioned",
+            "onCourt": "On court",
+            "other": "Other"
+        },
+        "activities": {
+            "movement": "Movement",
+            "release": "Release",
+            "return": "Returned",
+            "nilami": "Nilami",
+            "destroy": "Destroyed"
+        }
+    },
+    "entrySwitch": {
+        "malkhana": "Malkhana Entry",
+        "vehicles": "Seized Vehicles",
+        "label": "Entry type"
     }
 }
